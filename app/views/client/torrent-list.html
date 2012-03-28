@@ -1,0 +1,12 @@
+#{if (torrents.size() == 0)}
+	No torrents in '${group}' group.
+#{/if}
+#{else}
+	<table class="table table-bordered table-condensed">
+	#{list items:torrents, as:'torrent'}
+		#{if (torrent.metadataPercentComplete == 1)}
+			#{torrent torrent /}
+		#{/if}
+	#{/list}
+	</table>
+#{/else}

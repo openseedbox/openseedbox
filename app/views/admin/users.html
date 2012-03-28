@@ -1,0 +1,23 @@
+#{extends "admin/index.html" /}
+<h2>Users</h2>
+<table class="table table-bordered">
+	<tr>
+		<th>Name</th>
+		<th>Node</th>
+		<th>Disk Available</th>
+		<th>Disk Used</th>
+		<th>Torrents Active</th>
+		<th>Action</th>
+	</tr>
+	#{list items:users, as:"user"}
+	%{ def stats = user.getUserStats() }%
+	<tr>
+		<td>${user.emailAddress}</td>
+		<td>${user.getNode().name}</td>
+		<td>${stats.maxSpaceGb} GB</td>
+		<td>${stats.usedSpaceGb} GB</td>
+		<td>${user.getTorrents().size()}</td>
+		<td>[ <a href="/admin/editUser?id=${user.id}" class="edit-user" data-user-id="${user.id}">Edit</a> ]</td>
+	</tr>
+	#{/list}
+</table>

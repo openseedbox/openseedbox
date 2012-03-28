@@ -1,0 +1,13 @@
+<ul class="nav nav-tabs torrent-nav-tabs">
+		#{list items:_arg, as:'group'}
+			%{
+				def active_class = ""
+				if ((!active) && group_isFirst) {
+					active_class = "active"
+				} else if (active && active == group.name) {
+					active_class = "active"
+				}
+			}%
+			<li class="${active_class}"><a href="#${group.name}" data-toggle="tab">${group.name}</a></li>
+		#{/list}
+</ul>

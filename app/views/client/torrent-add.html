@@ -1,0 +1,87 @@
+
+%{
+	def waiting_for_metadata = (torrent && (torrent.metadataPercentComplete < 1))
+	def have_metadata = (torrent && (torrent.metadataPercentComplete == 1))
+}%
+<div class="modal-header">
+	<a class="close" data-dismiss="modal">&times;</a>
+	<h2>Add Torrent</h2>
+</div>
+<div class="modal-body control-group">
+	#{if (waiting_for_metadata)}
+		<p>
+		<img src="/public/images/ajax-loader.gif" />
+		<span>Fetching torrent from magnet link, ${torrent.getNiceMetadataPercentComplete()}% complete.</span>
+		</p>
+	#{/if}
+	#{elseif (have_metadata)}
+	<p>Fetched!</p>
+	#{/elseif}
+	#{else}
+	<span class="help-inline add-torrent-error"></span>
+	<label>URL or Magnet:</label><input type="text" name="torrent-url" value="" placeholder="Paste torrent URL or Magnet link" />
+	#{/else}
+</div>
+<div class="modal-footer">
+	#{if (waiting_for_metadata)}
+		<a href="#" class="btn btn-primary btn-error cancel-torrent-button"><i class="icon-remove"></i>Cancel</a>
+	#{/if}
+	#{elseif (have_metadata)}
+		<a href="#" class="btn" data-dismiss="modal"><i class="icon-remove"></i>Close</a>
+	#{/elseif}
+	#{else}
+		<a href="#" class="btn btn-primary add-torrent-button"><i class="icon-plus"></i>Add Torrent</a>
+		<a href="#" class="btn" data-dismiss="modal"><i class="icon-remove"></i>Close</a>
+	#{/else}
+</div>
+<script type="text/javascript">
+(function($) {
+	$(document).ready(function() {
+		#{if (waiting_for_metadata)}
+		setTimeout(function() {
+			$("#add-torrent-dialog").load("/client/renderAddTorrent", {
+				"torrentHash" : "${torrent.hashString}"
+			});
+		}, 1000);
+		$("a.cancel-torrent-button").click(function() {
+			var self = this;
+			toggleLoadingIcon(self);
+			$.post("/client/removeTorrent?ext=json", {
+				"torrentHash" : "${torrent.hashString}"
+			}, function(data) {
+				toggleLoadingIcon(self);
+				$("#add-torrent-dialog").modal("hide");
+			});
+		});
+		#{/if}
+		#{elseif (have_metadata)}
+		
+		#{/elseif}
+		#{else}
+		$("a.add-torrent-button").click(function() {
+			var self = this;
+			toggleLoadingIcon(self);
+			var urlOrMagnet = $("input[name=torrent-url]").val();
+			$.post("/client/addTorrent?ext=json", {
+				"urlOrMagnet" : urlOrMagnet
+			}, function(data) {
+				toggleLoadingIcon(self);
+				if (!data.success) {
+					$("span.add-torrent-error").html(data.error);
+					$("#add-torrent-dialog .control-group").addClass("error");
+				} else {
+					if (data.data.metadataPercentComplete < 1) {
+						$("#add-torrent-dialog").load("/client/renderAddTorrent", {
+							"torrentHash" : data.data.hashString
+						});
+					} else {
+						$("#add-torrent-dialog").modal("hide");
+						refreshTorrentList();						
+					}
+				}
+			})
+		});
+		#{/else}
+	});
+})(jQuery);
+</script>

@@ -1,0 +1,43 @@
+#{extends "main.html" /}
+#{set title: "Seedbox" /}
+#{set torrents_active: "active" /}
+#{set "moreScripts"}
+	<script type="text/javascript" src="/public/javascripts/client.js"></script>
+#{/set}
+#{set "moreStyles"}
+	<link rel="stylesheet" type="text/css" href="/public/stylesheets/client.css" />
+#{/set}
+<div id="tab-header">
+	#{client-tabs torrentGroups /}
+</div>
+<div class="pull-right" style="margin-top: -50px;">
+	<img id="global-loader" src="/public/images/ajax-loader.gif" />
+	<a href="#" class="btn add-torrent"><i class="icon-plus"></i>Add Torrent</a>
+</div>
+<div class="clearfix"></div>
+<div id="user-stats" class="pull-right">
+	#{user-stats userStats /}
+</div>
+<div id="with-selected" class="btn-group">
+	<a href="#" class="btn dropdown-toggle" data-toggle="dropdown">With selected: <span class="caret"></span></a>
+	<ul class="dropdown-menu">
+		<li><a href="#" id="remove-selected">Remove</a></li>
+		<li><a href="#" id="add-group-to-selected">Add group</a></li>
+	</ul>
+</div>
+<div class="clearfix"></div>
+<div class="tab-content">
+	#{list items:torrentGroups, as:'group'}
+		<div class="tab-pane #{if (group_isFirst)}active#{/if}" id="${group.name}">
+			<table>
+				<tr>
+					<td><img src="/public/images/ajax-loader.gif" /></td>
+					<td><h5 style="margin-left: 1em;">Loading ${group.name} torrents...</h3></td>
+				</tr>
+			</table>
+		</div>
+	#{/list}
+</div>
+<div class="modal hide" id="add-torrent-dialog">
+	
+</div>

@@ -1,0 +1,16 @@
+#{extends "admin/index.html" /}
+<h2>Nodes</h2>
+<table class="table table-bordered">
+	<tr>
+		<th>Name</th>
+		<th>IP Address</th>
+		<th>Uptime</th>
+		<th>Free Space</th>
+		<th>Users</th>
+		<th>Status</th>
+		<th>Action</th>
+	</tr>
+#{list items:nodes, as:"node"}
+	#{node-row node /}
+#{/list}
+</table>

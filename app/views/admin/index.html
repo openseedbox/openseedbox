@@ -1,0 +1,17 @@
+#{extends "main.html" /}
+#{set admin_active:"active" /}
+#{set title:"MySeedbox - Admin" /}
+#{set "moreScripts"}
+	<script type="text/javascript" src="/public/javascripts/admin.js"></script>
+#{/set}
+#{set "moreStyles"}
+	<link rel="stylesheet" type="text/css" href="/public/stylesheets/admin.css" />
+#{/set}
+<ul id="tabs" class="nav nav-tabs">
+	<li #{if (active == "stats")}class="active"#{/if}><a href="/admin/stats">Stats</a></li>
+	<li #{if (active == "nodes")}class="active"#{/if}><a href="/admin/nodes">Nodes</a></li>
+	<li #{if (active == "users")}class="active"#{/if}><a href="/admin/users">Users</a></li>
+</ul>
+<div id="tab-content">
+	#{doLayout /}
+</div>
