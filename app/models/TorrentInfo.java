@@ -12,9 +12,9 @@ import org.json.simple.JSONValue;
 
 public class TorrentInfo {
 
-	public List<TorrentFile> files = new ArrayList<>();
-	public List<TorrentPeer> peers = new ArrayList<>();
-	public List<TorrentTracker> trackers = new ArrayList<>();
+	public List<TorrentFile> files = new ArrayList<TorrentFile>();
+	public List<TorrentPeer> peers = new ArrayList<TorrentPeer>();
+	public List<TorrentTracker> trackers = new ArrayList<TorrentTracker>();
 	
 	public PeersFrom peersFrom;
 
@@ -51,7 +51,7 @@ public class TorrentInfo {
 	}
 
 	public List<TreeNode> filesAsTree() {
-		List<TreeNode> mapTree = new ArrayList<>();
+		List<TreeNode> mapTree = new ArrayList<TreeNode>();
 		for (TorrentFile f : files) {
 			String[] paths = f.name.split("/");
 			//Logger.info("paths: %s", paths.length);
@@ -99,7 +99,7 @@ public class TorrentInfo {
 
 		public String name = "";
 		public TorrentFile file = null;
-		public List<TreeNode> children = new ArrayList<>();
+		public List<TreeNode> children = new ArrayList<TreeNode>();
 		public int level = 0;
 		public String fullPath = "";
 

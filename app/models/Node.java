@@ -65,7 +65,10 @@ public class Node extends EnhancedModel {
 			c.connect();
 			String result = convertStreamToString(c.getInputStream());
 			return result;
-		} catch (JSchException | IOException ex) {
+		} catch (JSchException ex) {
+			Logger.error(ex, "Unable to execute SSH");
+			return ex.toString();			
+		} catch (IOException ex) {
 			Logger.error(ex, "Unable to execute SSH");
 			return ex.toString();
 		}
@@ -109,13 +112,16 @@ public class Node extends EnhancedModel {
 	}
 
 	private String convertStreamToString(InputStream is) {
-		try (InputStream i = is) {
-			return new Scanner(i).useDelimiter("\\A").next().trim();
+		try {
+			return new Scanner(is).useDelimiter("\\A").next().trim();
 		} catch (NoSuchElementException e) {
 			return "";
-		} catch (IOException ex) {
-			Logger.debug("Bad!", ex);
+		} finally {
+			if (is != null) {
+				try {
+					is.close();
+				} catch (Exception ex) {}
+			}
 		}
-		return "";
 	}
 }

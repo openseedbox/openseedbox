@@ -71,7 +71,7 @@ public class AdminController extends BaseController {
 		try {
 			TransmissionConfig tc = node.getTransmission().getConfig();
 			Field[] fields = tc.getClass().getDeclaredFields();
-			Map<String, Field> relevantFields = new HashMap<>();
+			Map<String, Field> relevantFields = new HashMap<String, Field>();
 			for (Field f : fields) {
 				SerializedName sn = (SerializedName) f.getAnnotation(SerializedName.class);
 				if (sn != null && !sn.value().equals("rpc-password")) {
