@@ -28,7 +28,9 @@ public class TransmissionController extends AdminController {
 				f.set(c, value);
 			}
 			c.save(n);
-		} catch (NoSuchFieldException | IllegalAccessException ex) {
+		} catch (NoSuchFieldException ex) {
+			throw new MessageException("Unable to set.");
+		} catch (IllegalAccessException ex) {
 			throw new MessageException("Unable to set.");
 		}
 		result(c);
@@ -46,7 +48,7 @@ public class TransmissionController extends AdminController {
 	public static void status(long id) {
 		Node n = getNode(id);
 		Transmission t = n.getTransmission();
-		Map<String, Object> res = new HashMap<>();
+		Map<String, Object> res = new HashMap<String, Object>();
 		res.put("transmission-daemon-running", t.isRunning());
 		res.put("node-uptime", n.uptime);
 		res.put("node-user-count", User.all().filter("node", n));

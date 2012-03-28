@@ -55,10 +55,10 @@ public class Torrent extends EnhancedModel {
 	public User user;
 	
 	@Embedded
-	public List<TorrentFile> files = new ArrayList<>();
+	public List<TorrentFile> files = new ArrayList<TorrentFile>();
 	
 	@Embedded
-	public List<TorrentGroup> groups = new ArrayList<>();
+	public List<TorrentGroup> groups = new ArrayList<TorrentGroup>();
 	
 	@Column("create_date_utc")
 	public Date createDateUTC = new Date();
@@ -115,7 +115,7 @@ public class Torrent extends EnhancedModel {
 	}
 	
 	public List<String> getFileIds() {
-		List<String> ret = new ArrayList<>();
+		List<String> ret = new ArrayList<String>();
 		for(TorrentFile tf : files) {
 			ret.add(String.valueOf(tf.transmissionId));
 		}

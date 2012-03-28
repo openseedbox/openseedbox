@@ -40,7 +40,7 @@ public class User extends EnhancedModel {
 	
 	
 	public List<Torrent> getTorrentsWithStatus(int status) {
-		List<Torrent> ret = new ArrayList<>();
+		List<Torrent> ret = new ArrayList<Torrent>();
 		for (Torrent t : this.getTorrents()) {
 			if (t.status == status) {
 				ret.add(t);
@@ -50,7 +50,7 @@ public class User extends EnhancedModel {
 	}
 	
 	public List<Torrent> getTorrentsWithGroup(String group) {
-		List<Torrent> ret = new ArrayList<>();
+		List<Torrent> ret = new ArrayList<Torrent>();
 		for (Torrent t : this.getTorrents()) {
 			if (t.groups.contains(new Torrent.TorrentGroup(group))) {
 				ret.add(t);
@@ -60,7 +60,7 @@ public class User extends EnhancedModel {
 	}	
 	
 	public List<TorrentGroup> getTorrentGroups() throws MessageException {
-		List<TorrentGroup> ret = new ArrayList<>();
+		List<TorrentGroup> ret = new ArrayList<TorrentGroup>();
 		ret.add(new TorrentGroup("All"));
 		ret.add(new TorrentGroup("Downloading"));
 		ret.add(new TorrentGroup("Seeding"));

@@ -19,7 +19,7 @@ public class PopulateDatabaseJob extends Job {
 		for(Node n : nodes) {
 			try {
 				Logger.debug("Populating database with data from node %s", n.name);
-				List<Torrent> saveMe = new ArrayList<>();
+				List<Torrent> saveMe = new ArrayList<Torrent>();
 				for (Torrent t : n.getTransmission().getTorrents()) {
 					Logger.debug("Populating with torrent %s (%s)", t.hashString, t.name);
 					Torrent inDb = Torrent.getByKey(t.hashString);

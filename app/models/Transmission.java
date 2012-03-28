@@ -52,7 +52,10 @@ public class Transmission extends EnhancedModel {
 			Gson g = new GsonBuilder().create();
 			return g.fromJson(contents, TransmissionConfig.class);
 			//return (JSONObject) JSONValue.parse(contents);
-		} catch (JSchException | SftpException ex) {
+		} catch (JSchException ex) {
+			Logger.error(ex, "Unable to get transmission config");
+			throw new MessageException(ex.toString());			
+		} catch (SftpException ex) {
 			Logger.error(ex, "Unable to get transmission config");
 			throw new MessageException(ex.toString());
 		}
@@ -112,7 +115,7 @@ public class Transmission extends EnhancedModel {
 	}	
 	
 	public Boolean removeTorrent(String id, Boolean torrentOnly) throws MessageException {
-		List<String> l = new ArrayList<>();
+		List<String> l = new ArrayList<String>();
 		l.add(id);
 		return removeTorrent(l, torrentOnly);
 	}
@@ -129,7 +132,7 @@ public class Transmission extends EnhancedModel {
 	}
 	
 	public Boolean startTorrent(String torrentHash) throws MessageException {	
-		List<String> s = new ArrayList<>();
+		List<String> s = new ArrayList<String>();
 		s.add(torrentHash);
 		return startTorrents(s);
 	}
@@ -142,7 +145,7 @@ public class Transmission extends EnhancedModel {
 	}
 	
 	public Boolean pauseTorrent(String torrentHash) throws MessageException {
-		List<String> s = new ArrayList<>();
+		List<String> s = new ArrayList<String>();
 		s.add(torrentHash);
 		return pauseTorrents(s);		
 	}
@@ -164,7 +167,7 @@ public class Transmission extends EnhancedModel {
 		req.arguments.put("fields", fields);
 		RpcResponse r = executeRpc(req);
 		JSONArray torrents = (JSONArray) r.arguments.get("torrents");
-		List<Torrent> ret = new ArrayList<>();
+		List<Torrent> ret = new ArrayList<Torrent>();
 		for (Object torrent : torrents) {
 			JSONObject t = (JSONObject) torrent;
 			ret.add(Torrent.fromJson(t.toJSONString()));
@@ -201,7 +204,7 @@ public class Transmission extends EnhancedModel {
 	}
 	
 	private List<Object> getTorrentIds(List<String> ids) {
-		List<Object> actual_ids = new ArrayList<>();
+		List<Object> actual_ids = new ArrayList<Object>();
 		for (String eyedee : ids) {
 			try {
 				actual_ids.add(Integer.parseInt(eyedee));
@@ -223,7 +226,7 @@ public class Transmission extends EnhancedModel {
 			HttpClient hc = new DefaultHttpClient();
 			HttpPost hp = new HttpPost(this.getTransmissionUrl());
 			if (headers == null) {
-				headers = new HashMap<>();
+				headers = new HashMap<String, String>();
 			}			
 			if (sessionId != null) {				
 				headers.put("X-Transmission-Session-Id", sessionId);
@@ -290,7 +293,7 @@ public class Transmission extends EnhancedModel {
 	
 	public class RpcRequest {
 		public String method;
-		public Map<String, Object> arguments = new HashMap<>();
+		public Map<String, Object> arguments = new HashMap<String, Object>();
 		
 		public RpcRequest() {}
 		
@@ -594,7 +597,10 @@ public class Transmission extends EnhancedModel {
 				this.rpcPassword = this.rpcPasswordUnencrypted;
 				Gson g = new GsonBuilder().create();
 				n.writeFile(g.toJson(this), "/etc/transmission-daemon/settings.json");
-			} catch (JSchException | SftpException ex) {
+			} catch (JSchException ex) {
+				Logger.error(ex, "Unable to save transmission-daemon config to node " + n.name);
+				throw new MessageException("Unable to save config!");				
+			} catch (SftpException ex) {
 				Logger.error(ex, "Unable to save transmission-daemon config to node " + n.name);
 				throw new MessageException("Unable to save config!");
 			}
