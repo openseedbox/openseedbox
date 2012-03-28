@@ -1,0 +1,34 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Static assets
+GET /public/											staticDir:public
+
+# SecureSocial module
+* /auth													module:securesocial
+
+# Admin screens
+* /admin/?												AdminController.index
+* /admin/{action}										AdminController.{action}
+
+
+
+#Torrent client	
+* /client/?												ClientController.index
+* /client/files/?										ClientFilesController.index
+* /client/files/{action}							ClientFilesController.{action}
+* /client/settings/?									ClientSettingsController.index
+* /client/settings/{action}						ClientSettingsController.{action}
+* /client/{action}									ClientController.{action}
+
+GET /	MainController.index
+
+# Transmission
+* /transmission/{action}/?						TransmissionController.{action}
+
+# Ignore favicon requests
+GET /favicon.ico										404
+
+# Catch all
+* /{controller}/{action}							{controller}.{action}

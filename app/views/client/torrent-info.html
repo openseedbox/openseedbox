@@ -1,0 +1,141 @@
+<div class="modal fade" id="torrent-info-modal">
+	<div class="modal-header">
+		<a class="close" data-dismiss="modal">&times;</a>
+		<h3>Info: ${torrent.name}</h3>
+	</div>
+	<div class="modal-body">
+		<ul class="nav nav-tabs">
+			<li class="active"><a href="#torrent-files" data-toggle="tab">Files</a></li>
+			<li><a href="#torrent-trackers" data-toggle="tab">Trackers</a></li>
+			<li><a href="#torrent-peers" data-toggle="tab">Peers</a></li>
+		</ul>
+		<div class="tab-content">
+			<div class="tab-pane active" id="torrent-files">
+				<table id="info-files-table" class="table table-bordered table-condensed">
+					<tr>
+						<th>Name</th>
+						<th>Included</th>
+						<th>Priority</th>
+					</tr>
+				#{list items:info.filesAsTree(), as:"file"}
+					#{file-row file:file, type:"info" /}
+				#{/list}
+				</table>
+			</div>
+			<div class="tab-pane" id="torrent-trackers">
+				#{list items:info.trackers, as:"tracker"}
+				<div class="row-fluid">
+					<div class="span8">
+						<strong>Host:</strong> ${tracker.host}<br />
+						<strong>Status:</strong> ${tracker.lastAnnounceResult}<br />
+						<strong>Last Announce:</strong> ${tracker.lastAnnounceTime}<br />
+						<strong>Last Scrape:</strong> ${tracker.lastScrapeTime ?: "N/A"}<br />
+					</div>
+					<div class="span4">
+						<strong>Seeders:</strong> ${(tracker.seederCount != -1) ?: "N/A"}<br />
+						<strong>Leechers:</strong> ${(tracker.leecherCount != -1) ?: "N/A"}<br />
+						<strong>Downloads:</strong> ${(tracker.downloadCount != -1) ?: "N/A"}<br />
+					</div>
+				</div>
+				#{if (!tracker_isLast)}
+					<hr />
+				#{/if}
+				#{/list}
+				#{else}
+					No connected trackers.
+				#{/else}
+			</div>
+			<div class="tab-pane" id="torrent-peers">
+				#{list items:info.peers, as:"peer"}
+					<strong>Address:</strong> ${peer.address}
+					<strong>Client:</strong> ${peer.clientName}
+					<strong>Encryption:</strong> ${peer.isEncrypted}
+					<strong>Down (KB/s):</strong> ${peer.rateToClient}
+					<strong>Up (KB/s):</strong> ${peer.rateToPeer}
+					#{if (!peer_isLast)}
+						<hr />
+					#{/if}
+				#{/list}
+				#{else}
+					No connected peers.
+				#{/else}
+			</div>
+		</div>
+	</div>
+	<div class="modal-footer">
+		<a class="btn btn-primary" href="#" data-torrent-hash="${torrent.hashString}" id="torrent-files-apply">Apply</a>
+		<a class="btn" href="#" data-dismiss="modal">Close</a>
+		<img class="ajax-loader" src="/public/images/ajax-loader.gif" />
+	</div>
+</div>
+<style type="text/css">
+	#info-files-table td {
+		vertical-align: middle;
+	}
+	#info-files-table td:nth-child(2) {
+		text-align: center;
+	}
+	#info-files-table select {
+		margin: 0px;
+	}
+</style>
+<script type="text/javascript">
+	(function($) {
+		$(document).ready(function() {
+			$("#info-files-table").on("change", "input[type=checkbox].info-select-multiple", function() {
+				var this_level = $(this).parents("tr:first").data("level");
+				var checked = $(this).is(":checked");
+				$("#info-files-table tr").each(function() {
+					if ($(this).data("level") > this_level) {
+						$(this).find("input[type=checkbox]").attr("checked", checked);
+					}
+				})
+			})
+			$("#torrent-info-modal").on("hidden", function() {
+				$(this).remove();
+			});
+			$("#torrent-files-apply").click(function() {
+				var loader = $(this).siblings(".ajax-loader").show();
+				var ids = [];
+				var unwanted_ids = []; //not actually used, maybe in future
+				var high_ids = [];
+				var normal_ids = [];
+				var low_ids = [];
+				var hash = $(this).data("torrent-hash");
+				$("#info-files-table input[type=checkbox].info-file").each(function() {
+					var id = $(this).data("id");
+					if ($(this).is(":checked")) {
+						ids.push(id);
+					} else {
+						unwanted_ids.push(id)
+					}
+				});
+				$("#info-files-table select").each(function() {
+					var val = $(this).val();
+					var id = $(this).data("id");
+					if (val == "-1") {
+						low_ids.push(id);
+					} else if (val == "0") {
+						normal_ids.push(id);
+					} else if (val == "1") {
+						high_ids.push(id);
+					}
+				});
+				$.post("/client/setIncludedTorrentFiles?ext=json", {
+					"torrentHash" : hash,
+					"fw" : ids,
+					"ph" : high_ids,
+					"pn" : normal_ids,
+					"pl" : low_ids
+				}, function(data) {
+					if (data.success) {
+						$(loader).hide();
+						$("#torrent-info-modal").modal("hide");
+					} else {
+						alert(data.error);
+					}
+				})
+			});
+		});
+	})(jQuery);
+</script>

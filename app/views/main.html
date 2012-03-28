@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>#{get "title" /}</title>
+		<link rel="stylesheet" href="/public/stylesheets/bootstrap.min.css">
+		#{get "moreStyles" /}
+		<script src="/public/javascripts/jquery.min.js" type="text/javascript"></script>
+		<script src="/public/javascripts/bootstrap.min.js" type="text/javascript"></script>
+		<script src="/public/javascripts/jquery-ui.position.min.js" type="text/javascript"></script>
+		#{get "moreScripts" /}
+	</head>
+	<body style="padding-top:40px;">
+		<div class="navbar navbar-fixed-top">
+			<div class="navbar-inner">
+				<div class="container">
+					<a class="brand" href="#">MySeedbox</a>
+					<ul class="nav">
+						<li class="#{get "torrents_active" /}"><a href="/client">Torrents</a></li>
+						<li class="#{get "files_active" /}"><a href="/client/files">Files</a></li>
+						<li class="#{get "settings_active" /}"><a href="/client/settings">Settings</a></li>
+						#{if (currentUser && currentUser.isAdmin)}
+							<li  class="#{get "admin_active" /}"><a href="/admin">Admin</a></li>
+						#{/if}
+					</ul>
+					<ul class="nav pull-right">
+						#{if (currentUser)}
+							<li><a href="/auth/logout">Logout ${currentUser.emailAddress}</a></li>
+						#{/if}
+						#{else}
+							<li><a href="/auth/login">Login</a></li>
+						#{/else}
+					</ul>
+				</div>
+			</div>
+		</div>
+		<div id="container" class="container">
+			#{doLayout /}
+		</div>
+	</body>
+</html>

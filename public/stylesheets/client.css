@@ -1,0 +1,57 @@
+.torrent-progress-bar {
+	margin-bottom: 0px;
+}
+
+.torrent-nav-tabs {
+	margin-top: 1em;
+}
+
+a.btn i {
+	margin-right: 5px;
+}
+
+i.icon-loader {
+	width: 16px;
+	height: 16px;
+	background: url("/public/images/ajax-loader.gif");
+}
+
+.dropdown-alert {
+	top: 0px;
+	left: 40%;
+	width: 20%;
+	position: absolute;
+	z-index: 2000;
+}
+
+#global-loader, .ajax-loader {
+	display: none;
+}
+
+input.torrent-add-group {
+	position: absolute;
+	z-index: 2000;
+}
+
+#with-selected {
+	margin-bottom: 3px;
+}
+
+#user-stats {
+	margin-top: 12px;
+}
+
+#files-list ul {
+	list-style-type: none;
+}
+
+#files-list .torrent-priority {
+	width: 65px;
+}
+
+#files-list .span9, #files-list .span1 {
+	margin-top: 9px;
+}
+#files-list .span2 {
+	margin-top: 5px;
+}
