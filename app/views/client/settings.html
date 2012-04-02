@@ -1,6 +1,105 @@
 #{extends "main.html" /}
 #{set settings_active: "active" /}
-<ul>
-	<li>Set Theme</li>
-	<li>Invite a friend</li>
-</ul>
+<div style="margin-top:20px;">
+<h3>Client Settings</h3>
+<form class="well form-inline" action="/client/settings/setTheme" method="post">
+	<div class="control-group">
+		<label>Theme:</label>
+		<select>
+			<option>Bootstrap Default</option>
+		</select>
+	</div>
+	<input type="submit" value="Save" class="btn btn-primary" />
+</form>
+<h3><span rel="tooltip" title="Lists users you have invited to share your account">Invited Users</span></h3>
+<form class="well form-inline" action="/client/settings/inviteUser" method="post">
+	#{if (invitedUsers.size() > 0)}
+	<table class="table table-bordered">
+		<tr>
+			<th>Email address</th>
+			<th>Status</th>
+			<th>Action</th>
+		</tr>
+		#{list items:invitedUsers, as:'user'}
+		<tr>
+			<td>${user.emailAddress}</td>
+			<td>
+			#{if (user.status == "Rejected")}
+				<span style="color:red;">${user.status}</span>
+			#{/if}
+			#{else}
+				<span style="color:green;">${user.status}</span>
+			#{/else}</td>
+			<td>
+				[ <a href="/client/settings/removeInvitedUser?id=${user.id}">Remove</a> ]
+			</td>
+		</tr>
+		#{/list}
+	</table>
+	#{/if}
+	#{else}
+	<p>You have not shared your account with anyone else yet.</p>
+	#{/else}
+	<h3>Invite someone to share your account</h3>
+	<label>Email address:</label>
+	<div class="control-group #{ifErrors}error#{/ifErrors}">
+		<input type="text" name="emailAddress" value="${flash.emailAddress}" />
+		<span class="help-inline error">#{error 'emailAddress' /}</span>
+	</div>
+	<input type="submit" class="btn btn-primary" value="Invite" />
+</form>
+<h3><span rel="tooltip" title="Lists invitations that you havn't yet accepted">Pending Invitations</span></h3>
+<div class="well">
+	#{if (pendingInvites.size() > 0)}
+	<table class="table table-bordered">
+		<tr>
+			<th>Email Address</th>
+			<th>Pending For</th>
+			<th>Action</th>
+		</tr>
+		#{list pendingInvites, as:'invite'}
+		<tr>
+			<td>${invite.getInvitingUser().emailAddress}</td>
+			<td>${invite.pendingFor}</td>
+			<td>[ <a href="/client/settings/acceptInvite?id=${invite.id}">Accept</a> |
+				  <a href="/client/settings/rejectInvite?id=${invite.id}">Reject</a>
+			]</td>
+		</tr>
+		#{/list}
+	</table>
+	#{/if}
+	#{else}
+	<p>You have no pending invites.</a>
+	#{/else}
+</div>
+<h3><span rel="tooltip" title="Lists accounts that others have shared with you">Shared Accounts</span></h3>
+<div class="well">
+	#{if (sharedAccounts.size() > 0)}
+	<table class="table table-bordered">
+		<tr>
+			<th>Email Address</th>
+			<th>Invitation Date</th>
+			<th>Action</th>
+		</tr>
+		#{list items:sharedAccounts, as:'account'}
+		%{ def user = account.getInvitingUser() }%
+		<tr>
+			<td>${user.emailAddress}</td>
+			<td>${account.invitationDate}</td>
+			<td>[ <a href="/client/settings/removeInvitedUser?id=${account.id}">Remove</a> ]</td>
+		</tr>
+		#{/list}
+	</table>
+	#{/if}
+	#{else}
+		<p>Nobody has shared their account with you yet.</p>
+	#{/else}
+</div>
+</div>
+<script type="text/javascript">
+(function($) {
+	$(document).ready(function() {
+		$("span[rel=tooltip]").tooltip();
+	});
+})(jQuery);
+</script>

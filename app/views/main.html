@@ -13,7 +13,7 @@
 		<div class="navbar navbar-fixed-top">
 			<div class="navbar-inner">
 				<div class="container">
-					<a class="brand" href="#">MySeedbox</a>
+					<a class="brand" href="/">MySeedbox</a>
 					<ul class="nav">
 						<li class="#{get "torrents_active" /}"><a href="/client">Torrents</a></li>
 						<li class="#{get "files_active" /}"><a href="/client/files">Files</a></li>
@@ -24,7 +24,29 @@
 					</ul>
 					<ul class="nav pull-right">
 						#{if (currentUser)}
-							<li><a href="/auth/logout">Logout ${currentUser.emailAddress}</a></li>
+						%{ def sharedAccounts = currentUser.getSharedAccounts() }%
+							#{if (sharedAccounts.size() > 0)}
+							<li class="dropdown" id="account-menu">
+								<a class="dropdown-toggle" data-toggle="dropdown" href="#account-menu">Active (${activeUser.emailAddress}) <b class="caret"></b></a>
+								<ul class="dropdown-menu">
+									#{list items:sharedAccounts, as:'account'}
+										%{ def invitingUser = account.getInvitingUser() }%
+										<li>
+											<a href="/client/setActiveUser?id=${invitingUser.id}">
+												${invitingUser.emailAddress}
+											</a>
+										</li>
+									#{/list}
+									<!-- item to allow user to switch back to their original user -->
+									<li>
+										<a href="/client/setActiveUser?id=${currentUser.id}">${currentUser.emailAddress} (you)</a>
+									</li>
+								</ul>
+							</li>
+							#{/if}
+						#{/if}
+						#{if (currentUser)}
+							<li><a href="/auth/logout">Logout</a></li>
 						#{/if}
 						#{else}
 							<li><a href="/auth/login">Login</a></li>

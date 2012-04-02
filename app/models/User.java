@@ -3,10 +3,13 @@ package models;
 import code.MessageException;
 import code.Util;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import models.Torrent.TorrentGroup;
 import play.data.validation.Email;
 import play.modules.siena.EnhancedModel;
+import securesocial.provider.SocialUser;
+import securesocial.provider.UserId;
 import siena.*;
 
 @Table("user")
@@ -24,6 +27,19 @@ public class User extends EnhancedModel {
 	public String oauthId;
 	@Column("is_admin")
 	public Boolean isAdmin;
+	@Column("is_activated")
+	public Boolean isActivated;
+	@Column("auth_provider_type")
+	public String authProviderType;
+	@Column("avatar_url")
+	public String avatarUrl;
+	@Column("display_name")
+	public String displayName;
+	@Column("last_access")
+	@DateTime
+	public Date lastAccess;
+	@Column("activation_uuid")
+	public String activationUuid;
 	
 	@Column("max_diskspace_gb")
 	public int maxDiskspaceGB;
@@ -37,7 +53,6 @@ public class User extends EnhancedModel {
 	public Node getNode() {
 		return Model.all(Node.class).getByKey(node.id);
 	}
-	
 	
 	public List<Torrent> getTorrentsWithStatus(int status) {
 		List<Torrent> ret = new ArrayList<Torrent>();
@@ -76,6 +91,20 @@ public class User extends EnhancedModel {
 		return ret;
 	}
 	
+	public List<InvitedUser> getInvitedUsers() {
+		return InvitedUser.all().filter("invitingUser", this).fetch();
+	}
+	
+	public List<InvitedUser> getPendingInvites() {
+		return InvitedUser.all().filter("emailAddress", this.emailAddress)
+				.filter("accepted", false).fetch();	
+	}
+	
+	public List<InvitedUser> getSharedAccounts() {
+		return InvitedUser.all().filter("actualUser", this)
+				.filter("accepted", true).fetch();
+	}
+	
 	public UserStats getUserStats() throws MessageException {
 		List<Torrent> t = this.getTorrents();
 		long totalSize = 0;
@@ -93,6 +122,17 @@ public class User extends EnhancedModel {
 		us.rateUploadKb = Util.getRateKb(totalRateUpload);		
 		return us;
 	}	
+	
+	public static User fromSocialUser(SocialUser su) {
+		return User.all().filter("authProviderType", su.id.provider.name())
+				.filter("oauthId", su.id.id).get();
+	}
+	
+	public static User fromUserId(UserId id) {
+		SocialUser su = new SocialUser();
+		su.id = id;
+		return User.fromSocialUser(su);
+	}
 
 	@Override
 	public String toString() {

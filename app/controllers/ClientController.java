@@ -9,6 +9,7 @@ import models.Torrent.TorrentGroup;
 import models.User.UserStats;
 import org.h2.util.StringUtils;
 import play.Logger;
+import play.mvc.Http.Header;
 import play.mvc.With;
 
 @With(SecureSocial.class)
@@ -176,6 +177,16 @@ public class ClientController extends BaseController {
 		renderTemplate("client/torrent-add.html", torrent);
 	}
 	
+	public static void setActiveUser(long id) {
+		session.put("actualUserId", id);
+		Header r = request.headers.get("Referer");
+		String referer = "/client/index";
+		if (r != null) {
+			referer = r.value();
+		}
+		redirect(referer);
+	}
+	
 	private static Node getUserNode() throws MessageException {
 		User cu = getCurrentUser();
 		Node n = cu.getNode();
@@ -184,11 +195,6 @@ public class ClientController extends BaseController {
 			throw new MessageException(String.format("User %s is not assigned to any node.", cu.emailAddress));
 		}
 		return n;
-	}
-	
-	private static List<Torrent> getUserTorrents() throws MessageException {
-		User u = getCurrentUser();
-		return u.getTorrents();
 	}
 	
 	private static void checkUserTorrents() throws MessageException{
@@ -214,7 +220,5 @@ public class ClientController extends BaseController {
 				newest.delete();
 			}
 		}			
-	}	
-	
-	
+	}		
 }

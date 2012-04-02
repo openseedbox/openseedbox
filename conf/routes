@@ -2,6 +2,10 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
+# Ignore favicon requests
+GET /favicon.ico										404
+
+
 # Static assets
 GET /public/											staticDir:public
 
@@ -12,8 +16,6 @@ GET /public/											staticDir:public
 * /admin/?												AdminController.index
 * /admin/{action}										AdminController.{action}
 
-
-
 #Torrent client	
 * /client/?												ClientController.index
 * /client/files/?										ClientFilesController.index
@@ -22,13 +24,13 @@ GET /public/											staticDir:public
 * /client/settings/{action}						ClientSettingsController.{action}
 * /client/{action}									ClientController.{action}
 
-GET /	MainController.index
 
 # Transmission
 * /transmission/{action}/?						TransmissionController.{action}
 
-# Ignore favicon requests
-GET /favicon.ico										404
+# Main
+* /								MainController.index
+* /{action}					MainController.{action}
 
 # Catch all
-* /{controller}/{action}							{controller}.{action}
+* /{controller}/{action}							{controller}Controller.{action}
