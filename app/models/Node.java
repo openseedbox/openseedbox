@@ -37,7 +37,7 @@ public class Node extends EnhancedModel {
 	
 	private Transmission transmission;
 	
-	private transient Session _session;
+	private static transient Session _session;
 
 	public String getUptime() {
 		return executeSsh("uptime").substring(0, 25);
