@@ -1,0 +1,4 @@
+#{extends "Mails/main.html" /}
+<p>Hello, ${user.emailAddress}</p>
+<p>You have been invited to use ${user.getInvitingUser().emailAddress}'s account on MySeedbox.</p>
+<p>Please follow <a href="${serverPath}/auth/signup">this link</a>.</p>
