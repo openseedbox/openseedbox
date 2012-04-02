@@ -36,6 +36,8 @@ public class Node extends EnhancedModel {
 	public transient String uptime;
 	
 	private Transmission transmission;
+	
+	private transient Session _session;
 
 	public String getUptime() {
 		return executeSsh("uptime").substring(0, 25);
@@ -64,6 +66,7 @@ public class Node extends EnhancedModel {
 			c.setCommand(command);
 			c.connect();
 			String result = convertStreamToString(c.getInputStream());
+			c.disconnect();
 			return result;
 		} catch (JSchException ex) {
 			Logger.error(ex, "Unable to execute SSH");
@@ -78,7 +81,9 @@ public class Node extends EnhancedModel {
 		ChannelSftp sftp = this.getSftpChannel();
 		sftp.connect();
 		InputStream is = sftp.get(filename);
-		return convertStreamToString(is);
+		String str = convertStreamToString(is);
+		sftp.disconnect();
+		return str;
 	}
 
 	public void writeFile(String contents, String filename) throws JSchException, SftpException {
@@ -87,6 +92,7 @@ public class Node extends EnhancedModel {
 		try {
 			InputStream is = new ByteArrayInputStream(contents.getBytes("UTF-8"));
 			sftp.put(is, filename);
+			sftp.disconnect();
 		} catch (UnsupportedEncodingException ex) {
 			Logger.error(ex, "");
 		}
@@ -103,12 +109,14 @@ public class Node extends EnhancedModel {
 	}
 
 	private Session getSshSession() throws JSchException {
-		JSch j = new JSch();
-		Session s = j.getSession(this.username, this.ipAddress);
-		s.setPassword(this.password);
-		s.setConfig("StrictHostKeyChecking", "no");
-		s.connect();
-		return s;
+		if (_session == null || !_session.isConnected()) {
+			JSch j = new JSch();
+			_session = j.getSession(this.username, this.ipAddress);
+			_session.setPassword(this.password);
+			_session.setConfig("StrictHostKeyChecking", "no");
+			_session.connect();
+		}
+		return _session;
 	}
 
 	private String convertStreamToString(InputStream is) {
@@ -116,12 +124,6 @@ public class Node extends EnhancedModel {
 			return new Scanner(is).useDelimiter("\\A").next().trim();
 		} catch (NoSuchElementException e) {
 			return "";
-		} finally {
-			if (is != null) {
-				try {
-					is.close();
-				} catch (Exception ex) {}
-			}
 		}
 	}
 }

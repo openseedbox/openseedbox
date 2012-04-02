@@ -1,48 +1,52 @@
 package controllers;
 
 import code.GenericResult;
+import controllers.securesocial.SecureSocial;
+import models.User;
+import org.h2.util.StringUtils;
 import play.mvc.Before;
+import play.mvc.Catch;
 import play.mvc.Controller;
 import play.templates.Template;
 import play.templates.TemplateLoader;
-import controllers.securesocial.SecureSocial;
-import models.User;
-import play.Logger;
-import play.mvc.Catch;
-import securesocial.provider.*;
+import securesocial.provider.SocialUser;
 
 public class BaseController extends Controller {
 	
-	protected static long currentUserId;
-	
 	@Before
 	protected static void before() {
-		SocialUser su = SecureSocial.getCurrentUser();
-		if (su != null) {
-			//check user exists in database
-			User inDb = User.all().filter("oauthId", su.id.id).get();
-			//if not, add
-			if (inDb == null) {
-				Logger.debug("OAuth user %s not in database, adding.", su.email);
-				User u = new User();
-				u.oauthId = su.id.id;
-				u.emailAddress = su.email;
-				u.maxDiskspaceGB = 1;
-				u.isAdmin = false;
-				u.insert();
-				currentUserId = u.id;
-			} else {
-				currentUserId = inDb.id;
-			}
-			renderArgs.put("currentUser", getCurrentUser());
-		} else {
-			Logger.debug("User was null, logging out");
-			redirect("/auth/logout");
-		}	
+		User u = getCurrentUser();
+		renderArgs.put("activeUser", getActualUser());
+		renderArgs.put("currentUser", u);
+		if (!request.url.contains("requireEmail")) {
+			if (u != null && StringUtils.isNullOrEmpty(u.emailAddress)) {
+				redirect("/main/requireEmail");
+			}	
+		}
 	}
 	
 	protected static User getCurrentUser() {
-		return User.findById(currentUserId);
+		SocialUser su = SecureSocial.getCurrentUser();
+		if (su != null) {
+			return User.fromSocialUser(su);
+		}
+		return null;
+	}
+	
+	protected static User getActualUser() {
+		long actualUserId = 0;
+		if (session.contains("actualUserId")) {
+			String s = session.get("actualUserId");
+			actualUserId = Long.parseLong(s);
+		}
+		if (actualUserId > 0) {
+			return User.getByKey(actualUserId);
+		}
+		return getCurrentUser();
+	}
+	
+	protected static String getServerPath() {
+		return String.format("http://%s", request.host);
 	}
 	
 	protected static void result(Object o) {

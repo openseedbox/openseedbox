@@ -18,6 +18,30 @@
         <p>&{'securesocial.signUpLabel'}</p>
         #{form @securesocial.UsernamePasswordController.createAccount(), autocomplete:'off'}
             <fieldset>
+				%{ def in_params = request.params['uuid'] }%
+				<input type="hidden" name="userName" value="#{if (in_params)}${in_params}#{/if}#{else}${UUID.randomUUID()}#{/else}" />
+				<input type="hidden" name="displayName" value="&nbsp;" />
+				<!--
+                <div class="clearfix #{ifError 'userName'} error #{/ifError}">
+                    <label for="userName">&{'securesocial.userName'}</label>
+                    <div class="input">
+                        <input id="userName" class="large" name="userName" value="${flash.userName}"/>
+                        #{ifError 'userName'}
+                        <span class="help-inline">#{error 'userName'/}</span>
+                        #{/ifError}
+                    </div>
+                </div>
+
+                <div class="clearfix #{ifError 'displayName'} error #{/ifError}">
+                    <label for="displayName">&{'securesocial.name'}</label>
+                    <div class="input">
+                        <input id="displayName" class="large" name="displayName" value="${flash.displayName}"/>
+                        #{ifError 'displayName'}
+                        <span class="help-inline">&{'securesocial.required'}</span>
+                        #{/ifError}
+                    </div>
+                </div>-->
+
                 <div class="clearfix #{ifError 'email'} error #{/ifError}">
                     <label for="email">&{'securesocial.email'}</label>
                     <div class="input">

@@ -10,6 +10,7 @@ require:
     - local -> jsch 0.1.46
     - local -> json-simple 1.1.1
     - local -> commons-lang3 3.1
+    - local -> joda-time 2.1
     
 repositories:
     - local:
