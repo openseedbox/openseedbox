@@ -224,6 +224,7 @@ public class Transmission extends EnhancedModel {
 		try {			
 			TransmissionConfig tc = this.getConfig();
 			HttpClient hc = new DefaultHttpClient();
+			Logger.info("Transmission RPC request, to url: %s", getTransmissionUrl());
 			HttpPost hp = new HttpPost(this.getTransmissionUrl());
 			if (headers == null) {
 				headers = new HashMap<String, String>();

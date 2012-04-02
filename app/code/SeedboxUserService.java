@@ -1,7 +1,7 @@
 package code;
 
 import java.util.UUID;
-import models.InvitedUser;
+import models.Node;
 import models.User;
 import securesocial.provider.ProviderType;
 import securesocial.provider.SocialUser;
@@ -38,7 +38,6 @@ public class SeedboxUserService implements UserService.Service {
 		u.emailAddress = user.email;
 		u.isActivated = user.isEmailVerified;
 		u.maxDiskspaceGB = 1;
-		u.isAdmin = false;
 		u.lastAccess = user.lastAccess;
 		u.password = user.password;
 		if (user.id.provider == ProviderType.userpass) {
@@ -50,6 +49,7 @@ public class SeedboxUserService implements UserService.Service {
 		if (exists != null) {
 			u.update();
 		} else {
+			u.node = getFreeNode();
 			u.insert();
 		}
 	}
@@ -77,6 +77,11 @@ public class SeedboxUserService implements UserService.Service {
 	@Override
 	public void deletePendingActivations() {
 		User.all().filter("isActivated", false).delete();
+	}
+	
+	public Node getFreeNode() {
+		//TODO: figure out what node to put them on
+		return Node.getByKey(1);
 	}
 	
 }
