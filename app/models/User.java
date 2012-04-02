@@ -44,7 +44,7 @@ public class User extends EnhancedModel {
 	@Column("max_diskspace_gb")
 	public int maxDiskspaceGB;
 	
-	private Node node;
+	public Node node;
 	
 	public List<Torrent> getTorrents() {
 		return Torrent.all().filter("user", this).fetch();
