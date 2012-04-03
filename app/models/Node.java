@@ -2,8 +2,10 @@ package models;
 
 import com.jcraft.jsch.*;
 import java.io.*;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentHashMap;
 import play.Logger;
 import play.modules.siena.EnhancedModel;
 import siena.Column;
@@ -36,8 +38,6 @@ public class Node extends EnhancedModel {
 	public transient String uptime;
 	
 	private Transmission transmission;
-	
-	private static transient Session _session;
 
 	public String getUptime() {
 		return executeSsh("uptime").substring(0, 25);
@@ -67,6 +67,7 @@ public class Node extends EnhancedModel {
 			c.connect();
 			String result = convertStreamToString(c.getInputStream());
 			c.disconnect();
+			c.getSession().disconnect();
 			return result;
 		} catch (JSchException ex) {
 			Logger.error(ex, "Unable to execute SSH");
@@ -83,6 +84,7 @@ public class Node extends EnhancedModel {
 		InputStream is = sftp.get(filename);
 		String str = convertStreamToString(is);
 		sftp.disconnect();
+		sftp.getSession().disconnect();
 		return str;
 	}
 
@@ -93,6 +95,7 @@ public class Node extends EnhancedModel {
 			InputStream is = new ByteArrayInputStream(contents.getBytes("UTF-8"));
 			sftp.put(is, filename);
 			sftp.disconnect();
+			sftp.getSession().disconnect();
 		} catch (UnsupportedEncodingException ex) {
 			Logger.error(ex, "");
 		}
@@ -109,14 +112,19 @@ public class Node extends EnhancedModel {
 	}
 
 	private Session getSshSession() throws JSchException {
-		if (_session == null || !_session.isConnected()) {
-			JSch j = new JSch();
-			_session = j.getSession(this.username, this.ipAddress);
-			_session.setPassword(this.password);
-			_session.setConfig("StrictHostKeyChecking", "no");
-			_session.connect();
-		}
-		return _session;
+		JSch j = new JSch();
+		Session s = j.getSession(this.username, this.ipAddress);
+		s.setPassword(this.password);
+		s.setConfig("StrictHostKeyChecking", "no");
+		s.connect();
+		return s;
+	}
+	
+	private void disconnectActiveSession() {
+		/*
+		if (_session != null) {
+			_session.disconnect();
+		}*/
 	}
 
 	private String convertStreamToString(InputStream is) {
