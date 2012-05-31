@@ -1,0 +1,49 @@
+#{extends "admin/index.html" /}
+<style type="text/css">
+	#plans td {
+		vertical-align: middle;
+	}
+</style>
+<script type="text/javascript">
+	(function($) {
+		$(document).ready(function() {
+			$("#delete").click(function() {
+				return confirm("Are you sure?");
+			});
+		});
+	})(jQuery);
+</script>
+<h2>Plans</h2>
+<table id="plans" class="table table-bordered table-striped">
+	<tr>
+		<th>Plan Name</th>
+		<th>Max. Diskspace (GB)</th>
+		<th>Max. Active Torrents</th>
+		<th>Monthly Cost</th>
+		<th>Free Slots</th>
+		<th>Visible</th>
+		<th>Action</th>
+	</tr>
+	#{list items:plans, as:"plan"}
+	<tr>
+		<td>${plan.name}</td>
+		<td>${plan.maxDiskspaceGb}</td>
+		<td>
+			#{if (plan.maxActiveTorrents == -1)}Unlimited#{/if}
+			#{else}${plan.maxActiveTorrents}#{/else}
+		</td>
+		<td>$${plan.monthlyCost}</td>
+		<td>${plan.freeSlots}</td>
+		<td>#{if (plan.visible)}yes#{/if}#{else}no#{/else}</td>
+		<td>
+			<div class="pull-right">
+				<a id="edit" class="btn btn-primary" href="@{AdminController.editPlan(plan)}">Edit</a>
+				<a id="delete" class="btn" href="@{AdminController.deletePlan(plan.id)}">Delete</a>
+			</div>
+		</td>
+	</tr>
+	#{/list}
+</table>
+<div class="form-actions">
+	<a class="btn btn-primary" href="@{AdminController.editPlan}">Create new Plan</a>
+</div>

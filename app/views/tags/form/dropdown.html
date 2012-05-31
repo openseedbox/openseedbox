@@ -1,0 +1,27 @@
+%{
+
+def options = [];
+def value_str = _value_str ?: "value";
+def name_str = _name_str ?: "name";
+for (option in _options) {
+	options.add([ name: option.class.getField(name_str).get(option), value: option.class.getField(value_str).get(option) ]);
+}
+
+}%
+<div class="control-group #{ifError _name}error#{/ifError}">
+	<label class="control-label" for="${_name}">${_label}</label>
+	<div class="controls">
+		<select id="${_name}" name="${_name}">
+		#{list items:options, as:"option"}
+			<option value="${option.value}"
+				#{if (option.value == _value)}selected="selected"#{/if}>
+					${option.name}
+			</option>
+		#{/list}
+		</select>
+		#{if _help}
+			<p class="help-block">${_help}</p>
+		#{/if}
+		<span class="help-inline">#{error "${_name}" /}</span>
+	</div>
+</div>

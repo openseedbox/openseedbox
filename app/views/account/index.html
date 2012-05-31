@@ -1,0 +1,32 @@
+#{extends "main.html" /}
+#{set title: "Account Settings" /}
+#{if !currentUser.hasPlan()}
+<div class="alert alert-error">
+	<h4 class="alert-heading">You are not on a plan!</h4>
+	You need to <a href="@{AccountController.plans}">choose a plan</a> before you can start downloading torrents.
+</div>
+#{/if}
+#{if !currentUser.emailAddress}
+<div class="alert alert-warning">
+	<h4 class="alert-heading">You have not set your email address!</h4>
+	We were unable to determine your email address from your OpenID provider.
+	We need to know your email address as a point of contact. Dont worry, we wont
+	spam you, any emails sent to the address you supply will only relate to
+	your account. Please go <a href="@{AccountController.details}">here</a> to
+	set your email address.
+</div>	
+#{/if}
+<ul class="nav nav-tabs">
+	<li #{if (active == "plans")}class="active"#{/if}>
+		<a href="@{AccountController.plans}">Plan</a>
+	</li>
+	<li #{if (active == "invoices")}class="active"#{/if}>
+		<a href="@{AccountController.invoices}">Invoices</a>
+	</li>
+	<li #{if (active == "details")}class="active"#{/if}>
+		<a href="@{AccountController.details}">Account Details</a>
+	</li>	
+</ul>
+<div class="tab-content">
+	#{doLayout /}
+</div>

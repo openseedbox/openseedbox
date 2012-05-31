@@ -1,0 +1,75 @@
+#{extends "account/index.html" /}
+
+#{ifErrors}
+<div class="alert alert-error">
+	<h3 class="alert-heading">Error</h3>
+	<ul>
+	#{errors}
+		<li>${error}</li>
+	#{/errors}
+	</ul>
+</div>
+#{/ifErrors}
+
+%{ def count = 0 }%
+#{list items:plans, as:"plan"}
+%{ def isCurrentPlan = (currentUser.plan == plan) }%
+#{if (count % 2 == 0)}
+<div class="row">
+#{/if}
+	<div class="span6">
+		<div id="${plan.name}" class="well plan">
+			<div class="pull-left">
+				<h2 style="display: inline-block">${plan.name}</h2>
+			</div>
+			<div class="clearfix"></div>
+			<p>
+			<ul>
+				<li><strong>Max. Diskspace:</strong> ${plan.maxDiskspaceGb}gb</li>
+				<li><strong>Max. Active Torrents:</strong>
+					#{if (plan.maxActiveTorrents == -1)}Unlimited#{/if}
+					#{else}${plan.maxActiveTorrents}#{/else}
+				</li>
+			</ul>
+			<div class="pull-right">
+				#{if (!isCurrentPlan)}
+					#{if (plan.freeSlots > 0)}
+					<span class="success"><strong>Free Slots:</strong> ${plan.freeSlots}</span><br /><span>&nbsp;</span>
+					#{/if}
+					#{else}
+					<span class="error"><strong>Sorry, no slots are available.</strong></span><br />
+					<span class="error">Please check back later.</span>
+					#{/else}
+				#{/if}
+				#{else}
+					<span class="success">Active on node: </span>
+					<strong>${currentUser.node?.name}</strong><br /><span>&nbsp;</span>
+				#{/else}
+			</div>
+			<div class="clearfix"></div>
+			</p>
+			<div class="form-actions">
+				<div class="pull-left" style="font-size:200%;">
+					<strong>$${plan.monthlyCost}</strong> / mo
+				</div>
+				<div class="pull-right">
+					#{if (plan.freeSlots > 0)}
+						#{if (isCurrentPlan)}
+							<span class="btn btn-success">Current Plan</span>
+						#{/if}
+						#{else}
+							<a id="edit" class="btn btn-primary" href="@{AccountController.setPlan(plan.id)}">Choose Plan</a>	
+						#{/else}
+					#{/if}
+					#{else}
+						<span class="btn btn-error">Sold out</span>
+					#{/else}
+				</div>
+			</div>			
+		</div>
+	</div>
+	%{ count++ }%
+#{if (count % 2 == 0 || plan_isLast)}
+</div>
+#{/if}
+#{/list}
