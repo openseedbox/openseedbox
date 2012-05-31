@@ -9,8 +9,9 @@ GET /favicon.ico										404
 # Static assets
 GET /public/											staticDir:public
 
-# SecureSocial module
-* /auth													module:securesocial
+# Auth
+* /auth/?													AuthController.login
+* /auth/{action}											AuthController.{action}
 
 # Admin screens
 * /admin/?												AdminController.index
@@ -24,13 +25,11 @@ GET /public/											staticDir:public
 * /client/settings/{action}						ClientSettingsController.{action}
 * /client/{action}									ClientController.{action}
 
-
-# Transmission
-* /transmission/{action}/?						TransmissionController.{action}
-
 # Main
 * /								MainController.index
 * /{action}					MainController.{action}
 
 # Catch all
+* /{controller}/?									{controller}Controller.index
 * /{controller}/{action}							{controller}Controller.{action}
+

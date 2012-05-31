@@ -17,7 +17,7 @@ public class NodeController extends BaseController {
 	public static void list() {
 			List<Node> nodes = Node.all().fetch();
 			for (Node n : nodes) {
-				n.uptime = n.getUptime();
+				//n.uptime = n.getUptime();
 			}
 			result(nodes);
 	}

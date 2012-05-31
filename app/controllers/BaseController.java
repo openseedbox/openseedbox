@@ -1,7 +1,6 @@
 package controllers;
 
 import code.GenericResult;
-import controllers.securesocial.SecureSocial;
 import models.User;
 import org.h2.util.StringUtils;
 import play.mvc.Before;
@@ -9,14 +8,12 @@ import play.mvc.Catch;
 import play.mvc.Controller;
 import play.templates.Template;
 import play.templates.TemplateLoader;
-import securesocial.provider.SocialUser;
 
 public class BaseController extends Controller {
 	
 	@Before
 	protected static void before() {
 		User u = getCurrentUser();
-		renderArgs.put("activeUser", getActualUser());
 		renderArgs.put("currentUser", u);
 		if (!request.url.contains("requireEmail")) {
 			if (u != null && StringUtils.isNullOrEmpty(u.emailAddress)) {
@@ -26,23 +23,15 @@ public class BaseController extends Controller {
 	}
 	
 	protected static User getCurrentUser() {
-		SocialUser su = SecureSocial.getCurrentUser();
-		if (su != null) {
-			return User.fromSocialUser(su);
+		long currentUserId = 0;
+		if (session.contains("currentUserId")) {
+			String s = session.get("currentUserId");
+			currentUserId = Long.parseLong(s);
+		}
+		if (currentUserId > 0) {
+			return User.getByKey(currentUserId);
 		}
 		return null;
-	}
-	
-	protected static User getActualUser() {
-		long actualUserId = 0;
-		if (session.contains("actualUserId")) {
-			String s = session.get("actualUserId");
-			actualUserId = Long.parseLong(s);
-		}
-		if (actualUserId > 0) {
-			return User.getByKey(actualUserId);
-		}
-		return getCurrentUser();
 	}
 	
 	protected static String getServerPath() {

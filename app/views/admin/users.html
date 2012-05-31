@@ -6,18 +6,42 @@
 		<th>Node</th>
 		<th>Disk Available</th>
 		<th>Disk Used</th>
-		<th>Torrents Active</th>
+		<th>Status</th>
+		<th>Password</th>
+		<th>Port</th>
 		<th>Action</th>
 	</tr>
 	#{list items:users, as:"user"}
-	%{ def stats = user.getUserStats() }%
+	%{ def stats = user.getUserStats()
+	   def transmission = user.getTransmission()
+	   def node = user.getNode()
+	   def account = user.getPrimaryAccount()
+	   def plan = account?.getPlan()}%
 	<tr>
 		<td>${user.emailAddress}</td>
-		<td>${user.getNode().name}</td>
-		<td>${stats.maxSpaceGb} GB</td>
+		<td><a href="http://${node?.ipAddress}:${account.getTransmissionPort()}/">${node?.name}</a></td>
+		<td>${plan.maxDiskspaceGb} GB</td>
 		<td>${stats.usedSpaceGb} GB</td>
-		<td>${user.getTorrents().size()}</td>
-		<td>[ <a href="/admin/editUser?id=${user.id}" class="edit-user" data-user-id="${user.id}">Edit</a> ]</td>
+		<td>
+			#{if (transmission?.isRunning())}
+				<span class="success">Running</span>
+			#{/if}
+			#{else}
+				<span class="error">Stopped</span>
+			#{/else}
+		</td>
+		<td>${account?.getTransmissionPassword()}</td>
+		<td>${account?.transmissionPort}</td>
+		<td>
+			<a class="btn btn-primary" href="@{AdminController.editUser(user.id)}">Edit</a>
+			#{if (transmission?.isRunning())}
+				<a class="btn btn-error" href="@{AdminController.stopTransmission(user.id)}">Stop</a>
+				<a class="btn" href="@{AdminController.restartTransmission(user.id)}">Restart</a>
+			#{/if}
+			#{else}
+				<a class="btn btn-success" href="@{AdminController.startTransmission(user.id)}">Start</a>
+			#{/else}
+		</td>
 	</tr>
 	#{/list}
 </table>
