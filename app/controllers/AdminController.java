@@ -1,19 +1,17 @@
 package controllers;
 
 import code.MessageException;
-import com.google.gson.annotations.SerializedName;
-import controllers.securesocial.SecureSocial;
-import java.lang.reflect.Field;
-import java.util.HashMap;
+import code.Transmission;
 import java.util.List;
-import java.util.Map;
+import models.FreeSlot;
 import models.Node;
-import models.Transmission.TransmissionConfig;
+import models.Plan;
 import models.User;
+import play.data.validation.Valid;
+import play.data.validation.Validation;
 import play.mvc.Before;
-import play.mvc.With;
+import siena.SienaException;
 
-@With(SecureSocial.class)
 public class AdminController extends BaseController {
 	
 	@Before
@@ -30,8 +28,7 @@ public class AdminController extends BaseController {
 	
 	public static void stats() {
 		String active = "stats";
-		SystemStats stats = new SystemStats();
-		renderTemplate("admin/stats.html", active, stats);
+		renderTemplate("admin/stats.html", active);
 	}
 	
 	public static void nodes() {
@@ -40,11 +37,74 @@ public class AdminController extends BaseController {
 		renderTemplate("admin/nodes.html", active, nodes);
 	}
 	
+	public static void editNode(Node node) {
+		String active = "plans";
+		renderTemplate("admin/node-edit.html", active, node);		
+	}
+	
+	public static void updateNode(@Valid Node node) {
+		if (!Validation.hasErrors()) {
+			if (node.id == null) {
+				node.insert();
+			} else {
+				node.save();
+			}
+			nodes();
+		}
+		Validation.keep();
+		editNode(node);
+	}
+	
+	public static void deleteNode(Long id) {
+		Node n = Node.getByKey(id);
+		n.delete();
+		nodes();
+	}
+	
 	public static void users() {
 		String active = "users";
 		List<User> users = User.all().fetch();
 		renderTemplate("admin/users.html", active, users);
 	}	
+	
+	public static void plans() {
+		String active = "plans";
+		List<Plan> plans = Plan.all().order("monthlyCost").fetch();
+		renderTemplate("admin/plans.html", active, plans);
+	}
+	
+	public static void editPlan(Plan plan) {
+		String active = "plans";
+		renderTemplate("admin/plan-edit.html", active, plan);
+	}
+	
+	public static void updatePlan(@Valid Plan plan) {
+		if (params.get("button").equals("cancel")) {
+			plans();
+		}
+		if (!Validation.hasErrors()) {
+			try {
+				if (plan.id == null) {
+					plan.insert();
+				} else {
+					plan.save();
+				}
+				plans();
+			} catch (SienaException ex) {
+				if (ex.getMessage().contains("Duplicate entry")) {
+					Validation.addError("plan.name", "Name already exists!");
+				}
+			}
+		}
+		Validation.keep();
+		editPlan(plan);	
+	}
+	
+	public static void deletePlan(Long id) {
+		Plan p = Plan.findById(id);
+		p.delete();
+		plans();
+	}
 	
 	public static void editUser(long id) {
 		String active = "users";
@@ -52,53 +112,93 @@ public class AdminController extends BaseController {
 		renderTemplate("admin/user-edit.html", active, user);
 	}
 	
-	
 	public static void editUserPost(User u) {
+		if (params.get("button").equals("cancel")) {
+			users();
+		}
 		User us = User.findById(u.id);
 		us.isAdmin = (params.get("u.isAdmin") != null);
-		us.maxDiskspaceGB = u.maxDiskspaceGB;
 		us.save();
 		users();
 	}
 	
-	public static void renderNodeRow(long id) {
-		Node _arg = Node.getByKey(id);
-		renderTemplate("tags/node-row.html", _arg);
+	public static void slots() {
+		String active = "slots";
+		List<FreeSlot> slots = FreeSlot.all().fetch();
+		render("admin/slots.html", active, slots);
 	}
 	
-	public static void renderEditConfigDialog(long id) {
-		Node node = Node.getByKey(id);
-		try {
-			TransmissionConfig tc = node.getTransmission().getConfig();
-			Field[] fields = tc.getClass().getDeclaredFields();
-			Map<String, Field> relevantFields = new HashMap<String, Field>();
-			for (Field f : fields) {
-				SerializedName sn = (SerializedName) f.getAnnotation(SerializedName.class);
-				if (sn != null && !sn.value().equals("rpc-password")) {
-					relevantFields.put(sn.value(), f);
+	public static void editSlot(FreeSlot slot) {
+		String active = "slots";
+		List<Node> nodes = Node.all().filter("active", true).fetch();
+		List<Plan> plans = Plan.all().filter("visible", true).fetch();
+		render("admin/slot-edit.html", active, slot, nodes, plans);
+	}
+	
+	public static void updateSlot(@Valid FreeSlot slot) {
+		if (!Validation.hasErrors()) {
+				try {
+				if (slot.id == null) {
+					slot.insert();
+				} else {
+					slot.save();
 				}
+				slots();
+			} catch (SienaException ex) {
+				if (ex.getMessage().contains("Duplicate entry")) {
+					Validation.addError("slot.node", "Plan/Node combination already exists!");
+				}				
 			}
-			renderTemplate("admin/node-edit-config.html", tc, relevantFields, node);
+		}
+		Validation.keep();
+		editSlot(slot);
+	}
+	
+	public static void deleteSlot(Long id) {
+		FreeSlot.findById(id).delete();
+		slots();
+	}
+	
+	public static void stopTransmission(Long userId) {
+		User u = User.getByKey(userId);
+		Transmission t = u.getTransmission();
+		try {
+			if (t != null) {
+				t.stop();
+			}
 		} catch (MessageException ex) {
-			resultError(ex.getMessage());
-		}	
+			Validation.addError("general", ex.getMessage());
+		}
+		Validation.keep();
+		users();
 	}
 	
-	public static void updateNodeConfig(long id, TransmissionConfig tc) throws MessageException {
-		Node node = Node.getByKey(id);
-		tc.save(node);
-		node.getTransmission().reloadConfig();
-		result(true);
-	}
+	public static void startTransmission(Long userId) {
+		User u = User.getByKey(userId);
+		Transmission t = u.getTransmission();
+		try {
+			if (t != null) {
+				t.start();
+			}
+		} catch (MessageException ex) {
+			Validation.addError("general", ex.getMessage());
+		}
+		Validation.keep();
+		users();
+	}	
 	
-	public static class SystemStats {
-		public String totalNodes;
-		public String totalUsers;
-		public String totalTorrents;
-		public String averageTorrentsPerUser;
-		public String averageNodeUptime;
-		public String totalSpaceUsed;
-		public String averageSpaceUsedPerNode;
+	public static void restartTransmission(Long userId) {
+		User u = User.getByKey(userId);
+		Transmission t = u.getTransmission();
+		try {
+			if (t != null) {
+				t.restart();
+			}
+		} catch (MessageException ex) {
+			Validation.addError("general", ex.getMessage());
+		}
+		Validation.keep();
+		users();
 	}
 
 }

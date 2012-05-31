@@ -1,16 +1,46 @@
 #{extends "admin/index.html" /}
+<style type="text/css">
+	#nodes td {
+		vertical-align: middle;
+	}
+</style>
 <h2>Nodes</h2>
-<table class="table table-bordered">
+<table id="nodes" class="table table-bordered">
 	<tr>
 		<th>Name</th>
 		<th>IP Address</th>
 		<th>Uptime</th>
 		<th>Free Space</th>
+		<th>Used Space</th>
 		<th>Users</th>
-		<th>Status</th>
+		<th>Active</th>
 		<th>Action</th>
 	</tr>
 #{list items:nodes, as:"node"}
-	#{node-row node /}
+	<tr class="node-${node.id}">
+		<td>${node.name}</td>
+		<td>${node.ipAddress}</td>
+		<td>${node.getUptime().raw()}</td>
+		<td>${node.getFreeSpace()}</td>
+		<td>${node.getUsedSpace()}</td>
+		<td>${node.getUserCount()}</td>
+		<td>
+			#{if (node.active)}
+				<span style="color:green;">Yes</span>
+			#{/if}
+			#{else}
+				<span style="color:red;">No</span>
+			#{/else}
+		</td>
+		<td>
+			<div class="pull-right">
+				<a class="btn btn-primary" href="@{AdminController.editNode(node)}">Edit</a>
+				<a class="btn" href="@{AdminController.deleteNode(node.id)}">Delete</a>
+			</div>
+		</td>
+	</tr>
 #{/list}
 </table>
+<div class="form-actions">
+	<a href="@{AdminController.editNode}" class="btn btn-primary">Create new Node</a>
+</div>

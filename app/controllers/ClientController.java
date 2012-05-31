@@ -1,7 +1,7 @@
 package controllers;
 
+import code.Transmission;
 import code.MessageException;
-import controllers.securesocial.SecureSocial;
 import java.util.Arrays;
 import java.util.List;
 import models.*;
@@ -9,11 +9,22 @@ import models.Torrent.TorrentGroup;
 import models.User.UserStats;
 import org.h2.util.StringUtils;
 import play.Logger;
+import play.mvc.Before;
 import play.mvc.Http.Header;
-import play.mvc.With;
 
-@With(SecureSocial.class)
 public class ClientController extends BaseController {
+	
+	@Before(unless={"login","auth"})
+	public static void before() {
+		User u = getCurrentUser();
+		if (u == null) {
+			redirect("/auth/login");
+		}
+		//check that a plan has been purchased
+		if (u.getPrimaryAccount().getPlan() == null) {
+			redirect("/account/");
+		}
+	}
 	
 	public static void index() throws MessageException {
 		User u = getCurrentUser();
@@ -32,6 +43,7 @@ public class ClientController extends BaseController {
 		render("tags/client-tabs.html", _arg, active);
 	}
 	
+	/*
 	public static void addTorrent(String urlOrMagnet, boolean paused) throws MessageException {
 		if (StringUtils.isNullOrEmpty(urlOrMagnet)) {
 			resultError("Please enter a valid URL or magent link.");
@@ -220,5 +232,5 @@ public class ClientController extends BaseController {
 				newest.delete();
 			}
 		}			
-	}		
+	}		*/
 }

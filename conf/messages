@@ -1,18 +1,5 @@
 # You can specialize this file for each language.
 # For example, for French create a messages.fr file
 #
-ipAddress=IP Address
-name=Name
-username=Username
-password=Password
-emailAddress=Email Address
-password=Password
-isAdmin=User is Admin
-maxDiskspaceGB=Maximum allowed diskspace (GB)
-users=Users
-node=Node
-NodeController=Node
-UserController=User
-AlternateLoginController=Alternate Logins
-TransmissionController=Transmission
-alternateLogins=Alternate Logins
+validation.whole_number=Please enter a whole number
+validation.decimal_number=Please enter a decimal number

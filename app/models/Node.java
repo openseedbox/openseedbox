@@ -1,17 +1,21 @@
 package models;
 
-import com.jcraft.jsch.*;
-import java.io.*;
+import code.Transmission;
+import code.WebRequest;
+import code.WebResponse;
+import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
-import java.util.concurrent.ConcurrentHashMap;
+import models.Node.UserStats;
+import models.Node.UserStats;
 import play.Logger;
+import play.data.validation.Required;
 import play.modules.siena.EnhancedModel;
 import siena.Column;
 import siena.Generator;
 import siena.Id;
-import siena.Model;
 import siena.Table;
 
 @Table("node")
@@ -20,118 +24,86 @@ public class Node extends EnhancedModel {
 	@Id(Generator.AUTO_INCREMENT)
 	public Long id;
 
+	@Required
 	@Column("name")
 	public String name;
 	
+	@Required
 	@Column("ip_address")
 	public String ipAddress;
 	
+	@Required
 	@Column("username")
 	public String username;
 	
+	@Required
 	@Column("password")
 	public String password;
 	
-	@Column("currently_populating_database")
-	public Boolean currentlyPopulatingDatabase = false;
+	@Column("active")
+	public boolean active;
 	
-	public transient String uptime;
-	
-	private Transmission transmission;
+	private transient UserStats _userStats;
+	private UserStats getUserStats() {
+		if (_userStats == null) {
+			try {
+				WebResponse res = new WebRequest(this).getResponse("status");
+				_userStats = new Gson().fromJson(res.getResultJsonObject().getAsJsonObject("stats"), UserStats.class);
+			} catch (WebRequest.WebRequestFailedException ex) {
+				Logger.error("WebRequest failed: %s", ex);
+				_userStats = null;
+			}
+		}
+		return _userStats;
+	}
 
 	public String getUptime() {
-		return executeSsh("uptime").substring(0, 25);
+		String uptime = getUserStats().uptime;
+		return uptime.replace("users,", "users,<br />");
 	}
 	
 	public String getFreeSpace() {
-		return executeSsh("df -h | grep /dev/ | awk '{print $2}'");
+		return "" + getUserStats().freeSpaceGb + "gb";
+	}
+	
+	public String getUsedSpace() {
+		UserStats s = getUserStats();
+		return "" + (s.totalSpaceGb - s.freeSpaceGb) + "gb";
+	}
+	
+	public Map<Plan, Integer> getFreeSlots() {
+		Map<Plan, Integer> ret = new HashMap<Plan, Integer>();
+		List<FreeSlot> fs = FreeSlot.all().filter("node", this).fetch();
+		for (FreeSlot f : fs) {
+			ret.put(f.plan, f.freeSlots);
+		}
+		return ret;
 	}
 	
 	public int getUserCount() {
-		return User.all().filter("node", this).count();
+		return getUserStats().numberOfUsers;
 	}
 	
-	public Transmission getTransmission() {
-		return Model.all(Transmission.class).getByKey(transmission.id);
+	public class UserStats {
+		
+		@SerializedName("free-space-gb")
+		public int freeSpaceGb;
+		
+		@SerializedName("total-space-gb")
+		public int totalSpaceGb;
+		
+		@SerializedName("storage-directory-is-writable")
+		public boolean storageDirectoryIsWritable;
+		
+		@SerializedName("apache-user")
+		public String apacheUser;
+		
+		@SerializedName("uptime")
+		public String uptime;
+		
+		@SerializedName("number-of-users")
+		public int numberOfUsers;
+		
 	}
 
-	@Override
-	public String toString() {
-		return name;
-	}
-
-	public String executeSsh(String command) {
-		try {
-			ChannelExec c = getExecChannel();
-			c.setCommand(command);
-			c.connect();
-			String result = convertStreamToString(c.getInputStream());
-			c.disconnect();
-			c.getSession().disconnect();
-			return result;
-		} catch (JSchException ex) {
-			Logger.error(ex, "Unable to execute SSH");
-			return ex.toString();			
-		} catch (IOException ex) {
-			Logger.error(ex, "Unable to execute SSH");
-			return ex.toString();
-		}
-	}
-
-	public String readFile(String filename) throws JSchException, SftpException {
-		ChannelSftp sftp = this.getSftpChannel();
-		sftp.connect();
-		InputStream is = sftp.get(filename);
-		String str = convertStreamToString(is);
-		sftp.disconnect();
-		sftp.getSession().disconnect();
-		return str;
-	}
-
-	public void writeFile(String contents, String filename) throws JSchException, SftpException {
-		ChannelSftp sftp = this.getSftpChannel();
-		sftp.connect();
-		try {
-			InputStream is = new ByteArrayInputStream(contents.getBytes("UTF-8"));
-			sftp.put(is, filename);
-			sftp.disconnect();
-			sftp.getSession().disconnect();
-		} catch (UnsupportedEncodingException ex) {
-			Logger.error(ex, "");
-		}
-	}
-
-	private ChannelSftp getSftpChannel() throws JSchException {
-		Session s = this.getSshSession();
-		return (ChannelSftp) s.openChannel("sftp");
-	}
-
-	private ChannelExec getExecChannel() throws JSchException {
-		Session s = this.getSshSession();
-		return (ChannelExec) s.openChannel("exec");
-	}
-
-	private Session getSshSession() throws JSchException {
-		JSch j = new JSch();
-		Session s = j.getSession(this.username, this.ipAddress);
-		s.setPassword(this.password);
-		s.setConfig("StrictHostKeyChecking", "no");
-		s.connect();
-		return s;
-	}
-	
-	private void disconnectActiveSession() {
-		/*
-		if (_session != null) {
-			_session.disconnect();
-		}*/
-	}
-
-	private String convertStreamToString(InputStream is) {
-		try {
-			return new Scanner(is).useDelimiter("\\A").next().trim();
-		} catch (NoSuchElementException e) {
-			return "";
-		}
-	}
 }

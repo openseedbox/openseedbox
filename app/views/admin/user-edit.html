@@ -1,23 +1,8 @@
 #{extends "admin/index.html" /}
 <h2>Edit user ${user.emailAddress}</h2>
-<form action="/admin/editUserPost" method="post">
-	<table class="table table-bordered">
-		<tr>
-			<th>Property</th>
-			<th>Value</th>
-		</tr>
-		<tr>
-			<td>Max Diskspace (GB)</td>
-			<td><input type="text" name="u.maxDiskspaceGB" value="${user.maxDiskspaceGB}" /></td>
-		</tr>
-		<tr>
-			<td>Is Administrator</td>
-			<td><input type="checkbox" name="u.isAdmin" value="${user.isAdmin}" #{if (user.isAdmin)}checked="checked"#{/if} /></td>
-		</tr>
-		<tr>
-			<td>&nbsp;</td>
-			<td><input class="btn" type="submit" value="Update" /></td>
-		</tr>
-		<input type="hidden" name="u.id" value="${user.id}" />
-	</table>
+<form class="form-horizontal" action="@{AdminController.editUserPost}" method="post">
+	#{form.hidden name:"u.id", value:user?.id /}
+	#{form.checkbox name:"u.isAdmin", value:user?.isAdmin, label:"Is Administrator" /}
+	#{form.actions buttons:[ [ label: "Update", value: "update" ],
+							 [ label: "Cancel", value: "cancel" ] ] /}
 </form>

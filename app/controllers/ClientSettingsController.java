@@ -4,7 +4,6 @@ import notifiers.Mails;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import models.InvitedUser;
 import models.User;
 import play.data.validation.Email;
 import play.data.validation.Required;
@@ -14,12 +13,13 @@ public class ClientSettingsController extends ClientController {
 
 	public static void index() {
 		User currentUser = getCurrentUser();
-		User actualUser = getActualUser();
+		//User actualUser = getActualUser();
+		/*
 		List<InvitedUser> invitedUsers = currentUser.getInvitedUsers();
 		List<InvitedUser> pendingInvites = currentUser.getPendingInvites();
 		List<InvitedUser> sharedAccounts = currentUser.getSharedAccounts();
 		renderTemplate("client/settings.html", invitedUsers, pendingInvites,
-				sharedAccounts, actualUser, currentUser);
+				sharedAccounts, actualUser, currentUser);*/
 	}
 	
 	public static void setTheme() {
@@ -27,6 +27,7 @@ public class ClientSettingsController extends ClientController {
 	}
 	
 	public static void inviteUser(@Required @Email String emailAddress) {
+		/*
 		User u = getCurrentUser();
 		//check email address hasnt already been added
 		int num = InvitedUser.all().filter("invitingUser", u)
@@ -50,27 +51,30 @@ public class ClientSettingsController extends ClientController {
 		iv.invitingUser = u;
 		iv.insert();
 		Mails.inviteUser(iv, getServerPath());
-		index();
+		index();*/
 	}
 	
 	public static void removeInvitedUser(long id) {
+		/*
 		InvitedUser.findById(id).delete();
-		index();
+		index();*/
 	}
 	
 	public static void acceptInvite(long id) {
+		/*
 		InvitedUser iv = InvitedUser.getByKey(id);
 		iv.accepted = true;
 		iv.actualUser = getCurrentUser();
 		iv.save();
-		index();
+		index();*/
 	}
 	
 	public static void rejectInvite(long id) {
+		/*
 		InvitedUser iv = InvitedUser.getByKey(id);
 		iv.accepted = false;
 		iv.actualUser = getCurrentUser();
 		iv.save();
-		index();		
+		index();		*/
 	}
 }

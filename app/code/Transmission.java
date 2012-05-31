@@ -1,16 +1,17 @@
-package models;
+package code;
 
-import code.MessageException;
-import code.Util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.SftpException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
 import java.util.Map.Entry;
+import models.Account;
+import models.Node;
+import models.Torrent;
+import models.TorrentInfo;
+import models.User;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NoHttpResponseException;
@@ -25,70 +26,112 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import play.Logger;
-import play.modules.siena.EnhancedModel;
-import siena.*;
 
-@Table("transmission")
-public class Transmission extends EnhancedModel {
+public class Transmission {
 
-	@Id(Generator.AUTO_INCREMENT)
-	public Long id;
+	private Account _account;
 	
-	private Node node;
-	
-	@Column("port")
-	public int port;
-	
-	@Column("config_file_location")
-	public String configFileLocation = "/etc/transmission-daemon/settings.json";
+	public Transmission(Account a) {
+		_account = a;
+	}
 	
 	public Node getNode() {
-		return Model.all(Node.class).getByKey(node.id);
+		return _account.getNode();
 	}
 
 	public TransmissionConfig getConfig() throws MessageException {
-		try {
-			String contents = getNode().readFile("/etc/transmission-daemon/settings.json");
-			Gson g = new GsonBuilder().create();
-			return g.fromJson(contents, TransmissionConfig.class);
-			//return (JSONObject) JSONValue.parse(contents);
-		} catch (JSchException ex) {
-			Logger.error(ex, "Unable to get transmission config");
-			throw new MessageException(ex.toString());			
-		} catch (SftpException ex) {
-			Logger.error(ex, "Unable to get transmission config");
-			throw new MessageException(ex.toString());
-		}
-	}
-
-	public void start() {
-		if (!isRunning()) {
-			Node n = getNode();
-			Logger.debug("Starting transmission-daemon on node %s", n.name);
-			n.executeSsh("/etc/init.d/transmission-daemon start");
-		}
-	}
-
-	public void stop() {
-		if (isRunning()) {
-			Node n = getNode();
-			Logger.debug("Stopping transmission-daemon on node %s", n.name);
-			n.executeSsh("/etc/init.d/transmission-daemon stop");
-		}
-	}
-
-	public Boolean isRunning() {
 		Node n = getNode();
-		String test = n.executeSsh("ps -A | grep transmission-da");
-		return (!test.isEmpty());
+		WebRequest wr = new WebRequest(n.ipAddress);
+		TransmissionConfig ret = null;
+		try {
+			WebResponse res = wr.getResponse("control", getStandardParams("config"));
+			ret = new Gson().fromJson(res.getResultJsonObject().get("config"), TransmissionConfig.class);
+		} catch (WebRequest.WebRequestFailedException ex) {
+			throw new MessageException(ex, "Unable to get transmission config for user %s on node %s (%s)",
+					_account.getPrimaryUser().emailAddress, n.name, n.ipAddress);
+		}
+		return ret;
+	}
+	
+	public void saveConfig(TransmissionConfig tc) throws MessageException {
+		Node n = getNode();
+		Map<String, String> params = getStandardParams("config-write");
+		params.put("config", new Gson().toJson(tc));
+		try {
+			new WebRequest(n.ipAddress).postResponse("control", params);
+		} catch (WebRequest.WebRequestFailedException ex) {
+			throw new MessageException(ex, "Unable to store transmission config for user %s on node %s (%s)",
+					_account.getPrimaryUser().emailAddress, n.name, n.ipAddress);
+		}
+	}
+	
+	private Map<String, String> getStandardParams(String action) throws MessageException {
+		Map<String, String> params = new HashMap<String, String>();
+		User u = _account.getPrimaryUser();
+		params.put("user_name", u.emailAddress);
+		params.put("password", _account.getTransmissionPassword());
+		params.put("action", action);
+		params.put("port", String.valueOf(_account.getTransmissionPort()));
+		return params;
 	}
 
-	public void reloadConfig() {
-		if (isRunning()) {
-			Node n = getNode();
-			Logger.debug("Reloading transmission-daemon config on node %s", n.name);
-			n.executeSsh("killall -HUP transmission-daemon");
+	public void start() throws MessageException {
+		Node n = getNode();
+		Logger.debug("Starting transmission-daemon on node %s for user %s (port %s)",
+					n.name, _account.getPrimaryUser().emailAddress, _account.getTransmissionPort());
+		try {
+			WebResponse wr = new WebRequest(n.ipAddress).getResponse("control", getStandardParams("start"));
+			if (!wr.isSuccessful()) {
+				throw new MessageException(wr.getErrorMessage());
+			}
+		} catch (WebRequest.WebRequestFailedException ex) {
+			throw new MessageException(ex, "Unable to start transmission for user %s on node %s (%s)",
+					_account.getPrimaryUser().emailAddress, n.name, n.ipAddress);			
 		}
+	}
+
+	public void stop() throws MessageException {
+		Node n = getNode();
+		Logger.debug("Stopping transmission-daemon on node %s for user %s (port %s)",
+					n.name, _account.getPrimaryUser().emailAddress, _account.getTransmissionPort());
+		try {
+			WebResponse wr = new WebRequest(n.ipAddress).getResponse("control", getStandardParams("stop"));
+			if (!wr.isSuccessful()) {
+				throw new MessageException(wr.getErrorMessage());
+			}
+		} catch (WebRequest.WebRequestFailedException ex) {
+			throw new MessageException(ex, "Unable to stop transmission for user %s on node %s (%s)",
+					_account.getPrimaryUser().emailAddress, n.name, n.ipAddress);			
+		}
+	}
+	
+	public void restart() throws MessageException {
+		Node n = getNode();
+		Logger.debug("Restarting transmission-daemon on node %s for user %s (port %s)",
+					n.name, _account.getPrimaryUser().emailAddress, _account.getTransmissionPort());
+		try {
+			WebResponse wr = new WebRequest(n.ipAddress).getResponse("control", getStandardParams("restart"));
+			if (!wr.isSuccessful()) {
+				throw new MessageException(wr.getErrorMessage());
+			}
+		} catch (WebRequest.WebRequestFailedException ex) {
+			throw new MessageException(ex, "Unable to restart transmission for user %s on node %s (%s)",
+					_account.getPrimaryUser().emailAddress, n.name, n.ipAddress);			
+		}		
+	}
+	
+	public boolean isRunning() throws MessageException {
+		Node n = getNode();
+		Logger.debug("Starting transmission-daemon on node %s for user %s (port %s)",
+					n.name, _account.getPrimaryUser().emailAddress, _account.getTransmissionPort());
+		try {
+			WebResponse wr = new WebRequest(n.ipAddress)
+					.getResponse("control", getStandardParams("is-running"));
+			return wr.getResultBoolean();
+		} catch (WebRequest.WebRequestFailedException ex) {
+			throw new MessageException(ex, "Unable to stop transmission for user %s on node %s (%s)",
+					_account.getPrimaryUser().emailAddress, n.name, n.ipAddress);			
+		}		
 	}
 	
 	/* RPC method wrappers */
@@ -252,7 +295,7 @@ public class Transmission extends EnhancedModel {
 				Logger.debug("Got 409, retrying using X-Transmission-Session-Id");
 				return executeRpc(rpc, headers);
 			} else if (status == 401) {
-				throw new MessageException("Transmission on node " + node.name + " returned 401 unauthroized.");
+				throw new MessageException("Transmission on node " + _account.getNode().name + " returned 401 unauthroized.");
 			}
 			RpcResponse rpc_r = new RpcResponse();
 			JSONObject ob = (JSONObject) JSONValue.parse(new InputStreamReader(res.getEntity().getContent()));
@@ -282,8 +325,7 @@ public class Transmission extends EnhancedModel {
 
 	private String getTransmissionUrl() throws MessageException {
 		Node n = getNode();
-		TransmissionConfig c = this.getConfig();
-		return String.format("http://%s:%s%srpc", n.ipAddress, c.rpcPort, c.rpcUrl);
+		return String.format("http://%s:%s/transmission/rpc", n.ipAddress, _account.getTransmissionPort());
 	}	
 
 	@Override
@@ -594,6 +636,7 @@ public class Transmission extends EnhancedModel {
 		}
 
 		public void save(Node n) throws MessageException {
+			/*
 			try {
 				this.rpcPassword = this.rpcPasswordUnencrypted;
 				Gson g = new GsonBuilder().create();
@@ -604,7 +647,7 @@ public class Transmission extends EnhancedModel {
 			} catch (SftpException ex) {
 				Logger.error(ex, "Unable to save transmission-daemon config to node " + n.name);
 				throw new MessageException("Unable to save config!");
-			}
+			}*/
 		}
 	}
 }
