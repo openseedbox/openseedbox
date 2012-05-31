@@ -1,0 +1,12 @@
+<div class="form-actions">
+	#{list items:_buttons, as:"button"}
+		#{if (button instanceof java.lang.String)}
+			<button name="button" type="submit" class="btn #{if button_isFirst}btn-primary#{/if}">${button}</button>
+		#{/if}
+		#{elseif (button instanceof java.util.Map)}
+			<button name="button" type="submit" class="btn #{if button_isFirst}btn-primary#{/if}" value="${button.value}">
+				${button.label}
+			</button>
+		#{/elseif}
+	#{/list}
+</div>

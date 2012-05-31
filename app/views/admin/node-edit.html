@@ -1,0 +1,21 @@
+#{extends "admin/index.html" /}
+#{if (node == null)}
+	<h2>Create new Node</h2>
+#{/if}
+#{else}
+	<h2>Editing node ${node?.name}</h2>
+#{/else}
+<p>
+	<form class="form-horizontal" method="post" action="@{AdminController.updateNode}">
+		#{form.hidden name:"node.id", value:node?.id /}
+		#{form.text name:"node.name", value:node?.name, label:"Name" /}
+		#{form.text name:"node.ipAddress", value:node?.ipAddress, label:"IP Address" /}
+		#{form.text name:"node.username", value:node?.username, label:"SSH Username" /}
+		#{form.text name:"node.password", value:node?.password, label:"SSH Password" /}
+		#{form.checkbox name:"node.active", value:node?.active, label:"Active" /}
+		%{ buttons = (node == null) ?
+				[ [ label:"Create new Node", value:"create" ], [ label:"Cancel", value:"cancel" ] ] :
+				[ [ label:"Update Node", value:"update" ], [ label:"Cancel", value:"cancel" ] ]}%	
+		#{form.actions buttons: buttons /}
+	</form>
+</p>

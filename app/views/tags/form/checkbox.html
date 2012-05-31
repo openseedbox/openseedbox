@@ -1,0 +1,10 @@
+<div class="control-group #{ifError _name}error#{/ifError}">
+	<label class="control-label" for="${_name}">${_label}</label>
+	<div class="controls">
+		<input id="${_name}" type="checkbox" name="${_name}" #{if (_value)}checked="checked"#{/if} />
+		#{if _help}
+			<p class="help-block">${_help}</p>
+		#{/if}
+		<span class="help-inline">#{error "${_name}" /}</span>
+	</div>
+</div>
