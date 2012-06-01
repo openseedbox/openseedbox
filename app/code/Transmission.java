@@ -1,31 +1,18 @@
 package code;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import com.google.gson.annotations.SerializedName;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.*;
-import java.util.Map.Entry;
 import models.Account;
 import models.Node;
 import models.Torrent;
 import models.TorrentInfo;
 import models.User;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.NoHttpResponseException;
-import org.apache.http.auth.AuthenticationException;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
+import org.apache.commons.lang.StringUtils;
 import play.Logger;
+import play.libs.WS;
+import play.libs.WS.HttpResponse;
+import play.libs.WS.WSRequest;
 
 public class Transmission {
 
@@ -135,25 +122,29 @@ public class Transmission {
 	}
 	
 	/* RPC method wrappers */
+	public SessionStats getSessionStats() throws MessageException {
+		RpcRequest req = new RpcRequest("session-stats");
+		RpcResponse res = req.getResponse();
+		if (res.success()) {
+			return new Gson().fromJson(res.getArguments(), SessionStats.class);
+		} else {
+			throw new MessageException("Unable to get session stats: " + res.getResultMessage());
+		}
+	}
+	
 	public Torrent addTorrent(String urlOrMagnet) throws MessageException {
 		return addTorrent(urlOrMagnet, false);
 	}
 	
 	public Torrent addTorrent(String urlOrMagnet, Boolean paused) throws MessageException {
 		RpcRequest req = new RpcRequest("torrent-add");
-		req.arguments.put("filename", urlOrMagnet);
-		req.arguments.put("paused", paused);
-		RpcResponse res = executeRpc(req);
-		if (res.success) {
-			JSONObject addedTorrent = (JSONObject) res.arguments.get("torrent-added");
-			String hash = addedTorrent.get("hashString").toString();
-			String name = addedTorrent.get("name").toString();
-			Torrent ret = new Torrent();
-			ret.hashString = hash;
-			ret.name = name;
-			return ret;
+		req.addArgument("filename", urlOrMagnet);
+		req.addArgument("paused", paused);
+		RpcResponse res = req.getResponse();
+		if (res.success()) {
+			return new Gson().fromJson(res.getArguments().get("torrent-added"), Torrent.class);
 		} else {
-			throw new MessageException("Unable to add torrent: " + res.errorMessage);
+			throw new MessageException("Unable to add torrent: " + res.getResultMessage());
 		}
 	}	
 	
@@ -165,12 +156,8 @@ public class Transmission {
 	
 	public Boolean removeTorrent(List<String> ids, Boolean torrentOnly) throws MessageException {
 		RpcRequest r = new RpcRequest("torrent-remove", ids);
-		/* convert the List<String> into a List<Object>. Transmission-daemon wont
-		 * remove torrents by id if the submitted id is a string and not an int.
-		 * However, we might also want to remove torrents by hash in the same request.
-		 * Therefore, we need both strings and ints to be in the ids array */
-		r.arguments.put("delete-local-data", !torrentOnly);
-		RpcResponse res = executeRpc(r);
+		r.addArgument("delete-local-data", !torrentOnly);
+		RpcResponse res = r.getResponse();
 		return res.successOrExcept();
 	}
 	
@@ -182,8 +169,8 @@ public class Transmission {
 	
 	public Boolean startTorrents(List<String> torrentHashes) throws MessageException {
 		RpcRequest r = new RpcRequest("torrent-start");
-		r.arguments.put("ids", getTorrentIds(torrentHashes));
-		RpcResponse res = executeRpc(r);
+		r.addArgument("ids", getTorrentIds(torrentHashes));
+		RpcResponse res = r.getResponse();
 		return res.successOrExcept();
 	}
 	
@@ -195,7 +182,7 @@ public class Transmission {
 	
 	public Boolean pauseTorrents(List<String> torrentHashes) throws MessageException {
 		RpcRequest r = new RpcRequest("torrent-stop", torrentHashes);
-		RpcResponse res = executeRpc(r);
+		RpcResponse res = r.getResponse();
 		return res.successOrExcept();		
 	}	
 
@@ -207,13 +194,13 @@ public class Transmission {
 			"peersFrom", "priorities", "trackerStats"
 		});		
 		RpcRequest req = new RpcRequest("torrent-get");
-		req.arguments.put("fields", fields);
-		RpcResponse r = executeRpc(req);
-		JSONArray torrents = (JSONArray) r.arguments.get("torrents");
+		req.addArgument("fields", fields);
+		RpcResponse r = req.getResponse();
+		JsonArray torrents = r.getArguments().getAsJsonArray("torrents");
 		List<Torrent> ret = new ArrayList<Torrent>();
-		for (Object torrent : torrents) {
-			JSONObject t = (JSONObject) torrent;
-			ret.add(Torrent.fromJson(t.toJSONString()));
+		Gson g = new Gson();
+		for (JsonElement torrent : torrents) {
+			ret.add(g.fromJson(torrent, Torrent.class));
 		}
 		return ret;
 	}
@@ -221,20 +208,19 @@ public class Transmission {
 	public TorrentInfo getTorrentInfo(String torrentHash) throws MessageException {
 		//get extra info for torrent and append to passed in torrent
 		RpcRequest rpc = new RpcRequest("torrent-get", torrentHash);
-		rpc.arguments.put("fields", Arrays.asList(new String[] {
+		rpc.addArgument("fields", Arrays.asList(new String[] {
 			"files", "peers", "peersFrom", "priorities", "trackerStats", "wanted"
 		}));
-		RpcResponse res = executeRpc(rpc);
-		JSONObject torrent = (JSONObject) ((JSONArray) res.arguments.get("torrents")).get(0);	
-		return TorrentInfo.fromJson(torrent.toJSONString());
+		RpcResponse res = rpc.getResponse();
+		return new Gson().fromJson(res.getArguments().getAsJsonArray("torrents").get(0), TorrentInfo.class);
 	}
 	
 	public Boolean setFilesWanted(String torrentHash, List<String> ids) throws MessageException {
 		RpcRequest rpc = new RpcRequest("torrent-set", torrentHash);
 		Torrent to = Torrent.findById(torrentHash);
-		rpc.arguments.put("files-unwanted", getTorrentIds(to.getFileIds())); //unwant all files
-		rpc.arguments.put("files-wanted", getTorrentIds(ids));
-		RpcResponse res = executeRpc(rpc);
+		rpc.addArgument("files-unwanted", getTorrentIds(to.getFileIds())); //unwant all files
+		rpc.addArgument("files-wanted", getTorrentIds(ids));
+		RpcResponse res = rpc.getResponse();
 		return res.successOrExcept();
 	}
 	
@@ -242,11 +228,15 @@ public class Transmission {
 	public Boolean setFilePriority(String torrentHash, List<String> ids, String priority) throws MessageException {
 		RpcRequest rpc = new RpcRequest("torrent-set", torrentHash);
 		rpc.arguments.put(String.format("priority-%s", priority), getTorrentIds(ids));
-		RpcResponse res = executeRpc(rpc);
+		RpcResponse res = rpc.getResponse();
 		return res.successOrExcept();
 	}
 	
 	private List<Object> getTorrentIds(List<String> ids) {
+		/* convert the List<String> into a List<Object>. Transmission-daemon wont
+		 * remove torrents by id if the submitted id is a string and not an int.
+		 * However, we might also want to remove torrents by hash in the same request.
+		 * Therefore, we need both strings and ints to be in the ids array */		
 		List<Object> actual_ids = new ArrayList<Object>();
 		for (String eyedee : ids) {
 			try {
@@ -257,71 +247,6 @@ public class Transmission {
 		}	
 		return actual_ids;
 	}	
-	
-	private RpcResponse executeRpc(RpcRequest rpc) throws MessageException {
-		return executeRpc(rpc, new HashMap<String, String>());
-	}
-
-	private String sessionId = null;
-	private RpcResponse executeRpc(RpcRequest rpc, Map<String, String> headers) throws MessageException {
-		try {			
-			TransmissionConfig tc = this.getConfig();
-			HttpClient hc = new DefaultHttpClient();
-			Logger.info("Transmission RPC request, to url: %s", getTransmissionUrl());
-			HttpPost hp = new HttpPost(this.getTransmissionUrl());
-			if (headers == null) {
-				headers = new HashMap<String, String>();
-			}			
-			if (sessionId != null) {				
-				headers.put("X-Transmission-Session-Id", sessionId);
-			}
-			if (headers != null) {
-				for (Entry<String, String> header : headers.entrySet()) {
-					hp.addHeader(header.getKey(), header.getValue());
-				}
-			}
-			UsernamePasswordCredentials up = new UsernamePasswordCredentials(tc.rpcUsername, tc.getRpcPassword());
-			hp.addHeader(new BasicScheme().authenticate(up, hp));
-			Gson g = new GsonBuilder().create();
-			String body = g.toJson(rpc);
-			Logger.debug("Executing rpc: %s", body);
-			HttpEntity he = new StringEntity(body);
-			hp.setEntity(he);
-			HttpResponse res = hc.execute(hp);
-			int status = res.getStatusLine().getStatusCode();
-			if (status == 409) {
-				//resubmit request with X-Transmission-Session-Id header
-				sessionId = res.getLastHeader("X-Transmission-Session-Id").getValue();
-				Logger.debug("Got 409, retrying using X-Transmission-Session-Id");
-				return executeRpc(rpc, headers);
-			} else if (status == 401) {
-				throw new MessageException("Transmission on node " + _account.getNode().name + " returned 401 unauthroized.");
-			}
-			RpcResponse rpc_r = new RpcResponse();
-			JSONObject ob = (JSONObject) JSONValue.parse(new InputStreamReader(res.getEntity().getContent()));
-			if (!ob.get("result").equals("success")) {
-				rpc_r.success = false;
-				rpc_r.errorMessage = ob.get("result").toString();
-			}
-			rpc_r.arguments = (JSONObject) ob.get("arguments");
-			rpc_r.jsonData = ob.toJSONString();
-			Logger.debug("Response from td: %s ", ob.toJSONString());
-			return rpc_r;
-		} catch (NoHttpResponseException ex) {
-			throw new MessageException("Node not responding");
-		} catch (IOException ex) {
-			throw new MessageException(getRpcErrorMessage(rpc.method, ex));
-		} catch (AuthenticationException ex) {
-			throw new MessageException("Bad RPC username/password!");
-		}
-
-	}
-	
-	private String getRpcErrorMessage(String method, Throwable t) {
-		Node n = getNode();
-		return String.format("Unable to execute RPC command %s on node %s, reason: %s",
-					  method, n.name, Util.getStackTrace(t));
-	}
 
 	private String getTransmissionUrl() throws MessageException {
 		Node n = getNode();
@@ -335,7 +260,8 @@ public class Transmission {
 	}
 	
 	public class RpcRequest {
-		public String method;
+		
+		public String method;	
 		public Map<String, Object> arguments = new HashMap<String, Object>();
 		
 		public RpcRequest() {}
@@ -353,27 +279,81 @@ public class Transmission {
 			this(method);
 			this.arguments.put("ids", getTorrentIds(torrentHashes));
 		}
+		
+		public void addArgument(String key, Object value) {
+			this.arguments.put(key, value);
+		}
+		
+		public RpcResponse getResponse() throws MessageException {
+			String url = getTransmissionUrl();
+			Logger.info("Transmission RPC request, to url: %s", url);
+			WSRequest req = WS.url(url);
+			req.authenticate(_account.getPrimaryUser().emailAddress, _account.getTransmissionPassword());
+			req.body(new Gson().toJson(this));
+			HttpResponse res = getResponse(req, null);
+			RpcResponse rpc = new RpcResponse(res);
+			return rpc;		
+		}
+		
+		private HttpResponse getResponse(WSRequest req, String transmissionId) throws MessageException {
+			if (!StringUtils.isEmpty(transmissionId)) {
+				req.headers.put("X-Transmission-Session-Id", transmissionId);
+			}
+			HttpResponse res = req.post();
+			if (res.getStatus() == 409) {
+				String tid = res.getHeader("X-Transmission-Session-Id");
+				return getResponse(req, tid);
+			} else if (res.getStatus() == 401) {
+				throw new MessageException("Invalid RPC credentials supplied!");
+			}
+			return res;
+		}
 	}
 	
 	public class RpcResponse {
-		public Boolean success = true;
-		public String errorMessage = "";
-		public String jsonData = "{}";
-		public Map<String, Object> arguments;
+		private String jsonData;
 		
-		public Boolean successOrExcept() throws MessageException {
-			if (!success) {
-				throw new MessageException(errorMessage);
-			}
-			return success;
+		public RpcResponse(HttpResponse r) {
+			jsonData = r.getString();
 		}
+		
+		public String getJsonData() {
+			return jsonData;
+		}
+		
+		public boolean successOrExcept() throws MessageException {
+			boolean s = success();
+			if (!s) {
+				throw new MessageException(getResultMessage());
+			}
+			return s;
+		}
+		
+		public boolean success() {
+			return (getResultMessage().equals("success"));
+		}
+		
+		public JsonObject getWholeResponse() {
+			return new JsonParser().parse(jsonData).getAsJsonObject();
+		}
+		
+		public JsonObject getArguments() {
+			JsonObject wr = getWholeResponse();
+			return wr.getAsJsonObject("arguments");
+		}
+		
+		public String getResultMessage() {
+			JsonObject ob = getWholeResponse();
+			return ob.get("result").getAsString();
+		}
+		
 		
 		@Override
 		public String toString() {
-			if (success) {
+			if (success()) {
 				return "Successful RPC response: " + jsonData;
 			} else {
-				return "Failed RPC Response: " + errorMessage;
+				return "Failed RPC Response: " + getResultMessage();
 			}
 		}
 	}
@@ -648,6 +628,28 @@ public class Transmission {
 				Logger.error(ex, "Unable to save transmission-daemon config to node " + n.name);
 				throw new MessageException("Unable to save config!");
 			}*/
+		}
+	}
+	
+	public class SessionStats {
+		public int activeTorrentCount;
+		public long downloadSpeed;
+		public int pausedTorrentCount;
+		public int torrentCount;
+		public long uploadSpeed;
+		
+		@SerializedName("cumulative-stats")
+		public Stats cumulativeStats;
+		
+		@SerializedName("current-stats")
+		public Stats currentStats;
+		
+		public class Stats {
+			public long uploadedBytes;
+			public long downloadedBytes;
+			public int filesAdded;
+			public int sessionCount;
+			public long secondsActive;
 		}
 	}
 }

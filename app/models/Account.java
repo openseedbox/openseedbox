@@ -33,11 +33,16 @@ public class Account extends EnhancedModel {
 		return Plan.getByKey(plan.id);
 	}
 	
+	private transient User _primaryUser;
 	public User getPrimaryUser() {
-		return User.getByKey(primaryUser.id);
+		if (_primaryUser == null) {
+			_primaryUser = User.getByKey(primaryUser.id);
+		}
+		return _primaryUser;
 	}
 	
 	public void setPrimaryUser(User u) {
+		this._primaryUser = null;
 		this.primaryUser = u;
 	}
 	

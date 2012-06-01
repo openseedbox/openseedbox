@@ -1,16 +1,12 @@
 package controllers;
 
-import code.Transmission;
 import code.MessageException;
-import java.util.Arrays;
+import code.Transmission.SessionStats;
 import java.util.List;
 import models.*;
 import models.Torrent.TorrentGroup;
 import models.User.UserStats;
-import org.h2.util.StringUtils;
-import play.Logger;
 import play.mvc.Before;
-import play.mvc.Http.Header;
 
 public class ClientController extends BaseController {
 	
@@ -30,7 +26,8 @@ public class ClientController extends BaseController {
 		User u = getCurrentUser();
 		List<TorrentGroup> torrentGroups = u.getTorrentGroups();
 		UserStats userStats = u.getUserStats();
-		render("client/index.html", torrentGroups, userStats);
+		SessionStats sessionStats = u.getTransmission().getSessionStats();
+		render("client/index.html", torrentGroups, userStats, sessionStats);
 	}
 	
 	public static void userStats() throws MessageException {
