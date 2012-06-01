@@ -7,8 +7,6 @@ import com.google.gson.annotations.SerializedName;
 import java.util.*;
 import models.Torrent.TorrentFile;
 import org.apache.commons.lang.StringUtils;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
 
 public class TorrentInfo {
 
@@ -19,6 +17,8 @@ public class TorrentInfo {
 	public PeersFrom peersFrom;
 
 	public static TorrentInfo fromJson(String json) {
+		return null;
+		/*
 		TorrentInfo ti = new TorrentInfo();
 		Map<String, Object> mo = (JSONObject) JSONValue.parse(json);
 		//do trackers
@@ -47,7 +47,7 @@ public class TorrentInfo {
 			ti.peers.add(p);
 		}
 		ti.peersFrom = g.fromJson(peersFrom.toJSONString(), PeersFrom.class);
-		return ti;
+		return ti;*/
 	}
 
 	public List<TreeNode> filesAsTree() {
