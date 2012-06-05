@@ -1,13 +1,17 @@
 package models;
 
 import code.MessageException;
-import code.Transmission;
+import code.transmission.Transmission;
 import code.Util;
+import code.transmission.TransmissionTorrent;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import models.Torrent.TorrentGroup;
 import org.apache.commons.lang.StringUtils;
+import play.Logger;
 import play.data.validation.Email;
 import play.modules.siena.EnhancedModel;
 import siena.*;
@@ -45,17 +49,13 @@ public class User extends EnhancedModel {
 	@Embedded @Column("allowed_account_ids")
 	public List<Integer> allowedAccounts; 
 	
-	public List<Torrent> getTorrents() {
-		return Torrent.all().filter("user", this).fetch();
-	}
-	
 	public Node getNode() {
 		Account a = getPrimaryAccount();
 		if (a != null) {
 			return a.getNode();
 		}
 		return null;
-	}
+	}	
 	
 	public Transmission getTransmission() {
 		Account a = getPrimaryAccount();
@@ -65,9 +65,13 @@ public class User extends EnhancedModel {
 		return null;		
 	}
 	
+	private transient Account _primaryAccount;
 	public Account getPrimaryAccount() {
 		if (this.primaryAccount != null) {
-			return Account.getByKey(this.primaryAccount.id);
+			if (_primaryAccount == null) {
+				_primaryAccount = Account.getByKey(this.primaryAccount.id);
+			}
+			return _primaryAccount;
 		}
 		return null;
 	}
@@ -98,33 +102,115 @@ public class User extends EnhancedModel {
 		}
 	}
 	
-	public List<Torrent> getTorrentsWithStatus(int status) {
-		List<Torrent> ret = new ArrayList<Torrent>();
-		for (Torrent t : this.getTorrents()) {
-			if (t.status == status) {
-				ret.add(t);
+	public Torrent addTorrent(File f) throws MessageException {
+		TransmissionTorrent tt = this.getTransmission().addTorrent(f);
+		return newTorrent(tt);		
+	}
+	
+	public Torrent addTorrent(String urlOrMagnet) throws MessageException {
+		TransmissionTorrent tt = this.getTransmission().addTorrent(urlOrMagnet);
+		return newTorrent(tt);
+	}
+	
+	private Torrent newTorrent(TransmissionTorrent tt) {
+		Torrent t = new Torrent();
+		t.hashString = tt.hashString;
+		t.name = tt.name;
+		t.user = this;
+		t.insert();
+		t.setTransmissionTorrent(tt);
+		return t;		
+	}
+	
+	public Torrent getTorrent(String hashString) throws MessageException {
+		return getTorrent(hashString, false);		
+	}
+	
+	public Torrent getTorrent(String hashString, boolean hitTransmission) throws MessageException {
+		Torrent t = Torrent.all().filter("hashString", hashString)
+				.filter("user", this).get();		
+		if (hitTransmission) {
+			TransmissionTorrent to = this.getTransmission().getTorrent(hashString);
+			t.setTransmissionTorrent(to);
+			calculateUserStats(Arrays.asList(new Torrent[] { t }));
+		}
+		return t;
+	}	
+	
+	public List<Torrent> getTorrents() throws MessageException {
+		List<TransmissionTorrent> trans = this.getTransmission().getAllTorrents();
+		List<String> hashes = getHashStringList(trans);
+		List<Torrent> ret;
+		//need this check or siena fails to do an IN clause with no values
+		if (hashes.size() > 0) {
+			ret = Torrent.all()
+					.filter("hashString IN", hashes)
+					.filter("user", this)
+					.fetch(); //so you dont have to do a db query per torrent
+			for (Torrent t : ret) {
+				t.setTransmissionTorrent(getMatchingTransmissionTorrent(trans, t.hashString));
 			}
+			return ret;
+		} else {
+			ret = new ArrayList<Torrent>();
+		}
+		calculateUserStats(ret);
+		return ret;
+	}
+	
+	private List<String> getHashStringList(List<TransmissionTorrent> t) {
+		List<String> ret = new ArrayList<String>();
+		for (TransmissionTorrent to : t) {
+			ret.add(to.hashString);
 		}
 		return ret;
 	}
 	
-	public List<Torrent> getTorrentsWithGroup(String group) {
+	private TransmissionTorrent getMatchingTransmissionTorrent(List<TransmissionTorrent> t, String hash) {
+		for (TransmissionTorrent tr : t) {
+			if (tr.hashString.equals(hash)) {
+				return tr;
+			}
+		}
+		return null;
+	}
+	
+	public List<Torrent> getTorrents(String group) throws MessageException {
 		List<Torrent> ret = new ArrayList<Torrent>();
-		for (Torrent t : this.getTorrents()) {
-			if (t.groups.contains(new Torrent.TorrentGroup(group))) {
+		List<Torrent> all = getTorrents();
+		for (Torrent t : all) {
+			int status = t.getStatus();		
+			if (group.equals("All")) {
+				ret.add(t);
+			} else if (group.equals("Downloading")) {
+				if (status == 4 || status == 3) {
+					ret.add(t);
+				}
+			} else if (group.equals("Seeding")) {
+				if (status == 5 || status == 6) {
+					ret.add(t);
+				}
+			} else if (group.equals("Paused")) {
+				if (status == 0) {
+					ret.add(t);
+				}
+			} else if (t.groups.contains(new TorrentGroup(group))) {
+				//Logger.info("Torrent %s contains group %s", t.name, group);
 				ret.add(t);
 			}
 		}
+		calculateUserStats(all); 
 		return ret;
 	}	
 	
-	public List<TorrentGroup> getTorrentGroups() throws MessageException {
+	public List<TorrentGroup> getTorrentGroups() {
 		List<TorrentGroup> ret = new ArrayList<TorrentGroup>();
 		ret.add(new TorrentGroup("All"));
 		ret.add(new TorrentGroup("Downloading"));
 		ret.add(new TorrentGroup("Seeding"));
 		ret.add(new TorrentGroup("Paused"));		
-		List<Torrent> torrents = this.getTorrents();
+		//dont use getTorrents() because we just need the groups and want to avoid hitting transmission-daemon
+		List<Torrent> torrents = Torrent.all().filter("user", this).fetch();
 		for (Torrent t : torrents) {
 			for (TorrentGroup group : t.groups) {
 				if (!ret.contains(group)) {
@@ -155,27 +241,34 @@ public class User extends EnhancedModel {
 				.filter("accepted", true).fetch();
 	}*/
 	
-	public UserStats getUserStats() throws MessageException {
-		List<Torrent> t = this.getTorrents();
+	private void calculateUserStats(List<Torrent> torrents) throws MessageException {
 		long totalSize = 0;
 		long totalRateUpload = 0;
 		long totalRateDownload = 0;
-		for(Torrent to : t) {
-			totalSize += to.totalSize;
-			totalRateUpload += to.rateUpload;
-			totalRateDownload += to.rateDownload;
+		for(Torrent to : torrents) {
+			totalSize += to.getTransmissionTorrent().totalSize;
+			totalRateUpload += to.getTransmissionTorrent().rateUpload;
+			totalRateDownload += to.getTransmissionTorrent().rateDownload;
 		}
 		UserStats us = new UserStats();
+		us.maxSpaceGb = String.format("%.2f", (double) getPlan().maxDiskspaceGb);
 		us.usedSpaceGb = Util.getRateGb(totalSize);
 		us.rateDownloadKb = Util.getRateKb(totalRateDownload);
 		us.rateUploadKb = Util.getRateKb(totalRateUpload);		
-		return us;
-	}	
-
-	@Override
-	public String toString() {
-		return emailAddress;
+		_userStats = us;	
 	}
+	
+	private transient UserStats _userStats;
+	public UserStats getUserStats() {
+		if (_userStats == null) {
+			try {
+				calculateUserStats(getTorrents());
+			} catch (MessageException ex) {
+				//do nothing
+			}
+		}
+		return _userStats;
+	}	
 	
 	public class UserStats {
 		public String maxSpaceGb;

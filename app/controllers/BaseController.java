@@ -1,8 +1,12 @@
 package controllers;
 
 import code.GenericResult;
+import java.util.HashMap;
+import java.util.Map;
 import models.User;
 import org.h2.util.StringUtils;
+import play.data.validation.Validation;
+import play.exceptions.UnexpectedException;
 import play.mvc.Before;
 import play.mvc.Catch;
 import play.mvc.Controller;
@@ -22,20 +26,37 @@ public class BaseController extends Controller {
 		}
 	}
 	
+	private static User _user;
 	protected static User getCurrentUser() {
+		if (_user != null) {
+			return _user;
+		}
 		long currentUserId = 0;
 		if (session.contains("currentUserId")) {
 			String s = session.get("currentUserId");
 			currentUserId = Long.parseLong(s);
 		}
 		if (currentUserId > 0) {
-			return User.getByKey(currentUserId);
+			_user = User.getByKey(currentUserId);
 		}
-		return null;
+		return _user;
+	}
+	
+	protected static void addGeneralError(Exception ex) {
+		Validation.addError("general", ex.getMessage());
 	}
 	
 	protected static String getServerPath() {
-		return String.format("http://%s", request.host);
+		return String.format("http://%s", request.host);	
+	}
+	
+	protected static String renderToString(String template) {
+		return renderToString(template, new HashMap<String, Object>());
+	}
+	
+	protected static String renderToString(String template, Map<String, Object> args) {
+		Template t = TemplateLoader.load(template);
+		return t.render(args);		
 	}
 	
 	protected static void result(Object o) {

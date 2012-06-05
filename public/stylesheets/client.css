@@ -1,5 +1,5 @@
 .torrent-progress-bar {
-	margin-bottom: 0px;
+	margin-bottom: 5px;
 }
 
 .torrent-nav-tabs {
@@ -54,4 +54,9 @@ input.torrent-add-group {
 }
 #files-list .span2 {
 	margin-top: 5px;
+}
+
+#torrent-info-modal {
+	margin-left: -25%;
+	width: 50%;
 }

@@ -2,7 +2,7 @@
 <h2>Users</h2>
 <table class="table table-bordered">
 	<tr>
-		<th>Name</th>
+		<th>Email Address</th>
 		<th>Node</th>
 		<th>Disk Available</th>
 		<th>Disk Used</th>
@@ -21,7 +21,7 @@
 		<td>${user.emailAddress}</td>
 		<td><a href="http://${node?.ipAddress}:${account.getTransmissionPort()}/">${node?.name}</a></td>
 		<td>${plan.maxDiskspaceGb} GB</td>
-		<td>${stats.usedSpaceGb} GB</td>
+		<td>${stats?.usedSpaceGb} GB</td>
 		<td>
 			#{if (transmission?.isRunning())}
 				<span class="success">Running</span>

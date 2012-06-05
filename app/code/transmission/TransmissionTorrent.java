@@ -1,58 +1,57 @@
-package models;
+package code.transmission;
 
 import code.Util;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.annotations.SerializedName;
-import java.util.*;
-import models.Torrent.TorrentFile;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import models.Node;
+import models.User;
 import org.apache.commons.lang.StringUtils;
 
-public class TorrentInfo {
+public class TransmissionTorrent {
 
-	public List<TorrentFile> files = new ArrayList<TorrentFile>();
-	public List<TorrentPeer> peers = new ArrayList<TorrentPeer>();
-	public List<TorrentTracker> trackers = new ArrayList<TorrentTracker>();
+	public int id;
+	public String name;
+	public double percentDone;
+	public long rateDownload;
+	public long rateUpload;
+	public String errorString;
+	public String hashString;
+	public long totalSize;
+	public long downloadedEver;
+	public long uploadedEver;
+	public int status;
+	public double metadataPercentComplete;
+	public String downloadDir;
+	public List<TransmissionFile> files;
+	public List<Integer> wanted;
+	public List<TransmissionPeer> peers;
+	public TransmissionPeerFrom peersFrom;
+	public List<Integer> priorities;
+	public List<TransmissionTrackerStats> trackerStats;
 	
-	public PeersFrom peersFrom;
-
-	public static TorrentInfo fromJson(String json) {
-		return null;
-		/*
-		TorrentInfo ti = new TorrentInfo();
-		Map<String, Object> mo = (JSONObject) JSONValue.parse(json);
-		//do trackers
-		List<Object> trackers = (List<Object>) mo.get("trackerStats");
-		List<Long> priorities = (List<Long>) mo.get("priorities");
-		List<Long> wanted = (List<Long>) mo.get("wanted");
-		List<Object> files = (List<Object>) mo.get("files");
-		List<Object> peers = (List<Object>) mo.get("peers");
-		JSONObject peersFrom = (JSONObject) mo.get("peersFrom");
-		Gson g = new GsonBuilder().create();
-		for (Object o : trackers) {
-			JSONObject jo = (JSONObject) o;
-			TorrentTracker tt = g.fromJson(jo.toJSONString(), TorrentTracker.class);
-			ti.trackers.add(tt);
-		}
+	private void fixFiles() {
+		//set the id and wanted fields on each file
+		//since the rpc response doesnt have them
+		//but its way easier to program when they are present
+		List<TransmissionFile> newList = new ArrayList<TransmissionFile>();
 		for (int x = 0; x < files.size(); x++) {
-			JSONObject o = (JSONObject) files.get(x);
-			TorrentFile tf = g.fromJson(o.toJSONString(), TorrentFile.class);
-			tf.priority = priorities.get(x).intValue();
-			tf.wanted = (wanted.get(x) > 0);
-			tf.transmissionId = x;
-			ti.files.add(tf);
+			TransmissionFile f = files.get(x);
+			f.id = x;
+			f.wanted = (wanted.get(x) == 1); 
+			f.priority = priorities.get(x);
+			newList.add(f);
 		}
-		for (Object o : peers) {
-			TorrentPeer p = g.fromJson(((JSONObject) o).toJSONString(), TorrentPeer.class);
-			ti.peers.add(p);
-		}
-		ti.peersFrom = g.fromJson(peersFrom.toJSONString(), PeersFrom.class);
-		return ti;*/
+		this.files = newList;
 	}
-
-	public List<TreeNode> filesAsTree() {
+	
+	public List<TreeNode> getFilesAsTree() {
+		fixFiles();
 		List<TreeNode> mapTree = new ArrayList<TreeNode>();
-		for (TorrentFile f : files) {
+		for (TransmissionFile f : files) {
 			String[] paths = f.name.split("/");
 			//Logger.info("paths: %s", paths.length);
 			List<TreeNode> parent = mapTree;
@@ -98,7 +97,7 @@ public class TorrentInfo {
 	public class TreeNode implements Comparable {
 
 		public String name = "";
-		public TorrentFile file = null;
+		public TransmissionFile file = null;
 		public List<TreeNode> children = new ArrayList<TreeNode>();
 		public int level = 0;
 		public String fullPath = "";
@@ -117,16 +116,28 @@ public class TorrentInfo {
 			return -1;
 		}
 		
-		public Boolean anyChildWanted() {
-			Boolean wanted = false;
+		public boolean isAnyChildWanted() {
+			boolean wanted = false;
 			for (TreeNode tn : this.children) {
 				if (tn.file != null && tn.file.wanted) {
 					wanted = true; break;
 				}
-				wanted = tn.anyChildWanted();
+				wanted = tn.isAnyChildWanted();
 				if (wanted) { break; }
 			}
 			return wanted;
+		}
+		
+		public boolean isAnyChildIncomplete() {
+			boolean complete = false;
+			for (TreeNode tn : this.children) {
+				if (tn.file != null && !tn.file.isFinishedDownloading()) {
+					complete = true; break;
+				}
+				complete = tn.isAnyChildIncomplete();
+				if (complete) { break; }
+			}			
+			return complete;
 		}
 		
 		public long getTotalSize() {
@@ -143,17 +154,47 @@ public class TorrentInfo {
 		
 		public String getNiceTotalSize() {
 			long ts = getTotalSize();
-			if (ts > 1073741824) {
-				return Util.getRateGb(ts) + "GB";
-			} else if (ts > 1048576) {
-				return Util.getRateMb(ts) + "MB";
-			} else {
-				return Util.getRateKb(ts) + "KB";
-			}		
+			return Util.getBestRate(ts);
+		}
+		
+		public String getDownloadLink(User u) {
+			Node n = u.getNode();
+			String fname = (file != null) ? file.name : name;
+			String status = (percentDone != 100) ? "incomplete" : "complete"; 
+			try {
+				return String.format("http://%s/openseedbox-server/download.php?user_name=%s&file_path=%s&status=%s",
+					n.ipAddress, URLEncoder.encode(u.emailAddress, "UTF-8"), URLEncoder.encode(fname, "UTF-8"), status);
+			} catch (UnsupportedEncodingException ex) {
+				return "Platform doesnt support UTF-8 encoding??";
+			}
+		}		
+		
+		public String getZipDownloadLink(User u) {
+			return String.format("%s&type=zip", getDownloadLink(u));
+		}
+		
+	}	
+
+	public class TransmissionFile {
+
+		public int id;
+		public boolean wanted;
+		public long bytesCompleted;
+		public long length;
+		public int priority;
+		public String name;
+		
+		public Boolean isFinishedDownloading() {
+			return (bytesCompleted == length);
+		}
+		
+		public String getPercentComplete() {
+			double percent = ((double) bytesCompleted / length) * 100;
+			return String.format("%.2f", percent);
 		}
 	}
 
-	public class TorrentPeer {
+	public class TransmissionPeer {
 
 		public String address;
 		public String clientName;
@@ -171,17 +212,36 @@ public class TorrentInfo {
 		public double progress;
 		public long rateToClient;
 		public long rateToPeer;
+		
+		public String getDownloadSpeed() {
+			return Util.getRateKb(this.rateToClient);
+		}
+		
+		public String getUploadSpeed() {
+			return Util.getRateKb(this.rateToPeer);
+		}
+		
 	}
 
-	public class TorrentTracker {
+	public class TransmissionPeerFrom {
+
+		public int fromCache;
+		public int fromDht;
+		public int fromIncoming;
+		public int fromLpd;
+		public int fromLtep;
+		public int fromPex;
+		public int fromTracker;
+	}
+
+	public class TransmissionTrackerStats {
 
 		public String announce;
 		public int downloadCount;
 		public boolean hasAnnounced;
 		public boolean hasScraped;
 		public String host;
-		@SerializedName("id")
-		public int trackerId;
+		public int id;
 		public boolean isBackup;
 		public int lastAnnouncePeerCount;
 		public String lastAnnounceResult;
@@ -190,18 +250,18 @@ public class TorrentInfo {
 		public long lastAnnounceTime;
 		public boolean lastAnnounceTimedOut;
 		public String lastScrapeResult;
-		public int lastScrapeStartTime;
+		public long lastScrapeStartTime;
 		public boolean lastScrapeSucceeded;
-		public int lastScrapeTime;
+		public long lastScrapeTime;
 		public boolean lastScrapeTimedOut;
 		public int leecherCount;
-		public int nextAnnounceTime;
-		public int nextScrapeTime;
+		public long nextAnnounceTime;
+		public long nextScrapeTime;
 		public String scrape;
 		public int scrapeState;
 		public int seederCount;
 		public int tier;
-
+		
 		public String getLastAnnounceTime() {
 			if (lastAnnounceTime <= 0) {
 				return "N/A";
@@ -216,16 +276,9 @@ public class TorrentInfo {
 			}
 			return Util.formatDateTime(new Date(Long.parseLong("" + (this.lastScrapeTime * 1000))));
 		}
-	}
-
-	public class PeersFrom {
-
-		public int fromCache;
-		public int fromDht;
-		public int fromIncoming;
-		public int fromLpd;
-		public int fromLtep;
-		public int fromPex;
-		public int fromTracker;
+		
+		public String getDownloadCount() {
+			return (this.downloadCount == -1) ? "N/A" : String.valueOf(this.downloadCount);
+		}
 	}
 }

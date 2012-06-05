@@ -1,10 +1,10 @@
 package code;
 
-import com.google.gson.Gson;
 import java.util.HashMap;
 import java.util.Map;
 import models.Node;
 import org.apache.commons.lang.StringUtils;
+import play.libs.F.Promise;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
 import play.libs.WS.WSRequest;
@@ -16,7 +16,7 @@ public class WebRequest {
 	private String path;
 	
 	public WebRequest(Node n) {
-		this.ipAddress = n.ipAddress;
+		this(n.ipAddress, null, "openseedbox-server");
 	}
 	
 	public WebRequest(String ipAddress) {

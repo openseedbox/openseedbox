@@ -1,7 +1,7 @@
 package controllers;
 
 import code.MessageException;
-import code.Transmission;
+import code.transmission.Transmission;
 import java.util.List;
 import models.FreeSlot;
 import models.Node;

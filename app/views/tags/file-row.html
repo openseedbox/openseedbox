@@ -1,34 +1,43 @@
 %{
 def file = _file
 def finished = false
-if (type != "info" && file.file) {
-	finished = file.file.isFinishedDownloading()
+def download_link = ""
+if (_type != "info" && file.file) {
+	finished = file.file.finishedDownloading
+	download_link = file.getDownloadLink(_user)
 }
 }%
 <tr data-level="${file.level}">
-	#{if (file.level > 0)}
-		<td style="padding-left: ${file.level * 20}px">${file.name}</td>
-	#{/if}
-	#{else}
-		<td>${file.name}</td>
-	#{/else}
+	<td #{if (file.level > 0)}style="padding-left: ${file.level * 20}px"#{/if}>
+		#{if (file.children.size() > 0)}<i class="icon-folder-open"></i>#{/if}
+		#{else}<i class="icon-file"></i>#{/else}
+		#{if (_type == "info")}${file.name}#{/if}
+		#{else}
+			#{if (finished && download_link)}
+				<a target="_blank" href="${download_link}">${file.name}</a>
+			#{/if}
+			#{else}
+				${file.name}
+			#{/else}
+		#{/else}
+	</td>
 	<td>
 	#{if (_type == "info")}
 		#{if (file.file)}
-		<input type="checkbox" class="info-file" data-id="${file.file.transmissionId}" #{if (file.file.wanted)}checked="checked"#{/if} />
+		<input type="checkbox" class="info-file" data-id="${file.file.id}" #{if (file.file.wanted)}checked="checked"#{/if} />
 		#{/if}
 		#{else}
-		<input type="checkbox" class="info-select-multiple" #{if (file.anyChildWanted())}checked="checked"#{/if} />
+		<input type="checkbox" class="info-select-multiple" #{if (file.anyChildWanted)}checked="checked"#{/if} />
 		#{/else}
 	#{/if}
 	#{else}
 		<span>${file.getNiceTotalSize()}</span>
 	#{/else}
 	</td>
-	<td>
+	<td style="text-align: center;">
 	#{if (_type == "info")}
 		#{if (file.file)}
-		<select class="torrent-priority" data-id="${file.file.transmissionId}" style="width:100%">
+		<select class="torrent-priority" data-id="${file.file.id}" style="width:100%">
 			<option value="-1" #{if (file.file.priority == -1)}selected="selected"#{/if}>Low</option>
 			<option value="0" #{if (file.file.priority == 0)}selected="selected"#{/if}>Normal</option>
 			<option value="1" #{if (file.file.priority == 1)}selected="selected"#{/if}>High</option>
@@ -37,15 +46,7 @@ if (type != "info" && file.file) {
 	#{/if}
 	#{else}
 		#{if (file.file)}
-			#{if (finished)}
-				[<a href="/client/files/download?fileName=${java.net.URLEncoder.encode(file.file.name)}">Download</a>]
-			#{/if}
-			#{else}
-				[ Downloading, ${file.file.percentComplete}% ]
-			#{/else}
-		#{/if}
-		#{if (!file.file)}
-			[<a href="/client/files/zip?directoryName=${java.net.URLEncoder.encode(file.fullPath)}">Zip</a>]
+			${file.file.percentComplete}%
 		#{/if}
 	#{/else}
 	</td>
@@ -53,7 +54,7 @@ if (type != "info" && file.file) {
 %{
 if (file.children.size() > 0) {
 	for (child in file.children) {
-		}%#{file-row file:child, type:_type /}%{		
+		}%#{file-row file:child, type:_type, user:_user /}%{		
 	}
 }
 }%

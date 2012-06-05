@@ -1,7 +1,7 @@
 package models;
 
 import code.MessageException;
-import code.Transmission;
+import code.transmission.Transmission;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 import play.modules.siena.EnhancedModel;
