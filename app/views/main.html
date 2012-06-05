@@ -18,7 +18,7 @@
 					<ul class="nav">
 						<li class="#{get "torrents_active" /}"><a href="@{ClientController.index()}">Torrents</a></li>
 						<li class="#{get "files_active" /}"><a href="@{ClientFilesController.index()}">Files</a></li>
-						<li class="#{get "settings_active" /}"><a href="@{ClientSettingsController.index()}">Settings</a></li>
+						<li class="#{get "settings_active" /}"><a href="@{AccountController.plans()}">Settings</a></li>
 						#{if (currentUser && currentUser.isAdmin)}
 							<li  class="#{get "admin_active" /}"><a href="@{AdminController.index()}">Admin</a></li>
 						#{/if}
@@ -43,6 +43,14 @@
 			</div>
 		</div>
 		<div id="container" class="container" style="padding-top: 20px;">
+			#{ifError "general"}
+			<div class="alert alert-error">
+				<a class="close" data-dismiss="alert" href="#">&times;</a>
+				<h3 class="alert-heading">An error occured:</h3>
+				#{error "general" /}
+			</div>
+			<div class="clearfix"></div>
+			#{/ifError}
 			#{doLayout /}
 		</div>
 	</body>

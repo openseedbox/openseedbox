@@ -1,11 +1,25 @@
 package controllers;
 
 import code.MessageException;
-import code.Transmission.SessionStats;
+import code.jobs.AddTorrentJob;
+import code.jobs.AddTorrentJob.AddTorrentJobResult;
+import code.jobs.GetTorrentsJob;
+import code.jobs.GetTorrentsJob.GetTorrentsJobResult;
+import code.jobs.TorrentControlJob;
+import code.jobs.TorrentControlJob.TorrentAction;
+import code.jobs.TorrentControlJob.TorrentControlJobResult;
+import code.transmission.Transmission;
+import java.io.File;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-import models.*;
+import java.util.Map;
+import models.Torrent;
 import models.Torrent.TorrentGroup;
-import models.User.UserStats;
+import models.User;
+import org.apache.commons.lang.StringUtils;
+import play.data.validation.Validation;
+import play.libs.F.Promise;
 import play.mvc.Before;
 
 public class ClientController extends BaseController {
@@ -22,108 +36,54 @@ public class ClientController extends BaseController {
 		}
 	}
 	
-	public static void index() throws MessageException {
-		User u = getCurrentUser();
-		List<TorrentGroup> torrentGroups = u.getTorrentGroups();
-		UserStats userStats = u.getUserStats();
-		SessionStats sessionStats = u.getTransmission().getSessionStats();
-		render("client/index.html", torrentGroups, userStats, sessionStats);
+	public static void index() {
+		List<TorrentGroup> torrentGroups = getCurrentUser().getTorrentGroups();
+		render("client/index.html", torrentGroups);
 	}
 	
-	public static void userStats() throws MessageException {
-		UserStats _arg = getCurrentUser().getUserStats();
-		render("tags/user-stats.html", _arg);
-	}
-	
-	public static void tabs(String active) throws MessageException {
-		List<TorrentGroup> _arg = getCurrentUser().getTorrentGroups();
-		render("tags/client-tabs.html", _arg, active);
-	}
-	
-	/*
-	public static void addTorrent(String urlOrMagnet, boolean paused) throws MessageException {
-		if (StringUtils.isNullOrEmpty(urlOrMagnet)) {
-			resultError("Please enter a valid URL or magent link.");
-		}
-		Node n = getUserNode();
-		Torrent t = n.getTransmission().addTorrent(urlOrMagnet, paused);
-		if (t != null) {
-			Logger.debug("Got here");
-			User currentUser = getCurrentUser();			
-			t.user = currentUser;
-			t.save();
-			result(t);
-		}
-		resultError("Error occured adding torrent.");
-	}
-	
-	public static void startTorrent(String torrentHash) throws MessageException {
-		Node n = getUserNode();
-		Torrent t = Torrent.findById(torrentHash);
-		t.status = 4; //Downloading
-		t.save();		
-		result(n.getTransmission().startTorrent(torrentHash));
-	}
-	
-	public static void pauseTorrent(String torrentHash) throws MessageException {
-		Node n = getUserNode();
-		Torrent t = Torrent.findById(torrentHash);
-		t.status = 0; //Paused
-		t.save();
-		result(n.getTransmission().pauseTorrent(torrentHash));		
-	}
-	
-	public static void removeTorrent(String torrentHash, Boolean torrentOnly) throws MessageException {
-		if (torrentOnly == null) { torrentOnly = true; }
-		Node n = getUserNode();
-		if (n.getTransmission().removeTorrent(torrentHash, torrentOnly)) {
-			//remove from db too
-			Torrent t = Torrent.findById(torrentHash);
-			t.delete();
-		}
-		result(true);
-	}
-	
-	public static void removeTorrents(String[] hashes) throws MessageException {
-		if (hashes == null) { result(true); }
-		Node n = getUserNode();
-		n.getTransmission().removeTorrent(Arrays.asList(hashes), false);
-		result(true);
-	}
-	
-	public static void renderTorrentList(String group) throws MessageException {
-		List<Torrent> torrents;
-		User u = getCurrentUser();
-		List<Torrent> userTorrents = u.getTorrents();
-		checkUserTorrents();
-		if (group == null || group.equals("All")) {
-			torrents = userTorrents;
-		} else if (group.equals("Downloading")) {
-			torrents = u.getTorrentsWithStatus(4);
-		} else if (group.equals("Seeding")) {
-			torrents = u.getTorrentsWithStatus(8);
-		} else if (group.equals("Paused")) {
-			torrents = u.getTorrentsWithStatus(0);
-		} else if (group.equals("Finished")) {
-			torrents = u.getTorrentsWithStatus(16);
+	public static void addTorrent(String urlOrMagnet, File fileFromComputer) {
+		if (StringUtils.isEmpty(urlOrMagnet) && fileFromComputer == null) {
+			Validation.addError("general", "Please enter a valid URL or magent link, or choose a valid file to upload.");
 		} else {
-			torrents = u.getTorrentsWithGroup(group);
+			User u = getCurrentUser();
+			Promise<AddTorrentJobResult> p = new AddTorrentJob(u, urlOrMagnet, fileFromComputer).now();
+			AddTorrentJobResult result = await(p);
+			if (result.hasError()) {
+				addGeneralError(result.error);
+			}
 		}
-		render("client/torrent-list.html", torrents, group);
+		Validation.keep();
+		index();
 	}
 	
-	public static void renderTorrent(String torrentHash) throws MessageException {
-		checkUserTorrents();
-		Torrent _arg = Torrent.findById(torrentHash);
-		if (_arg == null) {
-			throw new MessageException("No such torrent for user: %s", torrentHash);
-		}
-		render("tags/torrent.html", _arg);
+	
+	public static void startTorrent(String torrentHash) {
+		handleTorrentControlRequest(torrentHash, TorrentAction.START);	
 	}
+	
+	public static void startTorrents(String[] torrentHashes) {
+		handleTorrentControlRequest(torrentHashes, TorrentAction.START);
+	}
+	
+	public static void pauseTorrent(String torrentHash) {
+		handleTorrentControlRequest(torrentHash, TorrentAction.STOP);			
+	}
+	
+	public static void pauseTorrents(String[] torrentHashes) {
+		handleTorrentControlRequest(torrentHashes, TorrentAction.STOP);			
+	}
+	
+	public static void removeTorrent(String torrentHash) {
+		handleTorrentControlRequest(torrentHash, TorrentAction.REMOVE);
+	}	
+	
+	public static void removeTorrents(String[] torrentHashes) {
+		handleTorrentControlRequest(torrentHashes, TorrentAction.REMOVE);
+	}	
 	
 	public static void addTorrentGroup(String torrentHash, String group) throws MessageException {
-		Torrent t = Torrent.findById(torrentHash);
-		if (group != null && !group.trim().isEmpty()) {
+		Torrent t = getCurrentUser().getTorrent(torrentHash);
+		if (!StringUtils.isEmpty(group)) {
 			TorrentGroup temp = new TorrentGroup(group);
 			if (!t.groups.contains(temp)) {
 				t.groups.add(temp);
@@ -133,33 +93,78 @@ public class ClientController extends BaseController {
 		result(true);
 	}
 	
+	public static void addTorrentGroups(String[] torrentHashes, String group) {
+		if (torrentHashes != null && torrentHashes.length > 0 && !StringUtils.isEmpty(group)) {
+			List<Torrent> all = Torrent.all().filter("user", getCurrentUser()).filter("hashString IN", Arrays.asList(torrentHashes)).fetch();
+			for(Torrent t : all) {
+				TorrentGroup temp = new TorrentGroup(group);
+				if (!t.groups.contains(temp)) {
+					t.groups.add(temp);
+				}
+				t.save();			
+			}
+		}
+		result(true);
+	}
+	
 	public static void removeTorrentGroup(String torrentHash, String group) throws MessageException {
-		Torrent t = Torrent.findById(torrentHash);
-		if (group != null && !group.trim().isEmpty()) {
+		Torrent t = getCurrentUser().getTorrent(torrentHash);
+		if (!StringUtils.isEmpty(group)) {
 			t.groups.remove(new TorrentGroup(group));
 			t.save();
 		}
 		result(true);		
+	}	
+	
+	public static void update(String group) {
+		User u = getCurrentUser();	
+		
+		//use a job to prevent tying up server if backend transmission-daemon is being slow
+		Promise<GetTorrentsJobResult> job = new GetTorrentsJob(u, group).now();
+		GetTorrentsJobResult result = await(job);
+		if (result.hasError()) {
+			resultError(result.error.getMessage());
+		}
+		List<Torrent> torrents = result.torrents;
+		
+		//torrent list - changes all the time depending on progress, speed etc
+		Map<String, Object> tlist_params = new HashMap<String, Object>();
+		tlist_params.put("torrents", torrents);
+		tlist_params.put("group", group);
+		String tlist = renderToString("client/torrent-list.html", tlist_params);
+		
+		//user stats - change whenever the torrent-list changes
+		Map<String, Object> us_params = new HashMap<String, Object>();
+		us_params.put("stats", u.getUserStats());
+		String us = renderToString("tags/user-stats.html", us_params);
+
+		//tabs - included here because they may change as part of addGroup/removeGroup calls
+		Map<String, Object> ct_params = new HashMap<String, Object>();
+		ct_params.put("_arg", u.getTorrentGroups());
+		ct_params.put("active", group);
+		String ct = renderToString("tags/client-tabs.html", ct_params);	
+		
+		Map<String, Object> res = new HashMap<String, Object>();
+		res.put("torrent-list", tlist);
+		res.put("user-stats", us);
+		res.put("client-tabs", ct);
+		result(res);
 	}
 	
 	public static void renderTorrentInfo(String torrentHash) throws MessageException {
 		//torrent info is seeders, peers, files, tracker stats
-		User u = getCurrentUser();
-		TorrentInfo info = u.getNode().getTransmission().getTorrentInfo(torrentHash);
-		Torrent torrent = Torrent.findById(torrentHash);
-		if (params.get("ext") != null && !params.get("ext").equals("html")) {
-			result(info);
-		}
-		renderTemplate("client/torrent-info.html", info, torrent);
+		Promise<GetTorrentsJobResult> job = new GetTorrentsJob(getCurrentUser(), null, torrentHash).now();
+		GetTorrentsJobResult res = await(job);
+		Torrent torrent = res.torrents.get(0);
+		renderTemplate("client/torrent-info.html", torrent);
 	}
 	
-	public static void setIncludedTorrentFiles(String torrentHash, String[] fw, String[] ph,
-			  String[] pn, String[] pl) throws MessageException {
-		User u = getCurrentUser();
-		Transmission t = u.getNode().getTransmission();
-		if (fw == null) { fw = new String[]{}; }
+	public static void setIncludedTorrentFiles(String torrentHash, String[] fw, String[] fa,
+			String[] ph, String[] pn, String[] pl) throws MessageException {
+		//fw = files wanted, fa = all files, ph = priority high, pn = priority normal, pl = priority low
+		Transmission t = getCurrentUser().getTransmission();	
 		if (fw != null) {
-			t.setFilesWanted(torrentHash, Arrays.asList(fw));
+			t.setFilesWanted(torrentHash, Arrays.asList(fw), Arrays.asList(fa));
 		}
 		if (ph != null) {
 			t.setFilePriority(torrentHash, Arrays.asList(ph), "high");
@@ -173,19 +178,31 @@ public class ClientController extends BaseController {
 		result(true);
 	}
 	
-	public static void torrentDetail(String torrentHash) {
-		Torrent t = Torrent.findById(torrentHash);
-		if (t == null) {
-			resultError("No such torrent with hash: " + torrentHash);
+	protected static void handleTorrentControlRequest(String torrentHash, TorrentAction action) {
+		handleTorrentControlRequest(new String[] { torrentHash }, action);
+	}
+	
+	protected static void handleTorrentControlRequest(String[] torrentHashes, TorrentAction action) {
+		TorrentControlJobResult res = runTorrentControlJob(Arrays.asList(torrentHashes), action);
+		if (res.hasError()) {
+			resultError(res.error.getMessage());
 		}
-		result(t);
+		result(res.success);	
 	}
 	
-	public static void renderAddTorrent(String torrentHash) {
-		Torrent torrent = Torrent.findById(torrentHash);
-		renderTemplate("client/torrent-add.html", torrent);
-	}
+	protected static TorrentControlJobResult runTorrentControlJob(String torrentHash, TorrentAction action) {
+		return runTorrentControlJob(Arrays.asList(new String[] { torrentHash }), action);
+	}	
 	
+	protected static TorrentControlJobResult runTorrentControlJob(List<String> torrentHashes, TorrentAction action) {
+		User u = getCurrentUser();
+		Promise<TorrentControlJobResult> tcj = new TorrentControlJob(u, torrentHashes, action).now();
+		TorrentControlJobResult res = await(tcj);
+		return res;
+	}
+		
+	
+	/*
 	public static void setActiveUser(long id) {
 		session.put("actualUserId", id);
 		Header r = request.headers.get("Referer");
@@ -194,40 +211,5 @@ public class ClientController extends BaseController {
 			referer = r.value();
 		}
 		redirect(referer);
-	}
-	
-	private static Node getUserNode() throws MessageException {
-		User cu = getCurrentUser();
-		Node n = cu.getNode();
-		Logger.debug("Node name: %s (username: %s)", n.name, cu.emailAddress);
-		if (n == null) {
-			throw new MessageException(String.format("User %s is not assigned to any node.", cu.emailAddress));
-		}
-		return n;
-	}
-	
-	private static void checkUserTorrents() throws MessageException{
-		//make sure user isnt exceeding their limit. this can happen if they add
-		//a torrent from a magnet link, because we dont know the total size
-		//at the time they add it
-		User u = getCurrentUser();
-		UserStats us = u.getUserStats();
-		if (Double.parseDouble(us.usedSpaceGb) > Double.parseDouble(us.maxSpaceGb)) {
-			//delete the last torrent
-			Torrent newest = null;
-			for(Torrent t : u.getTorrents()) {
-				if (newest != null) {
-					if (t.createDateUTC.after(newest.createDateUTC)) {
-						newest = t;
-					}
-				} else {
-					newest = t;
-				}
-			}
-			if (newest != null) {
-				u.getNode().getTransmission().removeTorrent(newest.hashString, false);
-				newest.delete();
-			}
-		}			
-	}		*/
+	}*/
 }

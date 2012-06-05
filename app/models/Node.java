@@ -1,6 +1,6 @@
 package models;
 
-import code.Transmission;
+import code.transmission.Transmission;
 import code.WebRequest;
 import code.WebResponse;
 import com.google.gson.Gson;

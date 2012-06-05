@@ -7,16 +7,6 @@
 #{set "moreStyles"}
 	<link rel="stylesheet" type="text/css" href="/public/stylesheets/admin.css" />
 #{/set}
-#{ifErrors}
-<div class="alert alert-error">
-	<h3 class="alert-heading">Error</h3>
-	<ul>
-	#{errors}
-		<li>${error}</li>
-	#{/errors}
-	</ul>
-</div>
-#{/ifErrors}
 <ul id="tabs" class="nav nav-tabs">
 	<li #{if (active == "stats")}class="active"#{/if}><a href="@{AdminController.stats}">Stats</a></li>
 	<li #{if (active == "nodes")}class="active"#{/if}><a href="@{AdminController.nodes}">Nodes</a></li>

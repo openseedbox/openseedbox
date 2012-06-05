@@ -11,53 +11,75 @@
 		</ul>
 		<div class="tab-content">
 			<div class="tab-pane active" id="torrent-files">
-				<table id="info-files-table" class="table table-bordered table-condensed">
+				<table id="info-files-table" class="table table-bordered table-condensed table-striped">
 					<tr>
 						<th>Name</th>
 						<th>Included</th>
 						<th>Priority</th>
 					</tr>
-				#{list items:info.filesAsTree(), as:"file"}
+				#{list items:torrent.filesAsTree, as:"file"}
 					#{file-row file:file, type:"info" /}
 				#{/list}
 				</table>
 			</div>
 			<div class="tab-pane" id="torrent-trackers">
-				#{list items:info.trackers, as:"tracker"}
-				<div class="row-fluid">
-					<div class="span8">
-						<strong>Host:</strong> ${tracker.host}<br />
-						<strong>Status:</strong> ${tracker.lastAnnounceResult}<br />
-						<strong>Last Announce:</strong> ${tracker.lastAnnounceTime}<br />
-						<strong>Last Scrape:</strong> ${tracker.lastScrapeTime ?: "N/A"}<br />
-					</div>
-					<div class="span4">
-						<strong>Seeders:</strong> ${(tracker.seederCount != -1) ?: "N/A"}<br />
-						<strong>Leechers:</strong> ${(tracker.leecherCount != -1) ?: "N/A"}<br />
-						<strong>Downloads:</strong> ${(tracker.downloadCount != -1) ?: "N/A"}<br />
-					</div>
-				</div>
-				#{if (!tracker_isLast)}
-					<hr />
+				#{if (torrent.trackers.size > 0)}
+				<table class="table table-bordered table-condensed table-striped">
+					<tr>
+						<th>Host</th>
+						<th>Status</th>
+						<th>Seeds</th>
+						<th>Leeches</th>
+						<th>Downloads</th>
+					</tr>
+					#{list items:torrent.trackers, as:"tracker"}
+					<tr>
+						<th>${tracker.host}</th>
+						<th>
+							#{if (tracker.lastAnnounceResult == "Success")}
+								<span class="success">${tracker.lastAnnounceResult}</span>
+							#{/if}
+							#{else}
+								<span class="error">${tracker.lastAnnounceResult}</span>
+							#{/else}
+						</th>
+						<th>${tracker.seederCount}</th>
+						<th>${tracker.leecherCount}</th>
+						<th>${tracker.downloadCount}</th>
+					</tr>
+					#{/list}
+				</table>
 				#{/if}
-				#{/list}
 				#{else}
-					No connected trackers.
+					<p>No connected trackers.</p>
 				#{/else}
 			</div>
 			<div class="tab-pane" id="torrent-peers">
-				#{list items:info.peers, as:"peer"}
-					<strong>Address:</strong> ${peer.address}
-					<strong>Client:</strong> ${peer.clientName}
-					<strong>Encryption:</strong> ${peer.isEncrypted}
-					<strong>Down (KB/s):</strong> ${peer.rateToClient}
-					<strong>Up (KB/s):</strong> ${peer.rateToPeer}
-					#{if (!peer_isLast)}
-						<hr />
-					#{/if}
-				#{/list}
+				#{if (torrent.peers.size > 0)}
+				<table class="table table-bordered table-condensed table-striped">
+					<tr>
+						<th>Address</th>
+						<th>Client</th>
+						<th>Secure</th>
+						<th>Down (kb/s)</th>
+						<th>Up (kb/s)</th>
+					</tr>				
+					#{list items:torrent.peers, as:"peer"}
+					<tr>
+						<td>${peer.address}</td>
+						<td>${peer.clientName}</td>
+						<td>
+							#{if peer.isEncrypted}<span class="success">yes</span>#{/if}
+							#{else}<span class="error">no</span>#{/else}
+						</td>
+						<td>${peer.downloadSpeed}</td>
+						<td>${peer.uploadSpeed}</td>
+					</tr>
+					#{/list}
+				</table>
+				#{/if}
 				#{else}
-					No connected peers.
+					<p>No connected peers.</p>
 				#{/else}
 			</div>
 		</div>
@@ -97,7 +119,7 @@
 			$("#torrent-files-apply").click(function() {
 				var loader = $(this).siblings(".ajax-loader").show();
 				var ids = [];
-				var unwanted_ids = []; //not actually used, maybe in future
+				var all_ids = []; //needed to set files-unwanted
 				var high_ids = [];
 				var normal_ids = [];
 				var low_ids = [];
@@ -106,9 +128,8 @@
 					var id = $(this).data("id");
 					if ($(this).is(":checked")) {
 						ids.push(id);
-					} else {
-						unwanted_ids.push(id)
 					}
+					all_ids.push(id);
 				});
 				$("#info-files-table select").each(function() {
 					var val = $(this).val();
@@ -124,6 +145,7 @@
 				$.post("/client/setIncludedTorrentFiles?ext=json", {
 					"torrentHash" : hash,
 					"fw" : ids,
+					"fa" : all_ids,
 					"ph" : high_ids,
 					"pn" : normal_ids,
 					"pl" : low_ids

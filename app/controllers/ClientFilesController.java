@@ -1,18 +1,32 @@
 package controllers;
 
+import code.jobs.GetTorrentsJob;
+import code.jobs.GetTorrentsJob.GetTorrentsJobResult;
 import java.util.List;
 import models.Node;
 import models.Torrent;
+import play.libs.F.Promise;
 
-/**
- *
- * @author erin
- */
-public class ClientFilesController extends ClientController {
+public class ClientFilesController extends BaseController {
 	
 	public static void index() {
-		List<Torrent> torrents = getCurrentUser().getTorrents();
-		renderTemplate("client/files.html", torrents);
+		Promise<GetTorrentsJobResult> job = new GetTorrentsJob(getCurrentUser()).now();
+		GetTorrentsJobResult res = await(job);
+		if (res.hasError()) {
+			addGeneralError(res.error);
+		}
+		List<Torrent> torrents = res.torrents;
+		renderTemplate("clientfiles/index.html", torrents);
+	}
+	
+	public static void singleTorrent(String hashString) {
+		Promise<GetTorrentsJobResult> job = new GetTorrentsJob(getCurrentUser(), null, hashString).now();
+		GetTorrentsJobResult res = await(job);
+		if (res.hasError()) {
+			addGeneralError(res.error);
+		}
+		Torrent torrent = res.torrents.get(0);
+		renderTemplate("clientfiles/single-torrent.html", torrent);		
 	}
 	
 	public static void zip(String directoryName) {
@@ -24,7 +38,4 @@ public class ClientFilesController extends ClientController {
 		String url = String.format("http://%s/torrents/complete/%s", n.ipAddress, fileName);
 		redirect(url);
 	}
-	
-	
-
 }

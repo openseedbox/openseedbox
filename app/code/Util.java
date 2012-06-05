@@ -35,6 +35,16 @@ public class Util {
 		return String.format("%.2f", (d / (1024 * 1000000)));
 	}	
 	
+	public static String getBestRate(long rateInBytes) {
+		if (rateInBytes > (1024 * 1000000)) {
+			return getRateGb(rateInBytes) + "gb";
+		} else if (rateInBytes > (1024 * 1000)) {
+			return getRateMb(rateInBytes) + "mb";
+		} else {
+			return getRateKb(rateInBytes) + "kb";
+		}
+	}
+	
 	public static String formatDate(Date d) {
 		DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
 		return df.format(d);				

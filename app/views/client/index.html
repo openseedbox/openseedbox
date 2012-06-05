@@ -2,42 +2,81 @@
 #{set title: "Seedbox" /}
 #{set torrents_active: "active" /}
 #{set "moreScripts"}
-	<script type="text/javascript" src="/public/javascripts/client.js"></script>
+	<script type="text/javascript" src="@{'/public/javascripts/client.js'}"></script>
 #{/set}
 #{set "moreStyles"}
-	<link rel="stylesheet" type="text/css" href="/public/stylesheets/client.css" />
+	<link rel="stylesheet" type="text/css" href="@{'/public/stylesheets/client.css'}" />
 #{/set}
 <div id="tab-header">
-	#{client-tabs torrentGroups /}
+
 </div>
 <div class="pull-right" style="margin-top: -50px;">
-	<img id="global-loader" src="/public/images/ajax-loader.gif" />
-	<a href="#" class="btn add-torrent"><i class="icon-plus"></i>Add Torrent</a>
+	<img id="global-loader" src="@{'/public/images/ajax-loader.gif'}" />
+	<a href="#add-torrent-dialog" class="btn add-torrent" data-toggle="modal"><i class="icon-plus"></i>Add Torrent</a>
 </div>
 <div class="clearfix"></div>
 <div id="user-stats" class="pull-right">
-	#{user-stats userStats:userStats, sessionStats:sessionStats /}
+	
 </div>
 <div id="with-selected" class="btn-group">
 	<a href="#" class="btn dropdown-toggle" data-toggle="dropdown">With selected: <span class="caret"></span></a>
-	<ul class="dropdown-menu">
-		<li><a href="#" id="remove-selected">Remove</a></li>
-		<li><a href="#" id="add-group-to-selected">Add group</a></li>
+	<ul id="group-actions" class="dropdown-menu">
+		<li><a href="#" class="group-actions-start">Start</a></li>
+		<li><a href="#" class="group-actions-pause">Pause</a></li>
+		<li><a href="#" class="group-actions-remove">Remove</a></li>
+		<li><a href="#" class="group-actions-add-group">Add group</a></li>
 	</ul>
+	<img id="group-actions-loader" class="hide" src="@{'/public/images/ajax-loader.gif'}" style="margin-left: 10px;"/>
 </div>
 <div class="clearfix"></div>
-<div class="tab-content">
-	#{list items:torrentGroups, as:'group'}
-		<div class="tab-pane #{if (group_isFirst)}active#{/if}" id="${group.name}">
-			<table>
-				<tr>
-					<td><img src="/public/images/ajax-loader.gif" /></td>
-					<td><h5 style="margin-left: 1em;">Loading ${group.name} torrents...</h3></td>
-				</tr>
-			</table>
-		</div>
-	#{/list}
+<div id="torrent-list" class="tab-content">
+	
 </div>
 <div class="modal hide" id="add-torrent-dialog">
-	
+	<form class="form-horizontal" enctype="multipart/form-data" method="post" action="@{ClientController.addTorrent}">
+	<div class="modal-header">
+		<a class="close" data-dismiss="modal">&times;</a>
+		<h2>Add Torrent</h2>
+	</div>
+	<div class="modal-body">
+			#{form.text label:"URL or Magnet:", name:"urlOrMagnet", placeholder:"Plase torrent URL or Magnet link" /}
+			#{form.upload label:"Upload from computer:", name:"fileFromComputer" /}
+	</div>
+	<div class="modal-footer">
+		<input type="submit" class="btn btn-primary" value="Add Torrent" />
+		<a href="#" class="btn" data-dismiss="modal">Close</a>
+	</div>	
+	</form>
+</div>
+<div class="modal hide" id="remove-torrent-dialog">
+	<div class="modal-header">
+		<a class="close" data-dismiss="modal">&times;</a>
+		<h2>Remove Torrent</h2>
+	</div>	
+	<div class="modal-body">
+		<p>Are you sure you want to remove <strong class="torrent-name"></strong> (including all files)?</p>
+	</div>
+	<div class="modal-footer">
+		<a id="remove-torrent-button" class="btn btn-danger" href="#">Remove</a>
+		<a href="#" class="btn" data-dismiss="modal">Close</a>
+	</div>
+	<script type="text/javascript">
+		(function($) {
+			$(document).ready(function() {
+				$("#remove-torrent-button").click(function() {
+					var hash = $(this).data("torrent-hash");
+					$.post("/client/removeTorrent?ext=json", {
+						"torrentHash" : hash
+					}, function() {
+						$("#t_" + hash).fadeOut("slow", function() {
+							$(this).remove();
+						});
+						$("#remove-torrent-dialog").modal("hide");
+						window.refresh_disabled = false;
+					});
+					return false;
+				});
+			});
+		})(jQuery);
+	</script>
 </div>
