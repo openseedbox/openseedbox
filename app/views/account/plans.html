@@ -18,7 +18,7 @@
 <div class="row">
 #{/if}
 	<div class="span6">
-		<div id="${plan.name}" class="well plan">
+		<div id="${plan.name}" class="well plan #{if isCurrentPlan}alert-info#{/if}">
 			<div class="pull-left">
 				<h2 style="display: inline-block">${plan.name}</h2>
 			</div>

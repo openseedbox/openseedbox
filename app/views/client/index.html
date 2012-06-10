@@ -7,14 +7,18 @@
 #{set "moreStyles"}
 	<link rel="stylesheet" type="text/css" href="@{'/public/stylesheets/client.css'}" />
 #{/set}
-<div id="tab-header">
 
+#{choose-account-dropdown user:currentUser, account:activeAccount, returnTo:"/client" /}
+
+<div id="tab-header">
+	<ul class="nav nav-tabs">
+		<li class="active"><a href="#"><img src="@{'/public/images/ajax-loader.gif'}" /> Loading tabs...</a></li>
+	</ul>
 </div>
 <div class="pull-right" style="margin-top: -50px;">
 	<img id="global-loader" src="@{'/public/images/ajax-loader.gif'}" />
 	<a href="#add-torrent-dialog" class="btn add-torrent" data-toggle="modal"><i class="icon-plus"></i>Add Torrent</a>
 </div>
-<div class="clearfix"></div>
 <div id="user-stats" class="pull-right">
 	
 </div>

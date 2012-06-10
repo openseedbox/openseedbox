@@ -1,16 +1,16 @@
 package notifiers;
 
-import controllers.BaseController;
+import models.Invitation;
 import play.mvc.Mailer;
 
 public class Mails extends Mailer {
-	/*
-	public static void inviteUser(InvitedUser user, String serverPath) {
+
+	public static void inviteUser(Invitation invitation) {
 		setContentType("text/html");
-		setSubject("MySeedbox - account invite");
-		addRecipient(user.emailAddress);
-		setFrom("noreply@myseedbox.com");
-		send(user, serverPath);
-	}*/
+		setSubject(invitation.getInvitingUser().displayName + " wants to share their seedbox with you!");
+		addRecipient(invitation.emailAddress);
+		setFrom("noreply@openseedbox.com");
+		send(invitation);
+	}
 	
 }

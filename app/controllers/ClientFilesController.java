@@ -7,10 +7,10 @@ import models.Node;
 import models.Torrent;
 import play.libs.F.Promise;
 
-public class ClientFilesController extends BaseController {
+public class ClientFilesController extends ClientController {
 	
 	public static void index() {
-		Promise<GetTorrentsJobResult> job = new GetTorrentsJob(getCurrentUser()).now();
+		Promise<GetTorrentsJobResult> job = new GetTorrentsJob(getActiveAccount()).now();
 		GetTorrentsJobResult res = await(job);
 		if (res.hasError()) {
 			addGeneralError(res.error);
@@ -20,7 +20,7 @@ public class ClientFilesController extends BaseController {
 	}
 	
 	public static void singleTorrent(String hashString) {
-		Promise<GetTorrentsJobResult> job = new GetTorrentsJob(getCurrentUser(), null, hashString).now();
+		Promise<GetTorrentsJobResult> job = new GetTorrentsJob(getActiveAccount(), null, hashString).now();
 		GetTorrentsJobResult res = await(job);
 		if (res.hasError()) {
 			addGeneralError(res.error);
@@ -34,7 +34,7 @@ public class ClientFilesController extends BaseController {
 	}
 	
 	public static void download(String fileName) {
-		Node n = getCurrentUser().getNode();
+		Node n = getActiveAccount().getNode();
 		String url = String.format("http://%s/torrents/complete/%s", n.ipAddress, fileName);
 		redirect(url);
 	}

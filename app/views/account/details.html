@@ -2,13 +2,14 @@
 #{if (success)}
 <div class="alert alert-success">Details saved successfully!</div>
 #{/if}
-<h2>Account Details</h2>
+<h3>Account Details</h3>
 <p>
 <form class="form-horizontal" method="post" action="@{AccountController.details}">
 	#{form.hidden name:"user.id", value:user?.id /}
 	#{form.text name:"user.emailAddress", value:user?.emailAddress, label:"Email Address:" /}
 	#{form.text name:"user.avatarUrl", value:user?.avatarUrl, label:"Avatar URL" /}
 	#{form.text name:"user.displayName", value:user?.displayName, label:"Display Name" /}
+	#{form.dropdown name:"user.timeZone", value:user?.timeZone, label:"Time Zone", options:timeZones /}
 	#{form.actions buttons:["Update","Cancel"] /}
 </form>
 </p>

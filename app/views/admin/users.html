@@ -4,12 +4,12 @@
 	<tr>
 		<th>Email Address</th>
 		<th>Node</th>
-		<th>Disk Available</th>
-		<th>Disk Used</th>
+		<th>Available</th>
+		<th>Used</th>
 		<th>Status</th>
 		<th>Password</th>
 		<th>Port</th>
-		<th>Action</th>
+		<th width="20%">Action</th>
 	</tr>
 	#{list items:users, as:"user"}
 	%{ def stats = user.getUserStats()
