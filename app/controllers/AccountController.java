@@ -1,12 +1,18 @@
 package controllers;
 
 import code.MessageException;
+import code.Util;
+import code.Util.SelectItem;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-import models.Account;
-import models.FreeSlot;
-import models.Node;
-import models.Plan;
-import models.User;
+import models.*;
+import notifiers.Mails;
+import org.apache.commons.mail.EmailException;
+import org.apache.commons.mail.HtmlEmail;
+import org.joda.time.DateTimeZone;
+import play.cache.Cache;
+import play.data.validation.Email;
 import play.data.validation.Valid;
 import play.data.validation.Validation;
 import play.mvc.Before;
@@ -19,6 +25,15 @@ public class AccountController extends BaseController {
 		if (u == null) {
 			AuthController.logout();
 		}
+	}
+	
+	@Before
+	public static void uncacheUser() {
+		//When a users account settings are updated, the user should be removed from
+		//the cache so that the settings actually take effect, since basically
+		//every operation involving a User calls getCurrentUser() which will retrieve
+		//the user from the cache if its in there.
+		Cache.delete(getCurrentUserCacheKey());
 	}
 	
 	public static void index() {
@@ -75,8 +90,56 @@ public class AccountController extends BaseController {
 			user.save();
 			success = true;
 		}
-		if (user == null) { user = getCurrentUser(); }		
-		render("account/details.html", active, user, success);
+		if (user == null) { user = getCurrentUser(); }	
+		List<String> timeZones = new ArrayList<String>(DateTimeZone.getAvailableIDs());
+		//List<SelectItem> timeZones = Util.toSelectItems(tz);
+		render("account/details.html", active, user, success, timeZones);
+	}
+	
+	public static void invite() {
+		String active = "invite";
+		List<Invitation> invitations = getCurrentUser().getInvitations();
+		render("account/invite.html", active, invitations);
+	}
+	
+	public static void removeInvitedUser(Long id) {
+		Invitation.getByKey(id).delete();
+		invite();
+	}
+	
+	public static void resendInvitationEmail(Long id) {
+		Invitation i = Invitation.getByKey(id);
+		Mails.inviteUser(i);
+		flash.put("sucess", "Email successfully sent to " + i.emailAddress + ".");
+		invite();
+	}
+	
+	public static void inviteUser(@Email String emailAddress) {
+		if (!Validation.hasErrors()) {
+			User u = getCurrentUser();
+			//check email address isnt already in list
+			boolean found = false;
+			for (Invitation i : u.getInvitations()) {
+				if (i.emailAddress.equals(emailAddress)) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				Invitation i = new Invitation();
+				i.invitingUser = u;
+				i.emailAddress = emailAddress;
+				i.invitationDate = new Date();
+				i.insert();
+				
+				Mails.inviteUser(i);
+				
+			} else {
+				Validation.addError("emailAddress", "You have already invited this user!");
+			}
+		}
+		Validation.keep();
+		invite();
 	}
 	
 	private static int getTransmissionPort(Node n) throws MessageException {

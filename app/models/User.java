@@ -1,8 +1,8 @@
 package models;
 
 import code.MessageException;
-import code.transmission.Transmission;
 import code.Util;
+import code.transmission.Transmission;
 import code.transmission.TransmissionTorrent;
 import java.io.File;
 import java.util.ArrayList;
@@ -11,11 +11,9 @@ import java.util.Date;
 import java.util.List;
 import models.Torrent.TorrentGroup;
 import org.apache.commons.lang.StringUtils;
-import play.Logger;
 import play.data.validation.Email;
 import play.modules.siena.EnhancedModel;
 import siena.*;
-import siena.embed.Embedded;
 
 @Table("user")
 public class User extends EnhancedModel {
@@ -46,8 +44,8 @@ public class User extends EnhancedModel {
 	@Column("primary_account_id")
 	public Account primaryAccount;
 	
-	@Embedded @Column("allowed_account_ids")
-	public List<Integer> allowedAccounts; 
+	@Column("time_zone")
+	public String timeZone;
 	
 	public Node getNode() {
 		Account a = getPrimaryAccount();
@@ -56,6 +54,25 @@ public class User extends EnhancedModel {
 		}
 		return null;
 	}	
+	
+	public List<Invitation> getInvitations() {
+		return Invitation.all().filter("invitingUser", this).order("invitationDate").fetch();
+	}
+	
+	public List<Account> getAvailableAccounts() {
+		List<Account> ret = new ArrayList<Account>();
+		
+		//add the users account since it needs to be in the list of available accounts so the user can switch back to it
+		ret.add(this.getPrimaryAccount());
+		
+		//available accounts are all the invitations where the emailAddress is the same as the current user
+		List<Invitation> invitations = Invitation.all().filter("emailAddress", this.emailAddress).fetch();
+		for (Invitation i : invitations) {
+			User u = i.getInvitingUser();
+			ret.add(u.getPrimaryAccount());
+		}
+		return ret;
+	}
 	
 	public Transmission getTransmission() {
 		Account a = getPrimaryAccount();

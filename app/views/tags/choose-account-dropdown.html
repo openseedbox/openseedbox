@@ -1,0 +1,26 @@
+%{
+	def availableAccounts = _user.availableAccounts
+	def options = []
+	for (account in availableAccounts) {
+		options.add([ "value" : account.id, "name" : account.displayName ])
+	}
+}%
+#{if availableAccounts.size > 0}
+<div class="pull-left">
+	<h3>Showing torrents for: ${_account.displayName}</h3>
+</div>
+<div class="pull-right">
+	<form method="post" action="@{ClientController.setActiveAccount()}" class="form-horizontal">
+		#{form.hidden name:"returnTo", value:_returnTo /}
+		#{form.dropdown label:"Select Account", id:"select-account", name:"id", value:_account.id, options: options /}
+	</form>
+</div>
+<div class="clearfix" style="margin-bottom: -20px;"></div>
+<script type="text/javascript">
+	#{jquery-wrapper}
+	$("#select-account").change(function() {
+		$(this).parents("form:first").submit();
+	});
+	#{/jquery-wrapper}
+</script>
+#{/if}

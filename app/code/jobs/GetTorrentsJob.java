@@ -1,14 +1,12 @@
 package code.jobs;
 
-import code.MessageException;
 import code.jobs.GetTorrentsJob.GetTorrentsJobResult;
-import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.List;
+import models.Account;
 import models.Torrent;
 import models.User;
 import org.apache.commons.lang.StringUtils;
-import play.Logger;
 import play.jobs.Job;
 
 public class GetTorrentsJob extends Job<GetTorrentsJobResult> {
@@ -20,8 +18,8 @@ public class GetTorrentsJob extends Job<GetTorrentsJobResult> {
 	 * Gets all the torrents in the specified users transmission-daemon
 	 * @param user The user to get torrents for
 	 */
-	public GetTorrentsJob(User user) {
-		this(user, null);
+	public GetTorrentsJob(Account account) {
+		this(account, null);
 	}
 	
 	/**
@@ -29,9 +27,8 @@ public class GetTorrentsJob extends Job<GetTorrentsJobResult> {
 	 * @param user The user to get torrents for
 	 * @param group The group to get torrents in
 	 */
-	public GetTorrentsJob(User user, String group) {
-		_user = user;
-		_group = group;
+	public GetTorrentsJob(Account account, String group) {
+		this(account, group, null);
 	}	
 	
 	/**
@@ -40,8 +37,8 @@ public class GetTorrentsJob extends Job<GetTorrentsJobResult> {
 	 * @param group Ignore this parameter, only exists to make the method signature different
 	 * @param torrentHash The hash of a specific torrent to get details for
 	 */
-	public GetTorrentsJob(User user, String group, String torrentHash) {
-		_user = user;
+	public GetTorrentsJob(Account account, String group, String torrentHash) {
+		_user = account.getPrimaryUser();
 		_group = group;
 		_hash = torrentHash;
 	}		

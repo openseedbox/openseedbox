@@ -167,7 +167,7 @@ public class AdminController extends BaseController {
 				t.stop();
 			}
 		} catch (MessageException ex) {
-			Validation.addError("general", ex.getMessage());
+			addGeneralError(ex);
 		}
 		Validation.keep();
 		users();
@@ -180,8 +180,9 @@ public class AdminController extends BaseController {
 			if (t != null) {
 				t.start();
 			}
+			setGeneralMessage("Start request sent! Refresh the page in a few moments to see the status change.");
 		} catch (MessageException ex) {
-			Validation.addError("general", ex.getMessage());
+			addGeneralError(ex);
 		}
 		Validation.keep();
 		users();

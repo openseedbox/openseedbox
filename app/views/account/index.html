@@ -1,4 +1,5 @@
 #{extends "main.html" /}
+#{set settings_active: "active" /}
 #{set title: "Account Settings" /}
 #{if !currentUser.hasPlan()}
 <div class="alert alert-error">
@@ -26,6 +27,9 @@
 	<li #{if (active == "details")}class="active"#{/if}>
 		<a href="@{AccountController.details}">Account Details</a>
 	</li>	
+	<li #{if (active == "invite")}class="active"#{/if}>
+		<a href="@{AccountController.invite}">Invite Users</a>
+	</li>		
 </ul>
 <div class="tab-content">
 	#{doLayout /}

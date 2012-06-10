@@ -14,10 +14,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import models.Account;
 import models.Torrent;
 import models.Torrent.TorrentGroup;
 import models.User;
 import org.apache.commons.lang.StringUtils;
+import play.cache.Cache;
 import play.data.validation.Validation;
 import play.libs.F.Promise;
 import play.mvc.Before;
@@ -36,17 +38,16 @@ public class ClientController extends BaseController {
 		}
 	}
 	
-	public static void index() {
-		List<TorrentGroup> torrentGroups = getCurrentUser().getTorrentGroups();
-		render("client/index.html", torrentGroups);
+	public static void index() {		
+		render("client/index.html");
 	}
 	
 	public static void addTorrent(String urlOrMagnet, File fileFromComputer) {
 		if (StringUtils.isEmpty(urlOrMagnet) && fileFromComputer == null) {
 			Validation.addError("general", "Please enter a valid URL or magent link, or choose a valid file to upload.");
 		} else {
-			User u = getCurrentUser();
-			Promise<AddTorrentJobResult> p = new AddTorrentJob(u, urlOrMagnet, fileFromComputer).now();
+			Account a = getActiveAccount();
+			Promise<AddTorrentJobResult> p = new AddTorrentJob(a, urlOrMagnet, fileFromComputer).now();
 			AddTorrentJobResult result = await(p);
 			if (result.hasError()) {
 				addGeneralError(result.error);
@@ -54,6 +55,14 @@ public class ClientController extends BaseController {
 		}
 		Validation.keep();
 		index();
+	}
+	
+	public static void setActiveAccount(Long id, String returnTo) {
+		session.put("activeAccountId", id);
+		Cache.delete(getActiveAccountCacheKey()); //remove old active account from cache
+		//Account a = getActiveAccount();
+		//setGeneralMessage("Account changed to " + a.getDisplayName() + ".");
+		redirect(returnTo);
 	}
 	
 	
@@ -117,10 +126,10 @@ public class ClientController extends BaseController {
 	}	
 	
 	public static void update(String group) {
-		User u = getCurrentUser();	
+		Account a = getActiveAccount();
 		
 		//use a job to prevent tying up server if backend transmission-daemon is being slow
-		Promise<GetTorrentsJobResult> job = new GetTorrentsJob(u, group).now();
+		Promise<GetTorrentsJobResult> job = new GetTorrentsJob(a, group).now();
 		GetTorrentsJobResult result = await(job);
 		if (result.hasError()) {
 			resultError(result.error.getMessage());
@@ -135,13 +144,13 @@ public class ClientController extends BaseController {
 		
 		//user stats - change whenever the torrent-list changes
 		Map<String, Object> us_params = new HashMap<String, Object>();
-		us_params.put("stats", u.getUserStats());
+		us_params.put("stats", a.getPrimaryUser().getUserStats());
 		String us = renderToString("tags/user-stats.html", us_params);
 
 		//tabs - included here because they may change as part of addGroup/removeGroup calls
 		Map<String, Object> ct_params = new HashMap<String, Object>();
-		ct_params.put("_arg", u.getTorrentGroups());
-		ct_params.put("active", group);
+		ct_params.put("_groups", a.getPrimaryUser().getTorrentGroups());
+		ct_params.put("_active", group);
 		String ct = renderToString("tags/client-tabs.html", ct_params);	
 		
 		Map<String, Object> res = new HashMap<String, Object>();
@@ -153,7 +162,7 @@ public class ClientController extends BaseController {
 	
 	public static void renderTorrentInfo(String torrentHash) throws MessageException {
 		//torrent info is seeders, peers, files, tracker stats
-		Promise<GetTorrentsJobResult> job = new GetTorrentsJob(getCurrentUser(), null, torrentHash).now();
+		Promise<GetTorrentsJobResult> job = new GetTorrentsJob(getActiveAccount(), null, torrentHash).now();
 		GetTorrentsJobResult res = await(job);
 		Torrent torrent = res.torrents.get(0);
 		renderTemplate("client/torrent-info.html", torrent);
@@ -195,21 +204,11 @@ public class ClientController extends BaseController {
 	}	
 	
 	protected static TorrentControlJobResult runTorrentControlJob(List<String> torrentHashes, TorrentAction action) {
-		User u = getCurrentUser();
-		Promise<TorrentControlJobResult> tcj = new TorrentControlJob(u, torrentHashes, action).now();
+		Promise<TorrentControlJobResult> tcj = new TorrentControlJob(getActiveAccount(), torrentHashes, action).now();
 		TorrentControlJobResult res = await(tcj);
 		return res;
 	}
-		
 	
-	/*
-	public static void setActiveUser(long id) {
-		session.put("actualUserId", id);
-		Header r = request.headers.get("Referer");
-		String referer = "/client/index";
-		if (r != null) {
-			referer = r.value();
-		}
-		redirect(referer);
-	}*/
+	
+		
 }

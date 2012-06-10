@@ -1,10 +1,10 @@
 <ul class="nav nav-tabs torrent-nav-tabs">
-		#{list items:_arg, as:'group'}
+		#{list items:_groups, as:'group'}
 			%{
 				def active_class = ""
-				if ((!active) && group_isFirst) {
+				if ((!_active) && group_isFirst) {
 					active_class = "active"
-				} else if (active && active == group.name) {
+				} else if (_active && _active == group.name) {
 					active_class = "active"
 				}
 			}%

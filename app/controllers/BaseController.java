@@ -3,10 +3,11 @@ package controllers;
 import code.GenericResult;
 import java.util.HashMap;
 import java.util.Map;
+import models.Account;
 import models.User;
 import org.h2.util.StringUtils;
+import play.cache.Cache;
 import play.data.validation.Validation;
-import play.exceptions.UnexpectedException;
 import play.mvc.Before;
 import play.mvc.Catch;
 import play.mvc.Controller;
@@ -19,6 +20,8 @@ public class BaseController extends Controller {
 	protected static void before() {
 		User u = getCurrentUser();
 		renderArgs.put("currentUser", u);
+		Account a = getActiveAccount();
+		renderArgs.put("activeAccount", a);
 		if (!request.url.contains("requireEmail")) {
 			if (u != null && StringUtils.isNullOrEmpty(u.emailAddress)) {
 				redirect("/main/requireEmail");
@@ -26,10 +29,11 @@ public class BaseController extends Controller {
 		}
 	}
 	
-	private static User _user;
 	protected static User getCurrentUser() {
-		if (_user != null) {
-			return _user;
+		String cache_key = getCurrentUserCacheKey();
+		User fromCache = Cache.get(cache_key, User.class);
+		if (fromCache != null) {
+			return fromCache;
 		}
 		long currentUserId = 0;
 		if (session.contains("currentUserId")) {
@@ -37,13 +41,49 @@ public class BaseController extends Controller {
 			currentUserId = Long.parseLong(s);
 		}
 		if (currentUserId > 0) {
-			_user = User.getByKey(currentUserId);
+			fromCache = User.getByKey(currentUserId);
+			Cache.set(getCurrentUserCacheKey(), fromCache, "10mn");
 		}
-		return _user;
+		return fromCache;
+	}
+	
+	protected static Account getActiveAccount() {
+		//if no user, then there will be no account
+		User u = getCurrentUser();
+		if (u == null) { return null; }
+		String cache_key = getActiveAccountCacheKey();
+		Account fromCache = Cache.get(cache_key, Account.class);
+		if (fromCache != null) {
+			return fromCache;
+		}
+		long activeAccountId = 0;
+		if (session.contains("activeAccountId")) {
+			activeAccountId = Long.parseLong(session.get("activeAccountId"));
+		} else {
+			//no active account in session, default to the current user
+			activeAccountId = getCurrentUser().getPrimaryAccount().id;
+		}
+		if (activeAccountId > 0) {
+			fromCache = Account.getByKey(activeAccountId);
+			Cache.set(getActiveAccountCacheKey(), fromCache, "10mn");
+		}
+		return fromCache;
+	}
+	
+	protected static String getCurrentUserCacheKey() {
+		return session.getId() + "_currentUser";
+	}
+	
+	protected static String getActiveAccountCacheKey() {
+		return session.getId() + "_activeAccount";
 	}
 	
 	protected static void addGeneralError(Exception ex) {
 		Validation.addError("general", ex.getMessage());
+	}
+	
+	protected static void setGeneralMessage(String message) {
+		flash.put("message", message);
 	}
 	
 	protected static String getServerPath() {

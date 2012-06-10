@@ -10,15 +10,28 @@
 		}
 	});
 	
+	$(document).ajaxSuccess(function(evt, xhr) {
+		var data = $.parseJSON(xhr.responseText);
+		if (data.error) {
+			$.flashError(data.error);
+		}
+	});
+	
 	$(document).ready(function() {
 		var already_refreshing = false;
 		var activeGroup = "All";
 		var activeAjaxRequest;
-		var refresh = function() {
-			if (already_refreshing) {return;} //wait for previous refresh to finish before starting a new one
+		var refresh = function(force) {
+			if (already_refreshing && !force) {return;} //wait for previous refresh to finish before starting a new one, unless force is set
 			if (window.refresh_disabled) {return;} //refresh gets disabled when window loses focus to take load off server
 			already_refreshing = true;
+			if (activeAjaxRequest && force) {
+				activeAjaxRequest.abort();
+			}
 			activeAjaxRequest = $.getJSON("/client/update", {"group" : activeGroup, "ext" : "json"}, function(data) {
+				
+				if (!data.data) { return; }
+				
 				//hide any tooltips before replacing, otherwise bootstrap loses the reference to the tooltip text
 				//and it will never disappear
 				$(".torrent-add-group").tooltip("hide");
@@ -93,11 +106,8 @@
 		$("body").on("click", "#tab-header a", function() {
 			activeGroup = $(this).text();
 			$("#torrent-list").html(backend_message);
-			if (activeAjaxRequest) {
-				activeAjaxRequest.abort();
-			}
 			checked_hashes = []; //reset checked hashes of changing tabs
-			refresh();
+			refresh(true);
 		}).on("click", "a.torrent-pause-button", function() {
 			var hash = $(this).data("torrent-hash");
 			$(this).loading();
@@ -191,7 +201,8 @@
 })(jQuery);
 
 /*
- *Loading Icon plugin - replaces the first icon it finds in the element with an ajax loader
+ * Loading Icon plugin - replaces the first icon it finds in the element with an ajax loader
+ * Flash Error plugin - easy way to flash error messages to the user
  */
 (function($) {
 	$.fn.loading = function() {
@@ -200,6 +211,12 @@
 			$(icon).toggleClass("icon-loader");			
 		});
 	};
+	$.extend({
+		flashError : function(error) {
+			$("#flash-error-content").html(error);
+			$("#flash-error").show();
+		}
+	});
 })(jQuery);
 
 /*

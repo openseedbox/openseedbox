@@ -3,6 +3,7 @@ package code.jobs;
 import code.MessageException;
 import code.jobs.AddTorrentJob.AddTorrentJobResult;
 import java.io.File;
+import models.Account;
 import models.Torrent;
 import models.User;
 import play.jobs.Job;
@@ -13,8 +14,8 @@ public class AddTorrentJob extends Job<AddTorrentJobResult> {
 	private String _url;
 	private File _file;
 	
-	public AddTorrentJob(User user, String urlOrMagnet, File torrentFile) {
-		_user = user;
+	public AddTorrentJob(Account account, String urlOrMagnet, File torrentFile) {
+		_user = account.getPrimaryUser();
 		_url = urlOrMagnet;
 		_file = torrentFile;
 	}

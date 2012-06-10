@@ -7,6 +7,7 @@ import models.User;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 import play.Logger;
+import play.cache.Cache;
 import play.libs.OpenID;
 import play.libs.OpenID.UserInfo;
 
@@ -17,6 +18,7 @@ public class AuthController extends BaseController {
 	}
 	
 	public static void logout() {
+		Cache.delete(getCurrentUserCacheKey());
 		session.clear();
 		login();
 	}

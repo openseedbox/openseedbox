@@ -4,10 +4,10 @@
  */
 package code.jobs;
 
-import code.MessageException;
 import code.jobs.TorrentControlJob.TorrentControlJobResult;
 import code.transmission.Transmission;
 import java.util.List;
+import models.Account;
 import models.Torrent;
 import models.User;
 import play.jobs.Job;
@@ -22,10 +22,10 @@ public class TorrentControlJob extends Job<TorrentControlJobResult> {
 	private TorrentAction _action;
 	private User _user;
 
-	public TorrentControlJob(User user, List<String> hashes, TorrentAction ta) {
+	public TorrentControlJob(Account account, List<String> hashes, TorrentAction ta) {
 		this._hashes = hashes;
 		this._action = ta;
-		this._user = user;
+		this._user = account.getPrimaryUser();
 	}
 	
 	@Override

@@ -43,14 +43,23 @@
 			</div>
 		</div>
 		<div id="container" class="container" style="padding-top: 20px;">
-			#{ifError "general"}
-			<div class="alert alert-error">
+			<div id="flash-error" class="alert alert-error #{ifError "general"}#{/ifError}#{else}hide#{/else}">
 				<a class="close" data-dismiss="alert" href="#">&times;</a>
-				<h3 class="alert-heading">An error occured:</h3>
-				#{error "general" /}
+				<h3 id="flash-error-heading" class="alert-heading">An error occured:</h3>
+				<span id="flash-error-content">
+					#{ifError "general"}#{error "general" /}#{/ifError}
+				</span>
+			</div>
+			<div id="flash-message" class="alert alert-success #{if (!flash.message)}hide#{/if}">
+				<a class="close" data-dismiss="alert" href="#">&times;</a>
+				<h3 id="flash-success-heading" class="alert-heading">Success:</h3>
+				<span id="flash-message-content">
+					#{if (flash.message)}
+						${flash.message}
+					#{/if}
+				</span>
 			</div>
 			<div class="clearfix"></div>
-			#{/ifError}
 			#{doLayout /}
 		</div>
 	</body>

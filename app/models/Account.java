@@ -46,6 +46,14 @@ public class Account extends EnhancedModel {
 		this.primaryUser = u;
 	}
 	
+	private transient String _displayName;
+	public String getDisplayName() {
+		if (_displayName == null) {
+			_displayName = getPrimaryUser().getDisplayName();
+		}
+		return _displayName;
+	}
+	
 	private transient Transmission _transmission;
 	public Transmission getTransmission() {
 		if (_transmission == null) {

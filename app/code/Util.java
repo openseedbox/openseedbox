@@ -4,7 +4,15 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import models.User;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 /**
  *
@@ -53,6 +61,45 @@ public class Util {
 	public static String formatDateTime(Date d) {
 		DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 		return df.format(d);		
+	}
+	
+	public static String formatDateTime(DateTime d) {
+		DateTimeFormatter dtf = DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss");
+		return d.toString(dtf);
+	}
+	
+	public static List<SelectItem> toSelectItems(List<String> items) {
+		List<SelectItem> ret = new ArrayList<SelectItem>();
+		for (String s : items) {
+			SelectItem si = new SelectItem();
+			si.name = s;
+			si.value = s;
+			ret.add(si);
+		}
+		return ret;
+	}
+	
+	public static List<SelectItem> toSelectItems(Map<String, String> items) {
+		//the key is unique, so is the <option> value. The value is not unique, so is the <option> name. Confusing? Good.
+		List<SelectItem> ret = new ArrayList<SelectItem>();
+		for (String s : items.keySet()) {
+			SelectItem si = new SelectItem();
+			si.name = items.get(s);
+			si.value = s;
+			ret.add(si);
+		}
+		return ret;		
+	}
+	
+	public static DateTime getLocalDate(Date systemDate, User u) {
+		DateTimeZone tz = DateTimeZone.forID(u.timeZone);
+		return new DateTime(systemDate).toDateTime(tz);
+	}
+	
+	public static class SelectItem {
+		public String name;
+		public String value;
+		public boolean selected;
 	}
 
 }
