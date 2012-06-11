@@ -2,22 +2,27 @@ package controllers;
 
 import code.GenericResult;
 import code.MessageException;
+import com.googlecode.htmlcompressor.compressor.HtmlCompressor;
+import com.googlecode.htmlcompressor.compressor.XmlCompressor;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.zip.GZIPOutputStream;
 import models.Account;
 import models.User;
 import notifiers.Mails;
-import org.h2.util.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import play.cache.Cache;
 import play.data.validation.Validation;
 import play.mvc.Before;
 import play.mvc.Catch;
 import play.mvc.Controller;
+import play.mvc.Finally;
 import play.templates.Template;
 import play.templates.TemplateLoader;
 
 public class BaseController extends Controller {
-	
+
 	@Before
 	protected static void before() {
 		User u = getCurrentUser();
@@ -25,12 +30,12 @@ public class BaseController extends Controller {
 		Account a = getActiveAccount();
 		renderArgs.put("activeAccount", a);
 		if (!request.url.contains("requireEmail")) {
-			if (u != null && StringUtils.isNullOrEmpty(u.emailAddress)) {
+			if (u != null && StringUtils.isEmpty(u.emailAddress)) {
 				redirect("/main/requireEmail");
-			}	
+			}
 		}
 	}
-	
+
 	protected static User getCurrentUser() {
 		String cache_key = getCurrentUserCacheKey();
 		User fromCache = Cache.get(cache_key, User.class);
@@ -48,11 +53,13 @@ public class BaseController extends Controller {
 		}
 		return fromCache;
 	}
-	
+
 	protected static Account getActiveAccount() {
 		//if no user, then there will be no account
 		User u = getCurrentUser();
-		if (u == null) { return null; }
+		if (u == null) {
+			return null;
+		}
 		String cache_key = getActiveAccountCacheKey();
 		Account fromCache = Cache.get(cache_key, Account.class);
 		if (fromCache != null) {
@@ -71,36 +78,36 @@ public class BaseController extends Controller {
 		}
 		return fromCache;
 	}
-	
+
 	protected static String getCurrentUserCacheKey() {
 		return session.getId() + "_currentUser";
 	}
-	
+
 	protected static String getActiveAccountCacheKey() {
 		return session.getId() + "_activeAccount";
 	}
-	
+
 	protected static void addGeneralError(Exception ex) {
 		Validation.addError("general", ex.getMessage());
 	}
-	
+
 	protected static void setGeneralMessage(String message) {
 		flash.put("message", message);
 	}
-	
+
 	protected static String getServerPath() {
-		return String.format("http://%s", request.host);	
+		return String.format("http://%s", request.host);
 	}
-	
+
 	protected static String renderToString(String template) {
 		return renderToString(template, new HashMap<String, Object>());
 	}
-	
+
 	protected static String renderToString(String template, Map<String, Object> args) {
 		Template t = TemplateLoader.load(template);
-		return t.render(args);		
+		return t.render(args);
 	}
-	
+
 	protected static void result(Object o) {
 		throw new GenericResult(o);
 	}
@@ -125,4 +132,40 @@ public class BaseController extends Controller {
 		}
 	}
 
+	@Finally
+	public static void compress() throws IOException {
+		String text = response.out.toString();
+		
+		if (StringUtils.isEmpty(text)) {
+			return;
+		}
+
+		if (response.contentType.equals("text/xml")) {
+			text = new XmlCompressor().compress(text);
+		} else if (response.contentType.equals("text/html")) {
+			text = new HtmlCompressor().compress(text);
+		}
+
+		final ByteArrayOutputStream gzip = gzip(text);
+		response.setHeader("Content-Encoding", "gzip");
+		response.setHeader("Content-Length", gzip.size() + "");
+		response.out = gzip;
+	}
+
+	private static ByteArrayOutputStream gzip(final String input) throws IOException {
+		final InputStream inputStream = new ByteArrayInputStream(input.getBytes());
+		final ByteArrayOutputStream stringOutputStream = new ByteArrayOutputStream((int) (input.length() * 0.75));
+		final OutputStream gzipOutputStream = new GZIPOutputStream(stringOutputStream);
+
+		final byte[] buf = new byte[5000];
+		int len;
+		while ((len = inputStream.read(buf)) > 0) {
+			gzipOutputStream.write(buf, 0, len);
+		}
+
+		inputStream.close();
+		gzipOutputStream.close();
+
+		return stringOutputStream;
+	}
 }
