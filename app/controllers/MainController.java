@@ -25,8 +25,8 @@ public class MainController extends BaseController {
 		result("Yay!");
 	}
 	
-	public static void requireEmail() {
-		renderTemplate("main/enter-email.html");
+	public static void triggerError() throws Exception {
+		throw new Exception("Test error!");
 	}
 
 }
