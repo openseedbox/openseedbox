@@ -1,10 +1,12 @@
 package controllers;
 
 import code.GenericResult;
+import code.MessageException;
 import java.util.HashMap;
 import java.util.Map;
 import models.Account;
 import models.User;
+import notifiers.Mails;
 import org.h2.util.StringUtils;
 import play.cache.Cache;
 import play.data.validation.Validation;
@@ -117,5 +119,10 @@ public class BaseController extends Controller {
 		if (params.get("ext") != null && params.get("ext").equals("json")) {
 			resultError(ex.getMessage());
 		}
+		if (!(ex instanceof MessageException)) {
+			//send error email if the exception wasnt a message
+			Mails.sendError(ex, request);
+		}
 	}
+
 }

@@ -1,0 +1,19 @@
+#{extends "Mails/main.html" /}
+<h2>Url:</h2>
+<p>${request.url}</p>
+<h2>Parameters:</h2>
+<ul>
+#{list items:request.params.allSimple(), as:"param"}
+	<li><strong>${param.key}</strong> -> ${param.value}</li>
+#{/list}
+</ul>
+<h2>Cookies:</h2>
+#{list items:request.cookies, as:"param"}
+	<li><strong>${param.key}</strong> -> ${param.value.value}</li>
+#{/list}
+<h2>Stack Trace:</h2>
+${ex}
+<pre>
+${stackTrace}
+</pre>
+
