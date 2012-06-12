@@ -1,10 +1,5 @@
-#{extends "main.html" /}
-#{set files_active: "active" /}
-#{set title:"Files" /}
+#{extends "clientfiles/layout.html" /}
 
-<ul class="breadcrumb">
-	<li class="active">Files</li>
-</ul>
 <table class="table table-bordered table-condensed table-striped">
 	<tr>
 		<th>Directory Name</th>
@@ -12,16 +7,16 @@
 		<th>% Complete</th>
 		<th>Download</th>
 	</tr>
-#{list items:torrents, as:"torrent"}
+#{list items:torrents, as:"t"}
 	<tr>
 		<td>
 			<i class="icon-folder-open"></i>
-			<a href="@{ClientFilesController.singleTorrent(torrent.hashString)}">${torrent.name}</a>
+			<a href="@{ClientFilesController.singleTorrent(t.hashString)}">${t.name}</a>
 		</td>
-		<td>${torrent.totalSize}</td>
-		<td>${torrent.percentDone}%</td>
+		<td>${t.totalSize}</td>
+		<td>${t.percentDone}%</td>
 		<td style="text-align: center;">
-			[ <a href="${torrent.filesAsTree?.get(0).getZipDownloadLink(currentUser)}">Zip</a> ]
+			[ <a href="${t.filesAsTree?.get(0).getZipDownloadLink(activeAccount.primaryUser)}">Zip</a> ]
 		</td>
 	</tr>
 #{/list}
