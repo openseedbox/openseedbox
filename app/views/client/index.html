@@ -2,21 +2,21 @@
 #{set title: "Seedbox" /}
 #{set torrents_active: "active" /}
 #{set "moreScripts"}
-	<script type="text/javascript" src="@{'/public/javascripts/client.js'}"></script>
+	<script type="text/javascript" src="#{asset.url '/javascripts/client.js' /}"></script>
 #{/set}
 #{set "moreStyles"}
-	<link rel="stylesheet" type="text/css" href="@{'/public/stylesheets/client.css'}" />
+	<link rel="stylesheet" type="text/css" href="#{asset.url '/stylesheets/client.css' /}" />
 #{/set}
 
-#{choose-account-dropdown user:currentUser, account:activeAccount, returnTo:"/client" /}
+#{choose-account-dropdown user:currentUser, account:activeAccount, returnTo:"/client", what:"torrents" /}
 
 <div id="tab-header">
 	<ul class="nav nav-tabs">
-		<li class="active"><a href="#"><img src="@{'/public/images/ajax-loader.gif'}" /> Loading tabs...</a></li>
+		<li class="active"><a href="#"><img src="#{asset.ajax /}" /> Loading tabs...</a></li>
 	</ul>
 </div>
 <div class="pull-right" style="margin-top: -50px;">
-	<img id="global-loader" src="@{'/public/images/ajax-loader.gif'}" />
+	<img id="global-loader" src="#{asset.ajax /}" />
 	<a href="#add-torrent-dialog" class="btn add-torrent" data-toggle="modal"><i class="icon-plus"></i>Add Torrent</a>
 </div>
 <div id="user-stats" class="pull-right">
@@ -30,7 +30,7 @@
 		<li><a href="#" class="group-actions-remove">Remove</a></li>
 		<li><a href="#" class="group-actions-add-group">Add group</a></li>
 	</ul>
-	<img id="group-actions-loader" class="hide" src="@{'/public/images/ajax-loader.gif'}" style="margin-left: 10px;"/>
+	<img id="group-actions-loader" class="hide" src="#{asset.ajax /}" style="margin-left: 10px;"/>
 </div>
 <div class="clearfix"></div>
 <div id="torrent-list" class="tab-content">

@@ -28,14 +28,4 @@ public class ClientFilesController extends ClientController {
 		Torrent torrent = res.torrents.get(0);
 		renderTemplate("clientfiles/single-torrent.html", torrent);		
 	}
-	
-	public static void zip(String directoryName) {
-		
-	}
-	
-	public static void download(String fileName) {
-		Node n = getActiveAccount().getNode();
-		String url = String.format("http://%s/torrents/complete/%s", n.ipAddress, fileName);
-		redirect(url);
-	}
 }

@@ -7,7 +7,7 @@
 }%
 #{if availableAccounts.size > 0}
 <div class="pull-left">
-	<h3>Showing torrents for: ${_account.displayName}</h3>
+	<h3>Showing ${_what} for: ${_account.displayName}</h3>
 </div>
 <div class="pull-right">
 	<form method="post" action="@{ClientController.setActiveAccount()}" class="form-horizontal">

@@ -1,11 +1,5 @@
-#{extends "main.html" /}
-#{set files_active: "active" /}
-#{set title:"Files" /}
+#{extends "clientfiles/layout.html" /}
 
-<ul class="breadcrumb">
-	<li><a href="@{ClientFilesController.index}">Files</a> <span class="divider">/</span></li>
-	<li class="active">${torrent.name}</li>
-</ul>
 <h3>${torrent.name}</h3>
 <table class="table table-bordered table-condensed table-striped">
 	<thead>
@@ -17,7 +11,7 @@
 	</thead>
 	<tbody>
 	#{list items: torrent.filesAsTree, as:"file"}
-		#{file-row file:file, user:currentUser /}
+		#{file-row file:file, user:activeAccount.primaryUser /}
 	#{/list}
 	</tbody>
 </table>
