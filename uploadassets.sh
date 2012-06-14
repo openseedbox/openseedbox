@@ -16,10 +16,10 @@ echo -n "Checking s3cmd is configured..."
 if [ ! -f "$HOME/.s3cfg" ]; then
 	s3cmd --configure
 else 
-	echo -n " it is."
+	echo -n -e " it is.\n"
 fi
 
 echo "Syncing /public with $bucket_name/public"
-s3cmd sync "public/" "s3://$bucket_name/public/"
+s3cmd sync --acl-public "public/" "s3://$bucket_name/public/"
 
 echo "All done."
