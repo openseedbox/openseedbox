@@ -140,10 +140,12 @@ public class BaseController extends Controller {
 			return;
 		}
 
-		if (response.contentType.equals("text/xml")) {
-			text = new XmlCompressor().compress(text);
-		} else if (response.contentType.equals("text/html")) {
-			text = new HtmlCompressor().compress(text);
+		if (!StringUtils.isEmpty(response.contentType)) {		
+			if (response.contentType.equals("text/xml")) {
+				text = new XmlCompressor().compress(text);
+			} else if (response.contentType.equals("text/html")) {
+				text = new HtmlCompressor().compress(text);
+			}
 		}
 
 		final ByteArrayOutputStream gzip = gzip(text);
