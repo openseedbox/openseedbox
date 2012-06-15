@@ -24,7 +24,8 @@ public class Transmission {
 	}
 	
 	public Node getNode() {
-		return _account.getNode();
+		Node n = _account.getNode();
+		return n;
 	}
 
 	public TransmissionConfig getConfig() throws MessageException {
@@ -264,6 +265,7 @@ public class Transmission {
 
 	private String getTransmissionUrl() throws MessageException {
 		Node n = getNode();
+		if (n == null) { return null; }
 		return String.format("http://%s:%s/transmission/rpc", n.ipAddress, _account.getTransmissionPort());
 	}
 	

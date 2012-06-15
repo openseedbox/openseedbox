@@ -71,8 +71,9 @@ public class Account extends EnhancedModel {
 	
 	private transient String _transmissionPassword;
 	public String getTransmissionPassword() throws MessageException {
+		Node n = this.getNode();
 		if (StringUtils.isEmpty(this._transmissionPassword)) {
-			String pw = this.getNode().name + this.getPrimaryUser().emailAddress;
+			String pw = n.name + this.getPrimaryUser().emailAddress;
 			this._transmissionPassword = DigestUtils.md5Hex(pw);
 		}
 		return this._transmissionPassword;

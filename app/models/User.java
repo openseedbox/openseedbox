@@ -93,12 +93,16 @@ public class User extends EnhancedModel {
 		return null;
 	}
 	
-	public Boolean hasPlan() {
+	public boolean hasPlan() {
 		Account a = getPrimaryAccount();
 		if (a != null) {
 			return (a.plan != null);
 		}
 		return false;
+	}
+	
+	public boolean hasPlanAndNode() {
+		return (this.getNode() != null && hasPlan());
 	}
 	
 	public Plan getPlan() {
@@ -242,22 +246,6 @@ public class User extends EnhancedModel {
 		return StringUtils.isEmpty(this.displayName) ? this.emailAddress : this.displayName;
 	}
 	
-	/*
-	
-	public List<InvitedUser> getInvitedUsers() {
-		return InvitedUser.all().filter("invitingUser", this).fetch();
-	}
-	
-	public List<InvitedUser> getPendingInvites() {
-		return InvitedUser.all().filter("emailAddress", this.emailAddress)
-				.filter("accepted", false).fetch();	
-	}
-	
-	public List<InvitedUser> getSharedAccounts() {
-		return InvitedUser.all().filter("actualUser", this)
-				.filter("accepted", true).fetch();
-	}*/
-	
 	private void calculateUserStats(List<Torrent> torrents) throws MessageException {
 		long totalSize = 0;
 		long totalRateUpload = 0;
@@ -277,6 +265,7 @@ public class User extends EnhancedModel {
 	
 	private transient UserStats _userStats;
 	public UserStats getUserStats() {
+		if (!hasPlanAndNode()) { return null; }
 		if (_userStats == null) {
 			try {
 				calculateUserStats(getTorrents());
