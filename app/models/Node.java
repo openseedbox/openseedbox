@@ -57,17 +57,28 @@ public class Node extends EnhancedModel {
 	}
 
 	public String getUptime() {
-		String uptime = getUserStats().uptime;
-		return uptime.replace("users,", "users,<br />");
+		UserStats stats = getUserStats();
+		if (stats != null) {
+			String uptime = stats.uptime;
+			return uptime.replace("users,", "users,<br />");
+		}
+		return null;
 	}
 	
 	public String getFreeSpace() {
-		return "" + getUserStats().freeSpaceGb + "gb";
+		UserStats stats = getUserStats();
+		if (stats != null) {
+			return "" + stats.freeSpaceGb + "gb";
+		}
+		return null;
 	}
 	
 	public String getUsedSpace() {
 		UserStats s = getUserStats();
-		return "" + (s.totalSpaceGb - s.freeSpaceGb) + "gb";
+		if (s != null) {
+			return "" + (s.totalSpaceGb - s.freeSpaceGb) + "gb";
+		}
+		return null;
 	}
 	
 	public Map<Plan, Integer> getFreeSlots() {
@@ -80,7 +91,11 @@ public class Node extends EnhancedModel {
 	}
 	
 	public int getUserCount() {
-		return getUserStats().numberOfUsers;
+		UserStats s = getUserStats();
+		if (s != null) {
+			return s.numberOfUsers;
+		}
+		return -1;
 	}
 	
 	public class UserStats {
