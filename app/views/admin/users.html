@@ -18,6 +18,14 @@
 	   def account = user.getPrimaryAccount()
 	   def plan = account?.getPlan()
 	   def hasPlanAndNode = user.hasPlanAndNode()
+	   def transmissionIsRunning = false;
+	   def transmissionError = "";
+	   try {
+		transmissionIsRunning = transmission?.isRunning()
+	   } catch (ex) {
+		transmissionIsRunning = false;
+		transmissionError = ex.message;
+	   }
 	   }%
 	<tr>
 		<td>${user.emailAddress}</td>
@@ -30,11 +38,16 @@
 		<td>${stats?.usedSpaceGb} GB</td>
 		<td>
 			#{if (hasPlanAndNode)}
-				#{if (transmission?.isRunning())}
+				#{if (transmissionIsRunning)}
 					<span class="success">Running</span>
 				#{/if}
 				#{else}
-					<span class="error">Stopped</span>
+					#{if (transmissionError)}
+						<span class="error">${transmissionError}</span>
+					#{/if}
+					#{else}
+						<span class="error">Stopped</span>
+					#{/else}
 				#{/else}
 			#{/if}
 			#{else}
@@ -49,13 +62,15 @@
 		<td>
 			<a class="btn btn-primary" href="@{AdminController.editUser(user.id)}">Edit</a>
 			#{if (hasPlanAndNode)}
-				#{if (transmission?.isRunning())}
-					<a class="btn btn-error" href="@{AdminController.stopTransmission(user.id)}">Stop</a>
-					<a class="btn" href="@{AdminController.restartTransmission(user.id)}">Restart</a>
+				#{if (!transmissionError)}
+					#{if (transmissionIsRunning)}
+						<a class="btn btn-error" href="@{AdminController.stopTransmission(user.id)}">Stop</a>
+						<a class="btn" href="@{AdminController.restartTransmission(user.id)}">Restart</a>
+					#{/if}
+					#{else}
+						<a class="btn btn-success" href="@{AdminController.startTransmission(user.id)}">Start</a>
+					#{/else}
 				#{/if}
-				#{else}
-					<a class="btn btn-success" href="@{AdminController.startTransmission(user.id)}">Start</a>
-				#{/else}
 			#{/if}
 		</td>
 	</tr>
