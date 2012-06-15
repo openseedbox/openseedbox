@@ -1,10 +1,10 @@
 package code;
 
+import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.Map;
 import models.Node;
 import org.apache.commons.lang.StringUtils;
-import play.libs.F.Promise;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
 import play.libs.WS.WSRequest;
@@ -52,16 +52,20 @@ public class WebRequest {
 	private WebResponse doWebResponse(String page, Map<String, String> parameters, String type) throws WebRequestFailedException {
 		WSRequest req = getWebserviceUrl(page, parameters);
 		HttpResponse res;
-		if (type.equals("get")) {
-			res = req.get();
-		} else {
-			res = req.post();
+		try {
+			if (type.equals("get")) {
+				res = req.get();
+			} else {
+				res = req.post();
+			}
+			if (res.getStatus() != 200) {
+				throw new WebRequestFailedException("Failed to query webservice: " + req.url +
+						" (" + req.parameters + "), status: " + res.getStatus(), res);
+			}
+			return new WebResponse(res.getString());		
+		} catch (Exception ex) {
+			throw new WebRequestFailedException("Unable to connect to server " + req.url, null);
 		}
-		if (res.getStatus() != 200) {
-			throw new WebRequestFailedException("Failed to query webservice: " + req.url +
-					" (" + req.parameters + "), status: " + res.getStatus(), res);
-		}
-		return new WebResponse(res.getString());		
 	}
 
 	private WSRequest getWebserviceUrl(String page, Map<String, String> parameters) {

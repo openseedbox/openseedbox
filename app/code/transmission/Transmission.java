@@ -110,8 +110,8 @@ public class Transmission {
 					.getResponse("control", getStandardParams("is-running"));
 			return wr.getResultBoolean();
 		} catch (WebRequest.WebRequestFailedException ex) {
-			throw new MessageException(ex, "Unable to stop transmission for user %s on node %s (%s)",
-					_account.getPrimaryUser().emailAddress, n.name, n.ipAddress);			
+			throw new MessageException(ex, "Unable to check if transmission is running for user %s on node %s (%s)",
+					_account.getPrimaryUser().emailAddress, n.name, n.ipAddress);
 		}		
 	}
 	

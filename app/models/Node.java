@@ -1,14 +1,13 @@
 package models;
 
-import code.transmission.Transmission;
 import code.WebRequest;
 import code.WebResponse;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import models.Node.UserStats;
 import models.Node.UserStats;
 import play.Logger;
 import play.data.validation.Required;
