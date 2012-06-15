@@ -12,12 +12,15 @@ import models.Account;
 import models.User;
 import notifiers.Mails;
 import org.apache.commons.lang.StringUtils;
+import play.Logger;
+import play.Play.Mode;
 import play.cache.Cache;
 import play.data.validation.Validation;
 import play.mvc.Before;
 import play.mvc.Catch;
 import play.mvc.Controller;
 import play.mvc.Finally;
+import play.mvc.Http.Header;
 import play.templates.Template;
 import play.templates.TemplateLoader;
 
@@ -134,6 +137,11 @@ public class BaseController extends Controller {
 
 	@Finally
 	public static void compress() throws IOException {
+		//dont compress in dev mode
+		if (play.Play.mode == Mode.DEV) {
+			return;
+		}
+		
 		String text = response.out.toString();
 		
 		if (StringUtils.isEmpty(text)) {
@@ -147,11 +155,20 @@ public class BaseController extends Controller {
 				text = new HtmlCompressor().compress(text);
 			}
 		}
-
-		final ByteArrayOutputStream gzip = gzip(text);
-		response.setHeader("Content-Encoding", "gzip");
-		response.setHeader("Content-Length", gzip.size() + "");
-		response.out = gzip;
+		
+		//check if gzip is actually supported before compressing;
+		Header ae = request.headers.get("accept-encoding");
+		if (ae != null && ae.value().contains("gzip")) {
+			Logger.info("Gzipping response since user-agent supports it.");
+			final ByteArrayOutputStream gzip = gzip(text);
+			response.setHeader("Content-Encoding", "gzip");
+			response.setHeader("Content-Length", gzip.size() + "");
+			response.out = gzip;
+		} else {
+			Logger.info("User-Agent doesnt support gzip, not gzipping response.");
+			response.out = new ByteArrayOutputStream();
+			response.writeChunk(text);
+		}
 	}
 
 	private static ByteArrayOutputStream gzip(final String input) throws IOException {

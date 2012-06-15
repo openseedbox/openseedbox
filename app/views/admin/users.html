@@ -16,31 +16,47 @@
 	   def transmission = user.getTransmission()
 	   def node = user.getNode()
 	   def account = user.getPrimaryAccount()
-	   def plan = account?.getPlan()}%
+	   def plan = account?.getPlan()
+	   def hasPlanAndNode = user.hasPlanAndNode()
+	   }%
 	<tr>
 		<td>${user.emailAddress}</td>
-		<td><a href="http://${node?.ipAddress}:${account.getTransmissionPort()}/">${node?.name}</a></td>
-		<td>${plan.maxDiskspaceGb} GB</td>
+		<td>
+			#{if (hasPlanAndNode)}
+			<a href="http://${node?.ipAddress}:${account?.getTransmissionPort()}/">${node?.name}</a>
+			#{/if}
+		</td>
+		<td>${plan?.maxDiskspaceGb} GB</td>
 		<td>${stats?.usedSpaceGb} GB</td>
 		<td>
-			#{if (transmission?.isRunning())}
-				<span class="success">Running</span>
+			#{if (hasPlanAndNode)}
+				#{if (transmission?.isRunning())}
+					<span class="success">Running</span>
+				#{/if}
+				#{else}
+					<span class="error">Stopped</span>
+				#{/else}
 			#{/if}
 			#{else}
-				<span class="error">Stopped</span>
+				<span>Unknown</span>
 			#{/else}
 		</td>
-		<td>${account?.getTransmissionPassword()}</td>
-		<td>${account?.transmissionPort}</td>
+		<td>
+			#{if (hasPlanAndNode)}${account.getTransmissionPassword()}#{/if}
+		</td>
+		<td>
+			#{if (hasPlanAndNode)}${account.transmissionPort}#{/if}</td>
 		<td>
 			<a class="btn btn-primary" href="@{AdminController.editUser(user.id)}">Edit</a>
-			#{if (transmission?.isRunning())}
-				<a class="btn btn-error" href="@{AdminController.stopTransmission(user.id)}">Stop</a>
-				<a class="btn" href="@{AdminController.restartTransmission(user.id)}">Restart</a>
+			#{if (hasPlanAndNode)}
+				#{if (transmission?.isRunning())}
+					<a class="btn btn-error" href="@{AdminController.stopTransmission(user.id)}">Stop</a>
+					<a class="btn" href="@{AdminController.restartTransmission(user.id)}">Restart</a>
+				#{/if}
+				#{else}
+					<a class="btn btn-success" href="@{AdminController.startTransmission(user.id)}">Start</a>
+				#{/else}
 			#{/if}
-			#{else}
-				<a class="btn btn-success" href="@{AdminController.startTransmission(user.id)}">Start</a>
-			#{/else}
 		</td>
 	</tr>
 	#{/list}
