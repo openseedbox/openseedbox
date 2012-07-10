@@ -48,6 +48,10 @@ public class TransmissionTorrent {
 		this.files = newList;
 	}
 	
+	public Boolean isComplete() {
+		return (this.percentDone == 1.0);
+	}
+	
 	public List<TreeNode> getFilesAsTree() {
 		fixFiles();
 		List<TreeNode> mapTree = new ArrayList<TreeNode>();
@@ -160,7 +164,7 @@ public class TransmissionTorrent {
 		public String getDownloadLink(User u) {
 			Node n = u.getNode();
 			String fname = (file != null) ? file.name : name;
-			String status = (percentDone != 100) ? "incomplete" : "complete"; 
+			String status = (isComplete()) ? "complete" : "incomplete";
 			try {
 				return String.format("http://%s/openseedbox-server/download.php?user_name=%s&file_path=%s&status=%s",
 					n.ipAddress, URLEncoder.encode(u.emailAddress, "UTF-8"), URLEncoder.encode(fname, "UTF-8"), status);

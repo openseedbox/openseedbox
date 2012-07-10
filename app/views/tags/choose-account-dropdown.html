@@ -5,7 +5,7 @@
 		options.add([ "value" : account.id, "name" : account.displayName ])
 	}
 }%
-#{if availableAccounts.size > 0}
+#{if options.size > 0}
 <div class="pull-left">
 	<h3>Showing ${_what} for: ${_account.displayName}</h3>
 </div>
