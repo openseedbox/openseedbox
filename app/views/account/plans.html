@@ -1,16 +1,5 @@
 #{extends "account/index.html" /}
 
-#{ifErrors}
-<div class="alert alert-error">
-	<h3 class="alert-heading">Error</h3>
-	<ul>
-	#{errors}
-		<li>${error}</li>
-	#{/errors}
-	</ul>
-</div>
-#{/ifErrors}
-
 %{ def count = 0 }%
 #{list items:plans, as:"plan"}
 %{ def isCurrentPlan = (currentUser.plan == plan) }%
