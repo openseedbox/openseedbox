@@ -1,8 +1,8 @@
 package notifiers;
 
-import code.Util;
 import models.Invitation;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import play.mvc.Http.Request;
 import play.mvc.Mailer;
 
@@ -16,14 +16,14 @@ public class Mails extends Mailer {
 		send(invitation);
 	}
 	
-	public static void sendError(Exception exception, Request request) {
+	public static void sendError(Throwable exception, Request request) {
 		setContentType("text/html");
 		setSubject("An OpenSeedbox error occured!");
 		String address = play.Play.configuration.getProperty("errors.mailto");
 		if (!StringUtils.isEmpty(address)) {
 			addRecipient(address);
 			setFrom("errors@openseedbox.com");
-			String stackTrace = Util.getStackTrace(exception);
+			String stackTrace = ExceptionUtils.getStackTrace(exception);
 			send(exception, stackTrace, request);
 		}
 	}

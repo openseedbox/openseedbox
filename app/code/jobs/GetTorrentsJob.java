@@ -1,5 +1,7 @@
 package code.jobs;
 
+import code.MessageException;
+import code.Util;
 import code.jobs.GetTorrentsJob.GetTorrentsJobResult;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,6 +62,7 @@ public class GetTorrentsJob extends Job<GetTorrentsJobResult> {
 		} catch (Exception ex) {
 			res.error = ex;
 		}
+		
 		//Logger.info("End of job, torrents are %s", res.torrents);
 		return res;
 	}

@@ -29,7 +29,7 @@ public class AddTorrentJob extends Job<AddTorrentJobResult> {
 			} else {
 				res.torrent = _user.addTorrent(_url);
 			}
-		} catch (MessageException ex) {
+		} catch (Exception ex) {
 			res.error = ex;
 		}
 		return res;

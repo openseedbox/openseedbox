@@ -41,7 +41,7 @@ public class TransmissionTorrent {
 		for (int x = 0; x < files.size(); x++) {
 			TransmissionFile f = files.get(x);
 			f.id = x;
-			f.wanted = (wanted.get(x) == 1); 
+			f.wanted = this.wanted.get(x); 
 			f.priority = priorities.get(x);
 			newList.add(f);
 		}
@@ -123,7 +123,7 @@ public class TransmissionTorrent {
 		public boolean isAnyChildWanted() {
 			boolean wanted = false;
 			for (TreeNode tn : this.children) {
-				if (tn.file != null && tn.file.wanted) {
+				if (tn.file != null && tn.file.isWanted()) {
 					wanted = true; break;
 				}
 				wanted = tn.isAnyChildWanted();
@@ -182,7 +182,7 @@ public class TransmissionTorrent {
 	public class TransmissionFile {
 
 		public int id;
-		public boolean wanted;
+		public int wanted;
 		public long bytesCompleted;
 		public long length;
 		public int priority;
@@ -195,6 +195,10 @@ public class TransmissionTorrent {
 		public String getPercentComplete() {
 			double percent = ((double) bytesCompleted / length) * 100;
 			return String.format("%.2f", percent);
+		}
+		
+		public Boolean isWanted() {
+			return (wanted == 1);
 		}
 	}
 
@@ -257,7 +261,7 @@ public class TransmissionTorrent {
 		public long lastScrapeStartTime;
 		public boolean lastScrapeSucceeded;
 		public long lastScrapeTime;
-		public boolean lastScrapeTimedOut;
+		public int lastScrapeTimedOut;
 		public int leecherCount;
 		public long nextAnnounceTime;
 		public long nextScrapeTime;

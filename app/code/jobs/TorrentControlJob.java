@@ -1,9 +1,6 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package code.jobs;
 
+import code.MessageException;
 import code.jobs.TorrentControlJob.TorrentControlJobResult;
 import code.transmission.Transmission;
 import java.util.List;
@@ -12,10 +9,6 @@ import models.Torrent;
 import models.User;
 import play.jobs.Job;
 
-/**
- *
- * @author erin
- */
 public class TorrentControlJob extends Job<TorrentControlJobResult> {
 	
 	private List<String> _hashes;
@@ -41,7 +34,7 @@ public class TorrentControlJob extends Job<TorrentControlJobResult> {
 				res.success = t.removeTorrent(_hashes, false);
 				if (res.success && _hashes.size() > 0) {
 					//delete all the db entries for the torrents
-					Torrent.all().filter("hashString IN", _hashes).filter("user", this).delete();				
+					Torrent.all().filter("hashString IN", _hashes).filter("user", _user).delete();
 				}
 			}
 		} catch (Exception ex) {
