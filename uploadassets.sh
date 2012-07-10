@@ -22,4 +22,7 @@ fi
 echo "Syncing /public with $bucket_name/public"
 s3cmd sync --acl-public "public/" "s3://$bucket_name/public/"
 
+echo "Uploading prepare-node script"
+s3cmd put --acl-public "prepare-node.sh" "s3://$bucket_name/scripts/"
+
 echo "All done."

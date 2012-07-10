@@ -38,7 +38,7 @@ public class AdminController extends BaseController {
 	}
 	
 	public static void editNode(Node node) {
-		String active = "plans";
+		String active = "nodes";
 		renderTemplate("admin/node-edit.html", active, node);		
 	}
 	
