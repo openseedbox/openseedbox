@@ -1,7 +1,5 @@
 package code;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -9,10 +7,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import models.User;
+import notifiers.Mails;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import play.Play;
+import play.mvc.Http;
 
 /**
  *
@@ -21,11 +23,15 @@ import org.joda.time.format.DateTimeFormatter;
 public class Util {
 	
 	public static String getStackTrace(Throwable t) {
-		if (t == null) { return ""; }
-		StringWriter sw = new StringWriter();
-		PrintWriter pw = new PrintWriter(sw);
-		t.printStackTrace(pw);	
-		return sw.toString();
+		if (t instanceof MessageException) {
+			return t.getMessage();
+		}
+		if (Play.mode == Play.Mode.DEV) {
+			return ExceptionUtils.getStackTrace(t);
+		} else {
+			Mails.sendError(t, Http.Request.current.get());
+			return "An unhandled exception occured! The developers have been notified.";
+		}
 	}
 	
 	public static String getRateKb(long rateInBytes) {

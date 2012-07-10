@@ -1,6 +1,7 @@
 package controllers;
 
 import code.MessageException;
+import code.Util;
 import code.jobs.AddTorrentJob;
 import code.jobs.AddTorrentJob.AddTorrentJobResult;
 import code.jobs.GetTorrentsJob;
@@ -132,7 +133,7 @@ public class ClientController extends BaseController {
 		Promise<GetTorrentsJobResult> job = new GetTorrentsJob(a, group).now();
 		GetTorrentsJobResult result = await(job);
 		if (result.hasError()) {
-			resultError(result.error.getMessage());
+			resultError(Util.getStackTrace(result.error));
 		}
 		List<Torrent> torrents = result.torrents;
 		
@@ -194,7 +195,7 @@ public class ClientController extends BaseController {
 	protected static void handleTorrentControlRequest(String[] torrentHashes, TorrentAction action) {
 		TorrentControlJobResult res = runTorrentControlJob(Arrays.asList(torrentHashes), action);
 		if (res.hasError()) {
-			resultError(res.error.getMessage());
+			resultError(Util.getStackTrace(res.error));
 		}
 		result(res.success);	
 	}

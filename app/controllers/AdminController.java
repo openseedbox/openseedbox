@@ -82,6 +82,9 @@ public class AdminController extends BaseController {
 		if (params.get("button").equals("cancel")) {
 			plans();
 		}
+		if (params.get("plan.visible") == null) {
+			plan.visible = false;
+		}
 		if (!Validation.hasErrors()) {
 			try {
 				if (plan.id == null) {
