@@ -1,5 +1,9 @@
 #{extends "admin/index.html" /}
 <h2>Users</h2>
+<form method="get" action="">
+#{form.dropdown label:"Filter by Node:", name:"node_filter", value:node_filter, options:nodes, name_str:"name", value_str:"id"/}
+<button type="submit" class="btn btn-success">Filter</button>
+</form>
 <table class="table table-bordered">
 	<tr>
 		<th>Email Address</th>
@@ -31,7 +35,7 @@
 		<td>${user.emailAddress}</td>
 		<td>
 			#{if (hasPlanAndNode)}
-			<a href="http://${node?.ipAddress}:${account?.getTransmissionPort()}/">${node?.name}</a>
+			<a target="_blank" href="http://${user.emailAddress}:${account.getTransmissionPassword()}@${node?.ipAddress}:${account?.getTransmissionPort()}/">${node?.name}</a>
 			#{/if}
 		</td>
 		<td>${plan?.maxDiskspaceGb} GB</td>

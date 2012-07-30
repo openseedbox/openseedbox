@@ -5,10 +5,17 @@ require:
     - play -> siena 2.0.7
     - local -> joda-time 2.1
     - local -> htmlcompressor 1.5.3
+    - local -> checkout-sdk 2.5.1
     
 repositories:
     - local:
        type: local 
        artifact: "${application.path}/extra-lib/[module]-[revision].jar"
        contains:
-       - local -> * 
+          - local
+       
+    - modules:
+       type: local
+       artifact: "${application.path}/extra-modules/[module]-[revision]"
+       contains:
+          - local-module

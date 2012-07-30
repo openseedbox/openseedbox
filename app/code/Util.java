@@ -1,5 +1,7 @@
 package code;
 
+import com.google.checkout.sdk.commands.ApiContext;
+import com.google.checkout.sdk.commands.Environment;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -16,10 +18,6 @@ import org.joda.time.format.DateTimeFormatter;
 import play.Play;
 import play.mvc.Http;
 
-/**
- *
- * @author erin
- */
 public class Util {
 	
 	public static String getStackTrace(Throwable t) {
@@ -107,5 +105,17 @@ public class Util {
 		public String value;
 		public boolean selected;
 	}
-
+	
+	public static ApiContext getGoogleApiContext() {
+		String env = Play.configuration.getProperty("googlecheckout.environment", "sandbox").toLowerCase();
+		Environment environment = Environment.SANDBOX;
+		if (env.equals("production")) {
+			environment = Environment.PRODUCTION;
+		}
+        String merchantId = Play.configuration.getProperty("googlecheckout.merchantid");
+        String merchantKey =  Play.configuration.getProperty("googlecheckout.merchantkey");
+        String currency = Play.configuration.getProperty("googlecheckout.currency", "USD");
+        return new ApiContext(environment, merchantId, merchantKey, currency);
+    }
+	
 }

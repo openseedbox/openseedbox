@@ -1,24 +1,25 @@
 package controllers;
 
+import code.GenericResult;
 import code.MessageException;
 import code.Util;
 import code.jobs.AddTorrentJob;
 import code.jobs.AddTorrentJob.AddTorrentJobResult;
 import code.jobs.GetTorrentsJob;
 import code.jobs.GetTorrentsJob.GetTorrentsJobResult;
+import code.jobs.PlanSwitcherJob;
 import code.jobs.TorrentControlJob;
 import code.jobs.TorrentControlJob.TorrentAction;
 import code.jobs.TorrentControlJob.TorrentControlJobResult;
 import code.transmission.Transmission;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import models.Account;
-import models.Torrent;
+import models.*;
 import models.Torrent.TorrentGroup;
-import models.User;
 import org.apache.commons.lang.StringUtils;
 import play.cache.Cache;
 import play.data.validation.Validation;
@@ -31,16 +32,36 @@ public class ClientController extends BaseController {
 	public static void before() {
 		User u = getCurrentUser();
 		if (u == null) {
-			redirect("/auth/login");
+			AuthController.login();
 		}
 		//check that a plan has been purchased
 		if (u.getPrimaryAccount().getPlan() == null) {
-			redirect("/account/");
+			AccountController.index();
 		}
 	}
 	
 	public static void index() {		
 		render("client/index.html");
+	}
+	
+	public static void switchPlans() {
+		User user = getCurrentUser();
+		PlanSwitch ps = PlanSwitch.forUser(user);
+		if (ps != null) {
+			if (!ps.inProgress) {
+				new PlanSwitcherJob(ps).now();
+			}
+		}
+		render("client/switchplans.html", user, ps);
+	}	
+	
+	public static void dismissMessage(Long messageId) {
+		UserMessage um = UserMessage.getByKey(messageId);
+		if (um != null) {
+			um.dismissDateUtc = new Date();
+			um.save();
+		}
+		result(true);
 	}
 	
 	public static void addTorrent(String urlOrMagnet, File fileFromComputer) {

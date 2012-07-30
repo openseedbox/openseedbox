@@ -1,0 +1,16 @@
+#{extends "main.html" /}
+#{set title:"Switching Plans" /}
+
+#{if (ps)}
+<h2>Your seedbox is currently being migrated between nodes, please wait.</h2>
+<p>Note: This could take several hours if you have a lot (>10GB) of data to be copied.</p>
+<p>The page will automatically refresh in 10 seconds. Refresh it manually if it doesnt.</p>
+<script type="text/javascript">
+	setTimeout(function() {
+		document.location.reload();
+	}, 10000);
+</script>
+#{/if}
+#{else}
+<h2>Your new plan is active! Go to <a href="@{ClientController.index()}">your torrents.</a></h2>
+#{/else}

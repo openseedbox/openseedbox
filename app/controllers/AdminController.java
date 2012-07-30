@@ -2,11 +2,9 @@ package controllers;
 
 import code.MessageException;
 import code.transmission.Transmission;
+import java.util.ArrayList;
 import java.util.List;
-import models.FreeSlot;
-import models.Node;
-import models.Plan;
-import models.User;
+import models.*;
 import play.data.validation.Valid;
 import play.data.validation.Validation;
 import play.mvc.Before;
@@ -61,10 +59,37 @@ public class AdminController extends BaseController {
 		nodes();
 	}
 	
-	public static void users() {
+	private static void users() {
+		try {
+			users(-1L);
+		} catch (MessageException ex) {
+			BaseController.onException(ex);
+		}
+	}
+	
+	public static void users(Long node_filter) throws MessageException {
 		String active = "users";
-		List<User> users = User.all().fetch();
-		renderTemplate("admin/users.html", active, users);
+		if (node_filter == null) {
+			node_filter = -1L;
+		}
+		List<User> all_users = User.all().fetch();
+		List<User> users = new ArrayList<User>();
+		if (node_filter > 0) {
+			for (User u : all_users) {
+				Node n = u.getNode();
+				if (n != null && n.id == node_filter) {
+					users.add(u);
+				}
+			}
+		} else {
+			users = all_users;
+		}
+		List<Node> nodes = Node.all().fetch();
+		Node dummy = new Node();
+		dummy.id = -1L;
+		dummy.name = "All Nodes";
+		nodes.add(0, dummy);
+		renderTemplate("admin/users.html", active, users, nodes, node_filter);
 	}	
 	
 	public static void plans() {
@@ -112,15 +137,24 @@ public class AdminController extends BaseController {
 	public static void editUser(long id) {
 		String active = "users";
 		User user = User.findById(id);
-		renderTemplate("admin/user-edit.html", active, user);
+		List<Plan> plans = Plan.all().filter("visible", true).fetch();
+		List<Node> nodes = Node.all().filter("active", true).fetch();
+		renderTemplate("admin/user-edit.html", active, user, plans, nodes);
 	}
 	
-	public static void editUserPost(User u) {
+	public static void editUserPost(User u, long plan_id, long node_id) throws MessageException {
 		if (params.get("button").equals("cancel")) {
 			users();
 		}
 		User us = User.findById(u.id);
 		us.isAdmin = (params.get("u.isAdmin") != null);
+		Account a = us.getPrimaryAccount();
+		Node n = Node.findById(node_id);
+		us.setNode(n);
+		if (a != null) {
+			a.transmissionPort = Account.getAvailableTransmissionPort(n);
+			a.save();
+		}
 		us.save();
 		users();
 	}
@@ -131,10 +165,12 @@ public class AdminController extends BaseController {
 		render("admin/slots.html", active, slots);
 	}
 	
-	public static void editSlot(FreeSlot slot) {
+	public static void editSlot(long slotId) {
 		String active = "slots";
 		List<Node> nodes = Node.all().filter("active", true).fetch();
 		List<Plan> plans = Plan.all().filter("visible", true).fetch();
+		FreeSlot slot = FreeSlot.findById(slotId);
+		
 		render("admin/slot-edit.html", active, slot, nodes, plans);
 	}
 	
@@ -154,7 +190,7 @@ public class AdminController extends BaseController {
 			}
 		}
 		Validation.keep();
-		editSlot(slot);
+		editSlot(slot.id);
 	}
 	
 	public static void deleteSlot(Long id) {

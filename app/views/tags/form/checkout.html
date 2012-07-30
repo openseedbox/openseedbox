@@ -1,0 +1,10 @@
+%{
+def config = play.Play.configuration
+def merchant_id = config.get("checkout.merchantid")
+def type = config.get("checkout.environment", "sandbox").toLowerCase()
+def image_url = "http://sandbox.google.com/checkout/buttons/checkout.gif?merchant_id=${merchant_id}&w=180&h=46&style=white&variant=text&loc=en_US"
+if (type == "production") {
+	image_url = "http://sandbox.google.com/checkout/buttons/checkout.gif?merchant_id=${merchant_id}&w=180&h=46&style=white&variant=text&loc=en_US"
+}
+}%
+<input type="image" name="checkout_button" src="${image_url}" height="46" width="180" />

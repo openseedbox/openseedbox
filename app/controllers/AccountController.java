@@ -1,15 +1,14 @@
 package controllers;
 
+import code.BigDecimalUtils;
 import code.MessageException;
-import code.Util;
-import code.Util.SelectItem;
+import code.jobs.PlanSwitcherJob;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import models.*;
 import notifiers.Mails;
-import org.apache.commons.mail.EmailException;
-import org.apache.commons.mail.HtmlEmail;
 import org.joda.time.DateTimeZone;
 import play.cache.Cache;
 import play.data.validation.Email;
@@ -46,41 +45,73 @@ public class AccountController extends BaseController {
 		render("account/plans.html", active, plans);
 	}
 	
-	public static void setPlan(String id) {
-		User u = getCurrentUser();
-		Plan p = Plan.getByKey(id);
-		List<FreeSlot> fs = FreeSlot.all().filter("plan", p).filter("freeSlots >", 0).fetch();
-		try {
-			if (fs.isEmpty()) {
-				throw new MessageException(
-						String.format("No free slots left for plan %s!", p.name));
-			}
-			FreeSlot f = fs.get(0);
-			f.freeSlots -= 1; //take a slot
-			f.save(); //save ASAP so site gets updated
-			
-			//figure out transmission port and save to account
-			int port = getTransmissionPort(f.getNode());
-			Account a = u.getPrimaryAccount();
-			a.transmissionPort = port;
-			a.node = f.node;
-			a.save();
-			u.setPlan(p);
-			u.save();			
+	public static void buyPlan(Long newPlanID) throws MessageException {
+		User user = getCurrentUser();
+		Plan newPlan = Plan.getByKey(newPlanID);
 		
-			//start transmission on node for user. This will create all the needed files
-			u.getTransmission().start();	
-			
-		} catch (MessageException ex) {
-			Validation.addError("general", ex.getMessage());
+		//if the new plan is free, switch to it immediately
+		if (newPlan.isFree()) {
+			invoicePlan(newPlan.id);
 		}
-		Validation.keep(); 
-		plans();
+		
+		Plan oldPlan = user.getPlan();
+		String active = "plans";
+		render("account/buyplan.html", active, user, newPlan, oldPlan);
+	}
+	
+	public static void invoicePlan(Long newPlanID) throws MessageException {
+		//check to see if there is an outstanding invoice for this plan.
+		//if there is, use that one instead of creating a new one
+		Plan newPlan = Plan.getByKey(newPlanID);
+		User u = getCurrentUser();
+		FreeSlot fs = consumeSlot(u, newPlan);
+		
+		//if an invoice doesnt need to be created because the plan is free, switch immediately
+		if (newPlan.isFree()) {
+			PlanSwitch.create(u.getPrimaryAccount(), fs, null);
+			PlanSwitch.notifyUser(u, false);
+			ClientController.index();
+		}
+		
+		//check to see if theres already an active invoice for this plan
+		//if there is, dont create another one
+		Invoice invoice = Invoice.all()
+				.filter("account", u.getPrimaryAccount())
+				.filter("paymentDateUtc", null)
+				.get();
+		
+		if (invoice != null) {
+			redirect(invoice.getGoogleCheckoutUrl());
+		} else {		
+			//no active invoices for this plan; create one
+			u.paidForPlan = false;
+			u.save();
+			Invoice i = Invoice.createInvoice(u.getPrimaryAccount(), newPlan);
+			PlanSwitch.create(u.getPrimaryAccount(), fs, i);
+			redirect(i.getGoogleCheckoutUrl());
+		}
 	}
 	
 	public static void invoices() {
 		String active = "invoices";
-		render("account/invoices.html", active);
+		Account a = getCurrentUser().getPrimaryAccount();
+		List<Invoice> invoices = Invoice.all()
+				.filter("account", a)
+				.order("paymentDateUtc")
+				.limit(50).fetch();
+		render("account/invoices.html", active, invoices);
+	}
+	
+	public static void invoiceDetails(Long invoiceId) {
+		String active = "invoices";
+		Invoice invoice = Invoice.findById(invoiceId);
+		if (invoice == null) {
+			setGeneralMessage("No such invoice with id: " + invoiceId);
+		}
+		if (invoice.getAccount().id != getCurrentUser().getPrimaryAccount().id) {
+			setGeneralMessage("This invoice isnt yours!");
+		}
+		render("account/invoice-details.html", invoice, active);
 	}
 	
 	public static void details(@Valid User user) {
@@ -142,24 +173,15 @@ public class AccountController extends BaseController {
 		invite();
 	}
 	
-	private static int getTransmissionPort(Node n) throws MessageException {
-		Account biggestPort =
-				Account.all()
-				.filter("node", n)
-				.filter("transmissionPort >", 0)
-				.order("-transmissionPort").limit(1).get();
-		int p;
-		if (biggestPort != null) {
-			p = biggestPort.getTransmissionPort();
-			if (p > 0) {
-				p++;
-			} else {
-				p = 3000; //start at 3000
-			}
-		} else {
-			p = 3000;
-		}
-		return p;		
+	protected static FreeSlot consumeSlot(User u, Plan p) {
+		List<FreeSlot> eligibleSlots = p.getFreeSlots();
+		FreeSlot fs = eligibleSlots.get(0);
+		
+		//take a slot
+		fs.freeSlots -= 1;
+		fs.save();
+		
+		return fs;
 	}
 	
 }

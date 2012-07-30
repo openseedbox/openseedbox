@@ -47,6 +47,9 @@ public class User extends EnhancedModel {
 	@Column("time_zone")
 	public String timeZone;
 	
+	@Column("paid_for_plan")
+	public Boolean paidForPlan;
+	
 	public Node getNode() {
 		Account a = getPrimaryAccount();
 		if (a != null) {
@@ -54,6 +57,14 @@ public class User extends EnhancedModel {
 		}
 		return null;
 	}	
+	
+	public void setNode(Node n) {
+		Account a = getPrimaryAccount();
+		if (a != null) {
+			a.node = n;
+			a.save();
+		}
+	}
 	
 	public List<Invitation> getInvitations() {
 		return Invitation.all().filter("invitingUser", this).order("invitationDate").fetch();
@@ -275,6 +286,33 @@ public class User extends EnhancedModel {
 		}
 		return _userStats;
 	}	
+	
+	public List<UserMessage> getUnreadMessages() {
+		return UserMessage.all().filter("user", this).filter("dismissDateUtc", null).fetch();
+	}
+	
+	public List<UserMessage> getAllMessages() {
+		return UserMessage.all().filter("user", this).fetch();
+	}
+	
+	public UserMessage addUserMessage(String heading, String message) {
+		return addUserMessage(heading, message, UserMessage.STATE_MESSAGE);
+	}
+	
+	public UserMessage addUserErrorMessage(String heading, String message) {
+		return addUserMessage(heading, message, UserMessage.STATE_ERROR);
+	}	
+	
+	public UserMessage addUserMessage(String heading, String message, int type) {
+		UserMessage um = new UserMessage();
+		um.heading = heading;
+		um.message = message;
+		um.state = type;
+		um.createDateUtc = new Date();
+		um.user = this;
+		um.insert();
+		return um;
+	}
 	
 	public class UserStats {
 		public String maxSpaceGb;

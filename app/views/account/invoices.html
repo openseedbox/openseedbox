@@ -1,2 +1,35 @@
 #{extends "account/index.html" /}
-<p>You're lucky! Actually paying for something hasnt been implemented yet.</p>
+#{if invoices.size > 0}
+<table class="table table-bordered">
+	<tr>
+		<th>Invoice #</th>
+		<th>Create Date</th>
+		<th>Total Amount</th>
+		<th>Payment Date</th>
+		<th>Actions</th>
+	</tr>
+	#{list items:invoices, as:"invoice"}
+	<tr>
+		<td><a href="@{AccountController.invoiceDetails(invoice.id)}">${invoice.id}</a></td>
+		<td>${invoice.invoiceDateUtc}</td>
+		<td>$${invoice.getTotalAmount()}</td>
+		<td>#{if (invoice.hasBeenPaid())}
+				${invoice.paymentDateUtc}			
+			#{/if}
+			#{else}
+				<span class="alert-error">Not paid yet!</span>
+			#{/else}
+		</td>
+		<td>
+			#{if (!invoice.hasBeenPaid())}
+				<a class="btn btn-success" target="_blank" href="${invoice.googleCheckoutUrl}">Pay</a>
+			#{/if}
+			<a class="btn" href="@{AccountController.invoiceDetails(invoice.id)}">Details</a>
+		</td>
+	</tr>
+	#{/list}
+</table>
+#{/if}
+#{else}
+	<p>No invoices for this account.</p>
+#{/else}

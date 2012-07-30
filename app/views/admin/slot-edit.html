@@ -9,7 +9,7 @@
 	<form class="form-horizontal" action="@{AdminController.updateSlot()}" method="post">
 		#{form.hidden name:"slot.id", value:slot?.id /}
 		#{form.dropdown name:"slot.node.id", value:slot?.node, options:nodes, label:"Node", name_str:"name", value_str:"id" /}  
-		#{form.dropdown name:"slot.plan.id", value:slot?.plan, options:plans, label:"Plan", name_str:"name", value_str:"id" /}
+		#{form.dropdown name:"slot.plan.id", value:slot?.plan?.id, options:plans, label:"Plan", name_str:"name", value_str:"id" /}
 		#{form.text name:"slot.freeSlots", value:slot?.freeSlots, label:"Free Slots" /}
 		%{ buttons = (slot == null) ?
 				[ [ label:"Create new Slots", value:"create" ], [ label:"Cancel", value:"cancel" ] ] :
