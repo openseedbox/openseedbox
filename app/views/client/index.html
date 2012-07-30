@@ -11,6 +11,7 @@
 #{choose-account-dropdown user:currentUser, account:activeAccount, returnTo:"/client", what:"torrents" /}
 
 <div id="tab-header">
+	<br />
 	<ul class="nav nav-tabs">
 		<li class="active"><a href="#"><img src="#{asset.ajax /}" /> Loading tabs...</a></li>
 	</ul>
@@ -43,7 +44,7 @@
 		<h2>Add Torrent</h2>
 	</div>
 	<div class="modal-body">
-			#{form.text label:"URL or Magnet:", name:"urlOrMagnet", placeholder:"Please torrent URL or Magnet link" /}
+			#{form.text label:"URL or Magnet:", name:"urlOrMagnet", placeholder:"Paste torrent URL or Magnet link" /}
 			#{form.upload label:"Upload from computer:", name:"fileFromComputer" /}
 	</div>
 	<div class="modal-footer">

@@ -7,12 +7,15 @@ import com.googlecode.htmlcompressor.compressor.XmlCompressor;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.LogManager;
 import java.util.zip.GZIPOutputStream;
 import models.Account;
+import models.PlanSwitch;
 import models.User;
 import notifiers.Mails;
 import org.apache.commons.lang.StringUtils;
 import play.Logger;
+import play.Play;
 import play.Play.Mode;
 import play.cache.Cache;
 import play.data.validation.Validation;
@@ -25,18 +28,20 @@ import play.templates.Template;
 import play.templates.TemplateLoader;
 
 public class BaseController extends Controller {
+	
 
 	@Before
 	protected static void before() {
+		//Set logging level
+		String level = Play.configuration.getProperty("application.log", "INFO");
+		if (!level.equals("INFO")) {
+			LogManager.getLogManager().reset();
+		}
+		
 		User u = getCurrentUser();
 		renderArgs.put("currentUser", u);
 		Account a = getActiveAccount();
 		renderArgs.put("activeAccount", a);
-		if (!request.url.contains("requireEmail")) {
-			if (u != null && StringUtils.isEmpty(u.emailAddress)) {
-				redirect("/main/requireEmail");
-			}
-		}
 	}
 
 	protected static User getCurrentUser() {
@@ -131,7 +136,11 @@ public class BaseController extends Controller {
 		}
 		if (!(ex instanceof MessageException)) {
 			//send error email if the exception wasnt a message
-			Mails.sendError(ex, request);
+			if (Play.mode == Mode.DEV) {
+				
+			} else {
+				Mails.sendError(ex, request);
+			}
 		}
 	}
 

@@ -1,0 +1,34 @@
+#{extends "account/index.html" /}
+<h2>Details for invoice #${invoice.id}</h2>
+<br />
+<h4>Payable By: ${currentUser.emailAddress}</h4>
+<br />
+<h3>Items:</h3>
+<table class="table table-bordered table-condensed">
+	<tr>
+		<th>Item #</th>
+		<th>Name</th>
+		<th>Description</th>
+	</tr>
+	#{list items:invoice.getItems(), as:"item"}
+	<tr>
+		<td>${item_index}</td>
+		<td>${item.name}</td>
+		<td>${item.description}</td>
+	</tr>
+	#{/list}
+</table>
+<div class="pull-right">
+	<h4 class="pull-right">Total Cost: $${invoice.getTotalAmount()}</h4><br />
+	#{if (!invoice.hasBeenPaid())}
+		<a class="btn btn-success" href="${invoice.googleCheckoutUrl}">Pay Now</a>
+	#{/if}
+	#{else}
+		<span class="alert-success">This invoice has been paid. No further action is required.</span>
+	#{/else}
+</div>
+<div class="clearfix"></div>
+
+<div class="form-actions">
+	<a class="btn btn-primary" href="@{AccountController.invoices()}">Back to Invoices</a>
+</div>

@@ -1,5 +1,6 @@
 package models;
 
+import code.BigDecimalUtils;
 import java.math.BigDecimal;
 import java.util.List;
 import play.data.validation.CheckWith;
@@ -42,17 +43,34 @@ public class Plan extends EnhancedModel {
 	@Column("visible")
 	public boolean visible;
 	
+	public boolean isFree() {
+		return (BigDecimalUtils.LessThanOrEqual(monthlyCost, BigDecimal.ZERO));
+	}
+	
 	public int getUsedSlots() {
 		return Account.all().filter("plan", this).count();
 	}
 	
-	public int getFreeSlots() {
+	public List<FreeSlot> getFreeSlots() {
 		List<FreeSlot> slots = FreeSlot.all().filter("plan", this).fetch();
+		return slots;
+	}
+	
+	public int getTotalFreeSlots() {
+		List<FreeSlot> slots = getFreeSlots();
 		int ret = 0;
 		for (FreeSlot fs : slots) {
 			ret += fs.freeSlots;
 		}
 		return ret;
  	}
+	
+	public String getInvoiceLineName() {
+		return String.format("Seedbox Plan: %s", this.name);
+	}
+	
+	public String getInvoiceLineDescription() {
+		return "One months service";
+	}
 	
 }

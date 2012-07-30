@@ -44,4 +44,8 @@ public class FreeSlot extends EnhancedModel {
 		return Account.all().filter("plan", this.plan).filter("node", this.node).count();
 	}
 	
+	public static FreeSlot getForNodeAndPlan(Node n, Plan p) {
+		return FreeSlot.all().filter("node", n).filter("plan", p).get();
+	}
+	
 }

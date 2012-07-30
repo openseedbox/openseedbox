@@ -1,5 +1,11 @@
 #{extends "account/index.html" /}
 
+<div class="alert alert-warning">
+	<h3>Warning</h3>
+	<p>If you change a plan halfway through your billing cycle, you will be charged full price for the new plan
+		<strong>but your billing cycle will be reset</strong>. No refund will be issued for a partial month.</p>
+</div>
+
 %{ def count = 0 }%
 #{list items:plans, as:"plan"}
 %{ def isCurrentPlan = (currentUser.plan == plan) }%
@@ -22,8 +28,8 @@
 			</ul>
 			<div class="pull-right">
 				#{if (!isCurrentPlan)}
-					#{if (plan.freeSlots > 0)}
-					<span class="success"><strong>Free Slots:</strong> ${plan.freeSlots}</span><br /><span>&nbsp;</span>
+					#{if (plan.totalFreeSlots > 0)}
+					<span class="success"><strong>Free Slots:</strong> ${plan.totalFreeSlots}</span><br /><span>&nbsp;</span>
 					#{/if}
 					#{else}
 					<span class="error"><strong>Sorry, no slots are available.</strong></span><br />
@@ -42,12 +48,12 @@
 					<strong>$${plan.monthlyCost}</strong> / mo
 				</div>
 				<div class="pull-right">
-					#{if (plan.freeSlots > 0)}
+					#{if (plan.totalFreeSlots > 0)}
 						#{if (isCurrentPlan)}
 							<span class="btn btn-success">Current Plan</span>
 						#{/if}
 						#{else}
-							<a id="edit" class="btn btn-primary" href="@{AccountController.setPlan(plan.id)}">Choose Plan</a>	
+							<a id="edit" class="btn btn-primary" href="@{AccountController.buyPlan(plan.id)}">Choose Plan</a>	
 						#{/else}
 					#{/if}
 					#{else}

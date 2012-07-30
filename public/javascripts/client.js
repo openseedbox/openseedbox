@@ -17,6 +17,12 @@
 		}
 	});
 	
+	$(window).on("focus", function() {
+		window.refresh_disabled = false;
+	}).on("blur", function() {
+		window.refresh_disabled = true;
+	});
+	
 	$(document).ready(function() {
 		var already_refreshing = false;
 		var activeGroup = "All";

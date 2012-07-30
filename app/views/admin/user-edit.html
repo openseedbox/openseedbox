@@ -3,6 +3,8 @@
 <form class="form-horizontal" action="@{AdminController.editUserPost}" method="post">
 	#{form.hidden name:"u.id", value:user?.id /}
 	#{form.checkbox name:"u.isAdmin", value:user?.isAdmin, label:"Is Administrator" /}
+	#{form.dropdown name:"plan_id", value:user?.primaryAccount?.plan?.id, label:"Plan", options:plans, name_str:"name", value_str:"id" /}
+	#{form.dropdown name:"node_id", value:user?.primaryAccount?.node?.id, label:"Node", options:nodes, name_str:"name", value_str:"id" /}
 	#{form.actions buttons:[ [ label: "Update", value: "update" ],
 							 [ label: "Cancel", value: "cancel" ] ] /}
 </form>

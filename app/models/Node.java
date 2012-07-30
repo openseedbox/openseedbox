@@ -4,7 +4,6 @@ import code.WebRequest;
 import code.WebResponse;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -101,10 +100,10 @@ public class Node extends EnhancedModel {
 	public class UserStats {
 		
 		@SerializedName("free-space-gb")
-		public int freeSpaceGb;
+		public double freeSpaceGb;
 		
 		@SerializedName("total-space-gb")
-		public int totalSpaceGb;
+		public double totalSpaceGb;
 		
 		@SerializedName("storage-directory-is-writable")
 		public boolean storageDirectoryIsWritable;

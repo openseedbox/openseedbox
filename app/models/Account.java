@@ -86,4 +86,24 @@ public class Account extends EnhancedModel {
 		return null;
 	}
 	
+	public static int getAvailableTransmissionPort(Node n) throws MessageException {
+		Account biggestPort =
+				Account.all()
+				.filter("node", n)
+				.filter("transmissionPort >", 0)
+				.order("-transmissionPort").limit(1).get();
+		int p;
+		if (biggestPort != null) {
+			p = biggestPort.getTransmissionPort();
+			if (p > 0) {
+				p++;
+			} else {
+				p = 3000; //start at 3000
+			}
+		} else {
+			p = 3000;
+		}
+		return p;		
+	}	
+	
 }
