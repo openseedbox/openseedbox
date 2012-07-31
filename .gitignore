@@ -5,3 +5,4 @@ eclipse/
 modules/
 lib/
 precompiled/
+server.pid

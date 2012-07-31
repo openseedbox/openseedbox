@@ -2,12 +2,12 @@ package code.jobs;
 
 import play.Logger;
 import play.Play;
-import play.jobs.Every;
 import play.jobs.Job;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
 
-@Every("30s")
+//No longer required with the move away from heroku
+//@Every("30s")
 public class PingJob extends Job {
 
 	@Override

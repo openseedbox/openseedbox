@@ -48,7 +48,7 @@ public class User extends EnhancedModel {
 	public String timeZone;
 	
 	@Column("paid_for_plan")
-	public Boolean paidForPlan;
+	public boolean paidForPlan = true;
 	
 	public Node getNode() {
 		Account a = getPrimaryAccount();
