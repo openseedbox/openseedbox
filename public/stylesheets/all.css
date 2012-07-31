@@ -4,3 +4,8 @@
 .error {
 	color: red;
 }
+
+#logo {
+	padding-top: 13px;
+	padding-bottom: 0px;
+}
