@@ -2,11 +2,11 @@
 #{set admin_active:"active" /}
 #{set title:"MySeedbox - Admin" /}
 <ul class="nav nav-tabs">
-	<li #{if (active == "stats")}class="active"#{/if}><a href="@{AdminController.stats}">Stats</a></li>
-	<li #{if (active == "nodes")}class="active"#{/if}><a href="@{AdminController.nodes}">Nodes</a></li>
-	<li #{if (active == "users")}class="active"#{/if}><a href="@{AdminController.users}">Users</a></li>
-	<li #{if (active == "plans")}class="active"#{/if}><a href="@{AdminController.plans}">Plans</a></li>
-	<li #{if (active == "slots")}class="active"#{/if}><a href="@{AdminController.slots}">Slots</a></li>
+	<li #{if (active == "stats")}class="active"#{/if}><a href="@{AdminController.stats()}">Stats</a></li>
+	<li #{if (active == "nodes")}class="active"#{/if}><a href="@{AdminController.nodes()}">Nodes</a></li>
+	<li #{if (active == "users")}class="active"#{/if}><a href="@{AdminController.users()}">Users</a></li>
+	<li #{if (active == "plans")}class="active"#{/if}><a href="@{AdminController.plans()}">Plans</a></li>
+	<li #{if (active == "slots")}class="active"#{/if}><a href="@{AdminController.slots()}">Slots</a></li>
 </ul>
 <div id="tab-content">
 	#{doLayout /}
