@@ -126,7 +126,9 @@ public class ClientController extends BaseController {
 	
 	public static void addTorrentGroups(String[] torrentHashes, String group) {
 		if (torrentHashes != null && torrentHashes.length > 0 && !StringUtils.isEmpty(group)) {
-			List<Torrent> all = Torrent.all().filter("user", getCurrentUser()).filter("hashString IN", Arrays.asList(torrentHashes)).fetch();
+			List<Torrent> all = Torrent.all()
+					.filter("user", getActiveAccount().getPrimaryUser())
+					.filter("hashString IN", Arrays.asList(torrentHashes)).fetch();
 			for(Torrent t : all) {
 				TorrentGroup temp = new TorrentGroup(group);
 				if (!t.groups.contains(temp)) {
@@ -139,7 +141,7 @@ public class ClientController extends BaseController {
 	}
 	
 	public static void removeTorrentGroup(String torrentHash, String group) throws MessageException {
-		Torrent t = getCurrentUser().getTorrent(torrentHash);
+		Torrent t = getActiveAccount().getPrimaryUser().getTorrent(torrentHash);
 		if (!StringUtils.isEmpty(group)) {
 			t.groups.remove(new TorrentGroup(group));
 			t.save();
@@ -193,7 +195,7 @@ public class ClientController extends BaseController {
 	public static void setIncludedTorrentFiles(String torrentHash, String[] fw, String[] fa,
 			String[] ph, String[] pn, String[] pl) throws MessageException {
 		//fw = files wanted, fa = all files, ph = priority high, pn = priority normal, pl = priority low
-		Transmission t = getCurrentUser().getTransmission();	
+		Transmission t = getActiveAccount().getPrimaryUser().getTransmission();	
 		if (fw != null) {
 			t.setFilesWanted(torrentHash, Arrays.asList(fw), Arrays.asList(fa));
 		}
