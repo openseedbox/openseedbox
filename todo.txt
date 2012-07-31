@@ -1,0 +1,2 @@
+- PlanSwitch.addMessage should String.format() the message and replace {message_id} with the id of the message (for use in auto-dismissing messages)
+- Need to implement an hourly Job that reverts any partial plan changes after 2 days (to free up slots)
