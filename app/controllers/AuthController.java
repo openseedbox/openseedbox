@@ -32,10 +32,25 @@ public class AuthController extends BaseController {
 			}
 			//check that user is in database. If not, create.
 			User u = User.all().filter("openId", vu.id).get();
+			String emailAddress = vu.extensions.get("email");
+			
 			if (u == null) {
+				//check that the email isnt already in the database. if it is, the user is probably being re-authenticated by the provider and sometimes the openID changes.
+				if (!StringUtils.isEmpty(emailAddress)) {
+					User temp = User.all().filter("emailAddress", emailAddress).get();
+					if (temp != null) {
+						temp.openId = vu.id;
+						temp.save();
+						u = temp;
+					}
+				}			
+			}
+			
+			if (u == null) {
+				//email is not already in the database, definitely a new user
 				u = new User();
 				u.openId = vu.id;
-				u.emailAddress = vu.extensions.get("email");
+				u.emailAddress = emailAddress;
 				if (vu.extensions.containsKey("firstName")) {
 					u.displayName = String.format("%s %s", vu.extensions.get("firstName"), vu.extensions.get("lastName"));
 				} else {

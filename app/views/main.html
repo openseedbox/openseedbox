@@ -4,17 +4,18 @@
 		<title>OpenSeedbox - #{get "title" /}</title>
 		<link rel="stylesheet" href="#{asset.url '/stylesheets/bootstrap.min.css' /}">
 		<link rel="stylesheet" href="#{asset.url '/stylesheets/all.css' /}" />
+		<link rel="shortcut icon" href="#{asset.url '/images/favicon.ico' /}" />
 		#{get "moreStyles" /}
 		<script src="#{asset.url '/javascripts/jquery.min.js' /}" type="text/javascript"></script>
 		<script src="#{asset.url '/javascripts/bootstrap.min.js' /}" type="text/javascript"></script>
 		<script src="#{asset.url '/javascripts/jquery-ui.position.min.js' /}" type="text/javascript"></script>
 		#{get "moreScripts" /}
 	</head>
-	<body style="padding-top:40px;">
+	<body style="padding-top:70px;">
 		<div class="navbar navbar-fixed-top">
 			<div class="navbar-inner">
 				<div class="container">
-					<a class="brand" href="/">OpenSeedbox</a>
+					<a id="logo" class="brand" href="/"><img src="#{asset.url '/images/top-logo.png' /}" /></a>
 					<ul class="nav">
 						#{if (currentUser)}
 							<li class="#{get "torrents_active" /}"><a href="@{ClientController.index()}">Torrents</a></li>
@@ -28,7 +29,7 @@
 					<ul class="nav pull-right">
 						#{if (currentUser)}
 							<li>
-								<img src="${currentUser.avatarUrl}" style="padding-top:7px;width:24px;height:24px;" />
+								<img src="${currentUser.avatarUrl}" style="padding-top:12px; height:45px;" />
 							</li>
 							<li>
 								<a href="@{AccountController.plans()}">${currentUser.displayName}</a>

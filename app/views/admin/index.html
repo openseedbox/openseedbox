@@ -1,13 +1,7 @@
 #{extends "main.html" /}
 #{set admin_active:"active" /}
 #{set title:"MySeedbox - Admin" /}
-#{set "moreScripts"}
-	<script type="text/javascript" src="/public/javascripts/admin.js"></script>
-#{/set}
-#{set "moreStyles"}
-	<link rel="stylesheet" type="text/css" href="/public/stylesheets/admin.css" />
-#{/set}
-<ul id="tabs" class="nav nav-tabs">
+<ul class="nav nav-tabs">
 	<li #{if (active == "stats")}class="active"#{/if}><a href="@{AdminController.stats}">Stats</a></li>
 	<li #{if (active == "nodes")}class="active"#{/if}><a href="@{AdminController.nodes}">Nodes</a></li>
 	<li #{if (active == "users")}class="active"#{/if}><a href="@{AdminController.users}">Users</a></li>
