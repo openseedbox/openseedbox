@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.logging.LogManager;
 import java.util.zip.GZIPOutputStream;
 import models.Account;
-import models.PlanSwitch;
 import models.User;
 import notifiers.Mails;
 import org.apache.commons.lang.StringUtils;
@@ -24,18 +23,29 @@ import play.mvc.Catch;
 import play.mvc.Controller;
 import play.mvc.Finally;
 import play.mvc.Http.Header;
+import play.mvc.Router;
 import play.templates.Template;
 import play.templates.TemplateLoader;
 
 public class BaseController extends Controller {
 	
-
 	@Before
 	protected static void before() {
 		//Set logging level
 		String level = Play.configuration.getProperty("application.log", "INFO");
 		if (!level.equals("INFO")) {
 			LogManager.getLogManager().reset();
+		}
+		
+		//check if http request. if it is, make https
+		if (!request.secure) {
+			String url = Router.reverse("MainController.index").secure().url;
+			if (Play.mode == Mode.DEV) {
+				String httpPort = Play.configuration.getProperty("http.port");
+				String httpsPort = Play.configuration.getProperty("https.port");
+				url = url.replace(httpPort, httpsPort);
+			}
+			redirect(url);
 		}
 		
 		User u = getCurrentUser();
