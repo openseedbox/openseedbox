@@ -5,6 +5,7 @@ import code.Util;
 import code.transmission.Transmission;
 import code.transmission.TransmissionTorrent;
 import java.io.File;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -147,7 +148,14 @@ public class User extends EnhancedModel {
 	private Torrent newTorrent(TransmissionTorrent tt) {
 		Torrent t = new Torrent();
 		t.hashString = tt.hashString;
-		t.name = tt.name;
+		//for some reason, the names are URLEncoded. Strip it
+		String name = tt.name;
+		try {
+			name = URLDecoder.decode(name, "UTF8");
+		} catch (Exception ex) {
+			//fuck off java and your checked UnsupportedEncodingException's
+		}
+		t.name = name;
 		t.user = this;
 		t.insert();
 		t.setTransmissionTorrent(tt);
