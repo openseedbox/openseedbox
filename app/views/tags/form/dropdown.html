@@ -20,7 +20,6 @@ def id = (_id) ? _id : _name;
 	<div class="controls">
 		<select id="${id}" name="${_name}">
 		#{list items:options, as:"option"}
-		Option value: ${option.value}, selected value: ${_value}
 			<option value="${option.value}"
 				#{if (option.value?.toString() == _value?.toString())}selected="selected"#{/if}>
 					${option.name}
