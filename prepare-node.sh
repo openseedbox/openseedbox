@@ -21,7 +21,7 @@ required_packages="apache2 libapache2-mod-php5 libapache2-mod-xsendfile git tran
 
 #Apache config
 apache_config="
-<VirtualHost *:80>
+<VirtualHost *:443>
 	ServerAdmin support@openseedbox.com
 	
 	XSendFile on
@@ -29,8 +29,13 @@ apache_config="
 	
 	DocumentRoot $http_root
 	
+	SSLEngine on
+	SSLCertificateFile /openseedbox/host.cert
+	SSLCertificateKeyFile /openseedbox/host.key
+	
 	Alias /openseedbox-server "$http_root"
 	<Directory $http_root>
+		SSLRequireSSL
 		Options Indexes FollowSymLinks MultiViews
 		AllowOverride All
 		Order allow,deny
@@ -49,7 +54,8 @@ if [ "$root" != "root" ]; then
 fi
 
 #update apt package archive
-apt-get update
+echo "Updating apt package list (quietly, please wait...)"
+apt-get update -qq
 
 #install required packages
 echo -e "-- INSTALLING REQUIRED PACKAGES --"
@@ -106,8 +112,23 @@ if [ ! -f "$apache2_base/mods-enabled/xsendfile.load" ]; then
 	echo "...it isnt, enabling."
 	a2enmod xsendfile
 fi
+
+echo "Checking ssl is enabled..."
+if [ ! -f "$apache2_base/mods-enabled/ssl.load" ]; then
+	echo "...it isnt, enabling."
+	a2enmod ssl
+fi
+
+echo "Retrieving server keys..."
+wget -N http://cdn.openseedbox.com/other/host.cert -O "$base_dir/host.cert"
+wget -N http://cdn.openseedbox.com/other/host.key -O "$base_dir/host.key"
+
 echo "Writing out site config..."
 echo "$apache_config" > $apache2_site_config
+
+echo "Disabling Port 80"
+sed -i "s/^NameVirtualHost/#NameVirtualHost/g" "$apache2_base/ports.conf"
+sed -i "s/^Listen 80/#Listen 80/g" "$apache2_base/ports.conf"
 
 echo "Enabling site..."
 a2dissite 000-default #this site interferes if its not disabled

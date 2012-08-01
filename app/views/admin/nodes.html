@@ -18,7 +18,7 @@
 	</tr>
 #{list items:nodes, as:"node"}
 	<tr class="node-${node.id}">
-		<td><a href="http://${node.ipAddress}/openseedbox-server/status.php" target="_blank">${node.name}</a></td>
+		<td><a href="https://${node.ipAddress}/openseedbox-server/status.php" target="_blank">${node.name}</a></td>
 		<td>${node.ipAddress}</td>
 		<td>${node.getUptime().raw()}</td>
 		<td>${node.getFreeSpace()}</td>

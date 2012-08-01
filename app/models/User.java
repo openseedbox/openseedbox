@@ -49,7 +49,11 @@ public class User extends EnhancedModel {
 	public String timeZone;
 	
 	@Column("paid_for_plan")
-	public boolean paidForPlan = true;
+	public boolean paidForPlan;
+	
+	public User() {
+		paidForPlan = true; //because there seems to be no way to set a default value at the database level
+	}
 	
 	public Node getNode() {
 		Account a = getPrimaryAccount();

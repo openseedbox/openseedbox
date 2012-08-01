@@ -113,7 +113,7 @@ public class ClientController extends BaseController {
 	}	
 	
 	public static void addTorrentGroup(String torrentHash, String group) throws MessageException {
-		Torrent t = getCurrentUser().getTorrent(torrentHash);
+		Torrent t = getActiveAccount().getPrimaryUser().getTorrent(torrentHash);
 		if (!StringUtils.isEmpty(group)) {
 			TorrentGroup temp = new TorrentGroup(group);
 			if (!t.groups.contains(temp)) {
