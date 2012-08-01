@@ -71,10 +71,10 @@ public class WebRequest {
 	private WSRequest getWebserviceUrl(String page, Map<String, String> parameters) {
 		WSRequest ret;
 		if (!StringUtils.isEmpty(this.port)) {
-			ret = WS.url("http://%s:%s/%s/%s.php",
+			ret = WS.url("https://%s:%s/%s/%s.php",
 				this.ipAddress, this.port, this.path, page);
 		} else {
-			ret = WS.url("http://%s/%s/%s.php",
+			ret = WS.url("https://%s/%s/%s.php",
 				this.ipAddress, this.path, page);
 		}
 		if (parameters == null) {

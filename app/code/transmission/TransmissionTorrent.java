@@ -166,7 +166,7 @@ public class TransmissionTorrent {
 			String fname = (file != null) ? file.name : name;
 			String status = (isComplete()) ? "complete" : "incomplete";
 			try {
-				return String.format("http://%s/openseedbox-server/download.php?user_name=%s&file_path=%s&status=%s",
+				return String.format("https://%s/openseedbox-server/download.php?user_name=%s&file_path=%s&status=%s",
 					n.ipAddress, URLEncoder.encode(u.emailAddress, "UTF-8"), URLEncoder.encode(fname, "UTF-8"), status);
 			} catch (UnsupportedEncodingException ex) {
 				return "Platform doesnt support UTF-8 encoding??";
