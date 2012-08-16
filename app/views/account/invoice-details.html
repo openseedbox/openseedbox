@@ -1,4 +1,7 @@
 #{extends "account/index.html" /}
+#{set "moreScripts"}
+	<script type="text/javascript" src="https://www.paypalobjects.com/js/external/dg.js"></script>
+#{/set}
 <h2>Details for invoice #${invoice.id}</h2>
 <br />
 <h4>Payable By: ${currentUser.emailAddress}</h4>
@@ -9,19 +12,21 @@
 		<th>Item #</th>
 		<th>Name</th>
 		<th>Description</th>
+		<th>Cost</th>
 	</tr>
 	#{list items:invoice.getItems(), as:"item"}
 	<tr>
 		<td>${item_index}</td>
 		<td>${item.name}</td>
 		<td>${item.description}</td>
+		<td><div class="pull-right">$${item.price}</div></td>
 	</tr>
 	#{/list}
 </table>
 <div class="pull-right">
 	<h4 class="pull-right">Total Cost: $${invoice.getTotalAmount()}</h4><br />
 	#{if (!invoice.hasBeenPaid())}
-		<a class="btn btn-success" href="${invoice.googleCheckoutUrl}">Pay Now</a>
+		#{pay-invoice invoice /}
 	#{/if}
 	#{else}
 		<span class="alert-success">This invoice has been paid. No further action is required.</span>

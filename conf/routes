@@ -21,6 +21,11 @@ GET /public/											staticDir:public
 * /account/?											AccountController.index
 * /account/{action}										AccountController.{action}
 
+#API
+* /api/?												api.ApiController.index
+* /api/{sub}											api.Api{sub}Controller.index
+* /api/{sub}/{action}									api.Api{sub}Controller.{action}
+
 #Torrent client	
 * /client/?												ClientController.index
 * /client/files/?										ClientFilesController.index

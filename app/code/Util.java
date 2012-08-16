@@ -1,13 +1,13 @@
 package code;
 
-import com.google.checkout.sdk.commands.ApiContext;
-import com.google.checkout.sdk.commands.Environment;
+import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.net.URLDecoder;
 import java.text.DateFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import models.User;
 import notifiers.Mails;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -72,6 +72,12 @@ public class Util {
 		return d.toString(dtf);
 	}
 	
+	public static String formatMoney(BigDecimal bd) {
+		NumberFormat nf = NumberFormat.getCurrencyInstance(Locale.US);
+		nf.setRoundingMode(RoundingMode.HALF_EVEN);
+		return nf.format(bd.setScale(2, RoundingMode.HALF_EVEN));
+	}
+	
 	public static List<SelectItem> toSelectItems(List<String> items) {
 		List<SelectItem> ret = new ArrayList<SelectItem>();
 		for (String s : items) {
@@ -100,22 +106,42 @@ public class Util {
 		return new DateTime(systemDate).toDateTime(tz);
 	}
 	
+	public static Map<String, String> getUrlParameters(String url) {
+		Map<String, String> params = new HashMap<String, String>();
+		String[] urlParts = url.split("\\?");
+		String query = "";
+		if (urlParts.length > 0) {
+			query = urlParts[0];
+		} else if (urlParts.length > 1) {
+			query = urlParts[1];
+		}
+		if (!query.equals("")) {
+			for (String param : query.split("&")) {
+				String pair[] = param.split("=");
+				try {
+					String key = URLDecoder.decode(pair[0], "UTF-8");
+					String value = "";
+					if (pair.length > 1) {
+						value = URLDecoder.decode(pair[1], "UTF-8");
+					}
+					params.put(key, value);				
+				} catch (UnsupportedEncodingException ex) {
+					//ignore, fuck you java
+				}
+			}
+		}
+		return params;
+	}
+	
+	public static String stripHtml(String s) {
+		return s.replaceAll("\\<.*?>","");
+	}
+	
+	
 	public static class SelectItem {
 		public String name;
 		public String value;
 		public boolean selected;
 	}
-	
-	public static ApiContext getGoogleApiContext() {
-		String env = Play.configuration.getProperty("googlecheckout.environment", "sandbox").toLowerCase();
-		Environment environment = Environment.SANDBOX;
-		if (env.equals("production")) {
-			environment = Environment.PRODUCTION;
-		}
-        String merchantId = Play.configuration.getProperty("googlecheckout.merchantid");
-        String merchantKey =  Play.configuration.getProperty("googlecheckout.merchantkey");
-        String currency = Play.configuration.getProperty("googlecheckout.currency", "USD");
-        return new ApiContext(environment, merchantId, merchantKey, currency);
-    }
 	
 }

@@ -79,12 +79,12 @@ public class PlanSwitch extends EnhancedModel {
 	}
 	
 	public static void notifyUser(User u, boolean wasPaid) {
-		String url = Router.reverse("ClientController.switchPlans").url;
+		String url = Router.reverse("AccountController.switchPlans").url;
 		String message = "Please click <a href='" + url + "'>here</a> to activate your new plan.";
 		if (wasPaid) {
 			message = "Your invoice has been paid. " + message;
 		}
-		u.addUserMessage("Ready to switch plans", message);
+		u.addUserMessage("Ready to switch plans", message, UserMessage.Type.SWITCHPLAN);
 	}
 	
 }

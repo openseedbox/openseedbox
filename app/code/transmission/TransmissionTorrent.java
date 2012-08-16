@@ -48,7 +48,7 @@ public class TransmissionTorrent {
 		this.files = newList;
 	}
 	
-	public Boolean isComplete() {
+	public boolean isComplete() {
 		return (this.percentDone == 1.0);
 	}
 	

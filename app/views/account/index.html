@@ -30,7 +30,10 @@
 	</li>	
 	<li #{if (active == "invite")}class="active"#{/if}>
 		<a href="@{AccountController.invite}">Invite Users</a>
-	</li>		
+	</li>
+	<li #{if (active == "api")}class="active"#{/if}>
+		<a href="@{AccountController.api}">API</a>
+	</li>	
 </ul>
 <div class="tab-content">
 	#{doLayout /}

@@ -97,6 +97,11 @@ public class Node extends EnhancedModel {
 		return -1;
 	}
 	
+	public boolean isReachable() {
+		UserStats s = getUserStats();
+		return (s != null);
+	}
+	
 	public class UserStats {
 		
 		@SerializedName("free-space-gb")

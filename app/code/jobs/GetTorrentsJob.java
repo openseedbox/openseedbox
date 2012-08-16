@@ -60,7 +60,11 @@ public class GetTorrentsJob extends Job<GetTorrentsJobResult> {
 				}
 			}
 		} catch (Exception ex) {
-			res.error = ex;
+			if (ex.getMessage().contains("java.net.ConnectException: No route to host")) {
+				res.error = new MessageException("Your seedbox appears to be unreachable! Please contact support.");
+			} else {
+				res.error = ex;
+			}
 		}
 		
 		//Logger.info("End of job, torrents are %s", res.torrents);

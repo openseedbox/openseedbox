@@ -11,7 +11,9 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import models.Torrent.TorrentGroup;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
+import play.Play;
 import play.data.validation.Email;
 import play.modules.siena.EnhancedModel;
 import siena.*;
@@ -51,6 +53,11 @@ public class User extends EnhancedModel {
 	@Column("paid_for_plan")
 	public boolean paidForPlan;
 	
+	@Column("api_key")
+	@Max(32)
+	@Unique("api_key_unique")
+	public String apiKey;
+	
 	public User() {
 		paidForPlan = true; //because there seems to be no way to set a default value at the database level
 	}
@@ -69,6 +76,13 @@ public class User extends EnhancedModel {
 			a.node = n;
 			a.save();
 		}
+	}
+	
+	public void generateApiKey() {
+		String salt = Play.configuration.getProperty("application.secret", "salt value");
+		String key = this.emailAddress + salt;
+		this.apiKey = DigestUtils.md5Hex(key);
+		this.save();
 	}
 	
 	public List<Invitation> getInvitations() {
@@ -110,6 +124,13 @@ public class User extends EnhancedModel {
 	}
 	
 	public boolean hasPlan() {
+		//if there are PlanSwitch's for this user, return true
+		//otherwise the user may get stuck if they arent on a plan
+		//they cant switch to a plan because they arent on one
+		PlanSwitch ps = PlanSwitch.forUser(this);
+		if (ps != null) {
+			return true;
+		}
 		Account a = getPrimaryAccount();
 		if (a != null) {
 			return (a.plan != null);
@@ -199,6 +220,16 @@ public class User extends EnhancedModel {
 			ret = new ArrayList<Torrent>();
 		}
 		calculateUserStats(ret);
+		return ret;
+	}
+	
+	public List<Torrent> getRunningTorrents() throws MessageException {
+		List<Torrent> ret = new ArrayList<Torrent>();
+		for (Torrent t : getTorrents()) {
+			if (t.isRunning()) {
+				ret.add(t);
+			}
+		}
 		return ret;
 	}
 	
@@ -308,22 +339,89 @@ public class User extends EnhancedModel {
 	}
 	
 	public UserMessage addUserMessage(String heading, String message) {
-		return addUserMessage(heading, message, UserMessage.STATE_MESSAGE);
+		return addUserMessage(heading, message, UserMessage.State.MESSAGE, UserMessage.Type.GENERAL);
 	}
 	
-	public UserMessage addUserErrorMessage(String heading, String message) {
-		return addUserMessage(heading, message, UserMessage.STATE_ERROR);
+	public UserMessage addUserMessage(String heading, String message, UserMessage.Type type) {
+		return addUserMessage(heading, message, UserMessage.State.MESSAGE, type);
 	}	
 	
-	public UserMessage addUserMessage(String heading, String message, int type) {
+	public UserMessage addUserErrorMessage(String heading, String message) {
+		return addUserMessage(heading, message, UserMessage.State.ERROR, UserMessage.Type.SWITCHPLAN);
+	}	
+	
+	public UserMessage addUserMessage(String heading, String message, UserMessage.State state, UserMessage.Type type) {
 		UserMessage um = new UserMessage();
 		um.heading = heading;
 		um.message = message;
-		um.state = type;
+		um.state = state;
+		um.type = type;
 		um.createDateUtc = new Date();
 		um.user = this;
 		um.insert();
 		return um;
+	}
+	
+	public void dismissUserMessagesOfType(UserMessage.Type type) {
+		List<UserMessage> um = getUserMessagesOfType(type);
+		for (UserMessage u : um) {
+			u.dismissDateUtc = new Date();
+			u.save();
+		}
+	}
+	
+	public List<UserMessage> getUserMessagesOfType(UserMessage.Type type) {
+		return UserMessage.all().filter("type", type).filter("dismissDateUtc", null).fetch();
+	}
+	
+	public List<Invoice> getUnpaidInvoices() {
+		return Invoice.all()
+				.filter("account", this.getPrimaryAccount())
+				.filter("paymentDateUtc", null).fetch();
+	}
+	
+	public List<Invoice> getPaidInvoices() {
+		return Invoice.all()
+				.filter("account", this.getPrimaryAccount())
+				.filter("paymentDateUtc !=", null)
+				.order("-paymentDateUtc").fetch();	
+	}
+	
+	public boolean hasPaidForPlan() {
+		//if the user is on a free plan, return true
+		Plan p = getPlan();
+		if (p == null) { return true; } //stop error from showing, user cant do anything anyway
+		if (p.isFree()) {
+			return true;
+		}
+		return this.paidForPlan;
+	}
+	
+	public boolean hasExceededLimits() throws MessageException {
+		UserStats us = this.getUserStats();
+		if (Double.parseDouble(us.usedSpaceGb) > Double.parseDouble(us.maxSpaceGb)) {
+			return true;
+		}		
+		Plan p = this.getPlan();
+		if (p != null) {
+			if (p.maxActiveTorrents > -1) {
+				if (getRunningTorrents().size() > p.maxActiveTorrents) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public void notifyLimitsExceeded() {
+		//check if user has already been notified
+		if (getUserMessagesOfType(UserMessage.Type.LIMITSEXCEEDED).isEmpty()) {
+			addUserMessage("Limits Exceeded", "You have exceeded your plan limits! All torrents will be paused until you remove some.", UserMessage.State.ERROR, UserMessage.Type.LIMITSEXCEEDED);
+		}
+	}
+	
+	public void removeLimitsExceeded() {
+		dismissUserMessagesOfType(UserMessage.Type.LIMITSEXCEEDED);
 	}
 	
 	public class UserStats {

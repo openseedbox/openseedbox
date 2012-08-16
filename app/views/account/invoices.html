@@ -1,5 +1,10 @@
 #{extends "account/index.html" /}
-#{if invoices.size > 0}
+#{set "moreScripts"}
+	<script type="text/javascript" src="https://www.paypalobjects.com/js/external/dg.js"></script>
+#{/set}
+
+<h3>Unpaid Invoices</h3>
+#{if unpaid_invoices.size > 0}
 <table class="table table-bordered">
 	<tr>
 		<th>Invoice #</th>
@@ -8,7 +13,7 @@
 		<th>Payment Date</th>
 		<th>Actions</th>
 	</tr>
-	#{list items:invoices, as:"invoice"}
+	#{list items:unpaid_invoices, as:"invoice"}
 	<tr>
 		<td><a href="@{AccountController.invoiceDetails(invoice.id)}">${invoice.id}</a></td>
 		<td>${invoice.invoiceDateUtc}</td>
@@ -22,7 +27,44 @@
 		</td>
 		<td>
 			#{if (!invoice.hasBeenPaid())}
-				<a class="btn btn-success" target="_blank" href="${invoice.googleCheckoutUrl}">Pay</a>
+				#{pay-invoice invoice /}
+			#{/if}
+			<a class="btn" href="@{AccountController.invoiceDetails(invoice.id)}">Details</a>
+		</td>
+	</tr>
+	#{/list}
+</table>
+#{/if}
+#{else}
+	<p>No invoices for this account.</p>
+#{/else}
+
+
+<h3>Paid Invoices</h3>
+#{if paid_invoices.size > 0}
+<table class="table table-bordered">
+	<tr>
+		<th>Invoice #</th>
+		<th>Create Date</th>
+		<th>Total Amount</th>
+		<th>Payment Date</th>
+		<th>Actions</th>
+	</tr>
+	#{list items:paid_invoices, as:"invoice"}
+	<tr>
+		<td><a href="@{AccountController.invoiceDetails(invoice.id)}">${invoice.id}</a></td>
+		<td>${invoice.invoiceDateUtc}</td>
+		<td>$${invoice.getTotalAmount()}</td>
+		<td>#{if (invoice.hasBeenPaid())}
+				${invoice.paymentDateUtc}			
+			#{/if}
+			#{else}
+				<span class="alert-error">Not paid yet!</span>
+			#{/else}
+		</td>
+		<td>
+			#{if (!invoice.hasBeenPaid())}
+				#{pay-invoice invoice /}
 			#{/if}
 			<a class="btn" href="@{AccountController.invoiceDetails(invoice.id)}">Details</a>
 		</td>

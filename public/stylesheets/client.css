@@ -60,3 +60,7 @@ input.torrent-add-group {
 	margin-left: -25%;
 	width: 50%;
 }
+
+#search-loader {
+	margin-left: 10px;
+}

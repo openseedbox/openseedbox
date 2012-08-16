@@ -3,6 +3,7 @@
 #{set torrents_active: "active" /}
 #{set "moreScripts"}
 	<script type="text/javascript" src="#{asset.url '/javascripts/client.js' /}"></script>
+	<script type="text/javascript" src="#{asset.url '/javascripts/ajax-typeahead.min.js' /}"></script>
 #{/set}
 #{set "moreStyles"}
 	<link rel="stylesheet" type="text/css" href="#{asset.url '/stylesheets/client.css' /}" />
@@ -44,8 +45,12 @@
 		<h2>Add Torrent</h2>
 	</div>
 	<div class="modal-body">
-			#{form.text label:"URL or Magnet:", name:"urlOrMagnet", placeholder:"Paste torrent URL or Magnet link" /}
-			#{form.upload label:"Upload from computer:", name:"fileFromComputer" /}
+		#{set "ajax_url"}
+			#{asset.ajax /}
+		#{/set}
+		#{form.text label:"Search Isohunt:", name:"search", placeholder:"Enter search terms", extra:"<a id='clear' class='btn' href='#'>Clear</a><img class='hide' id='search-loader' src='${ajax_url.trim()}' />" /}
+		#{form.text label:"URL or Magnet:", name:"urlOrMagnet", placeholder:"Paste torrent URL or Magnet link" /}
+		#{form.upload label:"Upload from computer:", name:"fileFromComputer" /}
 	</div>
 	<div class="modal-footer">
 		<input type="submit" class="btn btn-primary" value="Add Torrent" />
@@ -79,6 +84,35 @@
 						$("#remove-torrent-dialog").modal("hide");
 						window.refresh_disabled = false;
 					});
+					return false;
+				});
+				
+				$("#search").typeahead({
+					"ajax" : {
+						"url" : "@{ClientController.searchIsohunt}",
+						"displayField" : "label",
+						"preDispatch" : function(query) {
+							$("#search-loader").show();
+							return {
+								"query" : query
+							}
+						},
+						"preProcess" : function(data) {
+							$("#search-loader").hide();
+							return data;
+						}
+					},
+					"matcher" : function() { return true; },
+					"display" : "label",
+					"val" : "torrent_url",
+					"itemSelected" : function(item, val, text) {
+						$("#urlOrMagnet").val(val);
+					}
+				});
+				
+				$("#clear").click(function() {
+					$("#search").val("");
+					$("#urlOrMagnet").val("");
 					return false;
 				});
 			});

@@ -1,10 +1,11 @@
 <div class="control-group #{ifError _name}error#{/ifError}">
 	<label class="control-label" for="${_name}">${_label}</label>
 	<div class="controls">
-		<input id="${_name}" type="text" name="${_name}" value="${_value}" placeholder="${_placeholder}"/>
+		<input id="${_name}" type="text" name="${_name}" value="${_value}" placeholder="${_placeholder}" ${_extraattrs} />
 		#{if _help}
 			<p class="help-block">${_help}</p>
 		#{/if}
 		<span class="help-inline">#{error "${_name}" /}</span>
+		${_extra?.raw()}
 	</div>
 </div>
