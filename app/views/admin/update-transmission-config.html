@@ -1,0 +1,11 @@
+#{extends "admin/index.html" /}
+<h2>Update Transmission Config</h2>
+<p>See all config options <a target="_blank" href="https://trac.transmissionbt.com/wiki/EditConfigFiles">here</a>.</p>
+<form action="@{AdminController.updateTransmissionConfigPost}" method="post" class="form-horizontal">
+	#{form.text label:"Key", name:"key", value:key /}
+	#{form.text label:"Value", name:"value", value:value /}
+	#{form.dropdown label:"Type", name:"type", value:type, options:types /}
+	<div class="form-actions">
+		<input type="submit" class="btn btn-primary" value="Push to all Nodes" />
+	</div>
+</form>

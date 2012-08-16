@@ -1,29 +1,31 @@
 package controllers;
 
-import code.GenericResult;
 import code.MessageException;
 import code.Util;
 import code.jobs.AddTorrentJob;
 import code.jobs.AddTorrentJob.AddTorrentJobResult;
 import code.jobs.GetTorrentsJob;
 import code.jobs.GetTorrentsJob.GetTorrentsJobResult;
-import code.jobs.PlanSwitcherJob;
 import code.jobs.TorrentControlJob;
 import code.jobs.TorrentControlJob.TorrentAction;
 import code.jobs.TorrentControlJob.TorrentControlJobResult;
 import code.transmission.Transmission;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import java.io.File;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import models.*;
+import java.util.*;
+import models.Account;
+import models.Torrent;
 import models.Torrent.TorrentGroup;
+import models.User;
+import models.UserMessage;
 import org.apache.commons.lang.StringUtils;
 import play.cache.Cache;
 import play.data.validation.Validation;
 import play.libs.F.Promise;
+import play.libs.WS;
+import play.libs.WS.HttpResponse;
 import play.mvc.Before;
 
 public class ClientController extends BaseController {
@@ -38,22 +40,33 @@ public class ClientController extends BaseController {
 		if (u.getPrimaryAccount().getPlan() == null) {
 			AccountController.index();
 		}
+
+		//check that limits have not been exceeded. if they have, pause all the torrents and notify user
+		try {
+			if (u.hasExceededLimits()) {
+				List<Torrent> running = u.getRunningTorrents();
+				List<String> hashes = new ArrayList<String>();
+				for (Torrent t : running) {
+					hashes.add(t.hashString);
+				}
+				//Note: cant use async/continuations in @Before method, potential bottleneck
+				TorrentControlJobResult res = 
+						new TorrentControlJob(getActiveAccount(), hashes, TorrentAction.STOP).doJobWithResult();
+				if (res.hasError()) {
+					addGeneralError(res.error);
+				}
+				u.notifyLimitsExceeded();
+			} else {
+				u.removeLimitsExceeded();
+			}
+		} catch (Exception ex) {
+			addGeneralError(ex);
+		}		
 	}
 	
 	public static void index() {		
 		render("client/index.html");
 	}
-	
-	public static void switchPlans() {
-		User user = getCurrentUser();
-		PlanSwitch ps = PlanSwitch.forUser(user);
-		if (ps != null) {
-			if (!ps.inProgress) {
-				new PlanSwitcherJob(ps).now();
-			}
-		}
-		render("client/switchplans.html", user, ps);
-	}	
 	
 	public static void dismissMessage(Long messageId) {
 		UserMessage um = UserMessage.getByKey(messageId);
@@ -66,7 +79,7 @@ public class ClientController extends BaseController {
 	
 	public static void addTorrent(String urlOrMagnet, File fileFromComputer) {
 		if (StringUtils.isEmpty(urlOrMagnet) && fileFromComputer == null) {
-			Validation.addError("general", "Please enter a valid URL or magent link, or choose a valid file to upload.");
+			setGeneralErrorMessage("Please enter a valid URL or magent link, or choose a valid file to upload.");
 		} else {
 			Account a = getActiveAccount();
 			Promise<AddTorrentJobResult> p = new AddTorrentJob(a, urlOrMagnet, fileFromComputer).now();
@@ -209,6 +222,36 @@ public class ClientController extends BaseController {
 			t.setFilePriority(torrentHash, Arrays.asList(pl), "low");
 		}
 		result(true);
+	}
+	
+	public static void searchIsohunt(String query) {
+		if (!StringUtils.isEmpty(query)) {
+			Promise<HttpResponse> promise = 
+					WS.url("http://ca.isohunt.com/js/json.php?ihq=%s&rows=20&sort=seeds", query).getAsync();
+			HttpResponse res = await(promise);
+			if (res.getJson() != null) {
+				JsonObject itemsObject = res.getJson().getAsJsonObject().getAsJsonObject("items");
+				if (itemsObject != null) {
+					JsonArray items = itemsObject.getAsJsonArray("list");
+					//copy only the parts we need into a map structure
+					List<Map<String, String>> results = new ArrayList<Map<String, String>>();
+					for (JsonElement i : items) {
+						JsonObject it = i.getAsJsonObject();
+						Map<String, String> ite = new HashMap<String, String>();
+						ite.put("title",  Util.stripHtml(it.get("title").getAsString()));
+						ite.put("length", Util.getBestRate(it.get("length").getAsLong()));
+						ite.put("seeds", it.get("Seeds").getAsString());
+						ite.put("leechers", it.get("leechers").getAsString());
+						ite.put("label", String.format("%s (%s) - S: <span style='color:green'>%s</span>, L: <span style='color:red'>%s</span>",
+								ite.get("title"), ite.get("length"), ite.get("seeds"), ite.get("leechers")));
+						ite.put("torrent_url", it.get("enclosure_url").getAsString());
+						results.add(ite);
+					}
+					renderJSON(results);
+				}
+			}
+		}
+		renderJSON(new ArrayList<String>());
 	}
 	
 	protected static void handleTorrentControlRequest(String torrentHash, TorrentAction action) {

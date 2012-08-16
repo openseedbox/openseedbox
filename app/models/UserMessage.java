@@ -11,13 +11,20 @@ import siena.Table;
 @Table("user_message")
 public class UserMessage extends EnhancedModel {
 	
-	public static transient int STATE_MESSAGE = 0;
-	public static transient int STATE_ERROR = 1;
+	public static enum State {
+		MESSAGE, ERROR
+	}
+	
+	public static enum Type {
+		GENERAL, SWITCHPLAN, LIMITSEXCEEDED
+	}
 	
 	@Id(Generator.AUTO_INCREMENT)
 	public Long id;
 	
-	public int state;
+	public State state;
+	
+	public Type type;
 	
 	public String heading;
 	

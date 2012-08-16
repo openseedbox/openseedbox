@@ -73,4 +73,8 @@ public class Plan extends EnhancedModel {
 		return "One months service";
 	}
 	
+	public static List<Plan> getVisiblePlans() {
+		return Plan.all().filter("visible", true).fetch();
+	}
+	
 }

@@ -5,6 +5,7 @@ import code.transmission.Transmission;
 import java.util.ArrayList;
 import java.util.List;
 import models.*;
+import play.data.validation.Required;
 import play.data.validation.Valid;
 import play.data.validation.Validation;
 import play.mvc.Before;
@@ -137,7 +138,7 @@ public class AdminController extends BaseController {
 	public static void editUser(long id) {
 		String active = "users";
 		User user = User.findById(id);
-		List<Plan> plans = Plan.all().filter("visible", true).fetch();
+		List<Plan> plans = Plan.getVisiblePlans();
 		List<Node> nodes = Node.all().filter("active", true).fetch();
 		renderTemplate("admin/user-edit.html", active, user, plans, nodes);
 	}
@@ -168,7 +169,7 @@ public class AdminController extends BaseController {
 	public static void editSlot(long slotId) {
 		String active = "slots";
 		List<Node> nodes = Node.all().filter("active", true).fetch();
-		List<Plan> plans = Plan.all().filter("visible", true).fetch();
+		List<Plan> plans = Plan.getVisiblePlans();
 		FreeSlot slot = FreeSlot.findById(slotId);
 		
 		render("admin/slot-edit.html", active, slot, nodes, plans);
@@ -239,6 +240,25 @@ public class AdminController extends BaseController {
 		}
 		Validation.keep();
 		users();
+	}
+	
+	public static void updateTransmissionConfig(String key, String value, String type) {
+		String[] types = new String[] { "String", "Integer", "Boolean" };
+		String active = "nodes";
+		render("admin/update-transmission-config.html", active, types, key, value, type);
+	}
+	
+	public static void updateTransmissionConfigPost(@Required String key, @Required String value, @Required String type) {
+		if (!validation.errorsMap().isEmpty()) {
+			Validation.keep();
+		} else {
+			setGeneralMessage("Config pushed to all nodes.");
+		}
+		updateTransmissionConfig(key, value, type);
+	}
+	
+	public static void runPrepareScript() {
+		
 	}
 
 }

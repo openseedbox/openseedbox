@@ -5,12 +5,7 @@ import code.jobs.NodeMigrationJob.NodeMigrationJobResult;
 import code.jobs.PlanSwitcherJob.PlanSwitcherJobResult;
 import java.util.Date;
 import java.util.List;
-import models.Account;
-import models.FreeSlot;
-import models.Node;
-import models.Plan;
-import models.PlanSwitch;
-import models.User;
+import models.*;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import play.Logger;
 import play.jobs.Every;
@@ -113,7 +108,9 @@ public class PlanSwitcherJob extends Job<PlanSwitcherJobResult> {
 			u.setPlan(newPlan);		
 			
 			Logger.info("Starting transmission");
-			u.getTransmission().start();
+			u.getTransmission().restart();
+			
+			u.dismissUserMessagesOfType(UserMessage.Type.SWITCHPLAN);
 			
 			u.addUserMessage("Migration completed", "Migration to new plan completed successfully.");
 		} catch (Exception ex) {

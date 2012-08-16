@@ -1,12 +1,10 @@
 package controllers;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import models.Account;
 import models.User;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
-import play.Logger;
 import play.cache.Cache;
 import play.libs.OpenID;
 import play.libs.OpenID.UserInfo;

@@ -1,0 +1,10 @@
+#{if plans.size > 0}
+	#{list items:plans, as:"plan"}
+	<ul>
+		<li>${plan.name}</li>
+	</ul>
+	#{/list}
+#{/if}
+#{else}
+	<p>No plans are available.</p>
+#{/else}

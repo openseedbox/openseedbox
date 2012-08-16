@@ -1,0 +1,13 @@
+#{extends "account/index.html" /}
+<h2>OpenSeedbox API</h2>
+<p>
+	This API is intended for developers to be able to integrate 3rd party apps with OpenSeedbox.
+	To use it, you need to use this page to generate an API key, and then have a look at the documentation
+	<a href="#">here</a>.
+</p>
+<form action="@{AccountController.apiPost}" method="post">
+	#{form.text name:"apiKey", value:currentUser.apiKey, label:"Current API Key:", attrs:"style='width:20em;' readonly='readonly'" /}
+	<div class="form-actions">
+		<input type="submit" value="Generate API key" />
+	</div>
+</form>

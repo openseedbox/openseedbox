@@ -157,8 +157,8 @@ public class Torrent extends EnhancedModel {
 		return _torrent.metadataPercentComplete != 1;
 	}
  	
-	public Boolean isRunning() {
-		return (_torrent.status != 0 && _torrent.status != 16);
+	public boolean isRunning() {
+		return (_torrent.status == 4 || _torrent.status == 6);
 	}
 	
 	public String getMetadataPercentComplete() {

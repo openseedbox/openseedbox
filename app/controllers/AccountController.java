@@ -1,9 +1,7 @@
 package controllers;
 
-import code.BigDecimalUtils;
 import code.MessageException;
 import code.jobs.PlanSwitcherJob;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -49,6 +47,12 @@ public class AccountController extends BaseController {
 		User user = getCurrentUser();
 		Plan newPlan = Plan.getByKey(newPlanID);
 		
+		List<Invoice> unpaid = user.getUnpaidInvoices();
+		if (unpaid.size() > 0) {
+			setGeneralErrorMessage("You cannot change your plan if you have unpaid invoices!");
+			plans();
+		}
+		
 		//if the new plan is free, switch to it immediately
 		if (newPlan.isFree()) {
 			invoicePlan(newPlan.id);
@@ -64,10 +68,11 @@ public class AccountController extends BaseController {
 		//if there is, use that one instead of creating a new one
 		Plan newPlan = Plan.getByKey(newPlanID);
 		User u = getCurrentUser();
-		FreeSlot fs = consumeSlot(u, newPlan);
 		
 		//if an invoice doesnt need to be created because the plan is free, switch immediately
 		if (newPlan.isFree()) {
+			//switch to plan
+			FreeSlot fs = consumeSlot(u, newPlan);
 			PlanSwitch.create(u.getPrimaryAccount(), fs, null);
 			PlanSwitch.notifyUser(u, false);
 			ClientController.index();
@@ -81,25 +86,40 @@ public class AccountController extends BaseController {
 				.get();
 		
 		if (invoice != null) {
-			redirect(invoice.getGoogleCheckoutUrl());
+			AccountController.invoiceDetails(invoice.id);
 		} else {		
 			//no active invoices for this plan; create one
+			FreeSlot fs = consumeSlot(u, newPlan);
 			u.paidForPlan = false;
 			u.save();
 			Invoice i = Invoice.createInvoice(u.getPrimaryAccount(), newPlan);
 			PlanSwitch.create(u.getPrimaryAccount(), fs, i);
-			redirect(i.getGoogleCheckoutUrl());
+			AccountController.invoiceDetails(i.id);
 		}
 	}
 	
+	public static void paypalInvoice(Long id) throws MessageException {
+		Invoice i = Invoice.findById(id);
+		redirect(i.getPaymentUrl());
+	}
+	
+	public static void switchPlans() {
+		User user = getCurrentUser();
+		PlanSwitch ps = PlanSwitch.forUser(user);
+		if (ps != null) {
+			if (!ps.inProgress) {
+				new PlanSwitcherJob(ps).now();
+			}
+		}
+		render("client/switchplans.html", user, ps);
+	}		
+	
 	public static void invoices() {
 		String active = "invoices";
-		Account a = getCurrentUser().getPrimaryAccount();
-		List<Invoice> invoices = Invoice.all()
-				.filter("account", a)
-				.order("paymentDateUtc")
-				.limit(50).fetch();
-		render("account/invoices.html", active, invoices);
+		User u = getCurrentUser();
+		List<Invoice> unpaid_invoices = u.getUnpaidInvoices();
+		List<Invoice> paid_invoices = u.getPaidInvoices();	
+		render("account/invoices.html", active, unpaid_invoices, paid_invoices);
 	}
 	
 	public static void invoiceDetails(Long invoiceId) {
@@ -171,6 +191,16 @@ public class AccountController extends BaseController {
 		}
 		Validation.keep();
 		invite();
+	}
+	
+	public static void api() {
+		String active = "api";
+		render("account/api.html", active);
+	}
+	
+	public static void apiPost() {
+		getCurrentUser().generateApiKey();
+		api();
 	}
 	
 	protected static FreeSlot consumeSlot(User u, Plan p) {

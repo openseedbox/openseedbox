@@ -63,7 +63,7 @@
 				</span>
 			</div>
 			#{if (currentUser)}
-				#{if (!currentUser.paidForPlan)}
+				#{if (!currentUser.hasPaidForPlan() && active != "invoices")}
 				<div class="alert alert-error">
 					<h4 class="alert-heading">We cant switch your plan unless you've paid!</h4>
 					<p>You need to <a href="@{AccountController.invoices}">go pay your invoice</a> before you can start using a paid plan. If you have paid, please refresh the page.</p>
@@ -71,10 +71,11 @@
 				#{/if}				
 				%{ def messages = currentUser.getUnreadMessages(); %}
 				#{list items:messages, as:"message"}
-				<div class="user-message alert #{if (message.state == 0)}alert-success#{/if}#{else}alert-error#{/else}">
+				<div class="user-message alert #{if (message.state == models.UserMessage.State.MESSAGE)}alert-success#{/if}#{else}alert-error#{/else}">
 					<a class="close" data-dismiss="alert" href="#" data-alert-id="${message.id}">&times;</a>
 					<h3 class="alert-heading">${message.heading}</h3>
 					<span>${message.message.raw()}</span>
+					[<a class="close-link" href="#" data-dismiss="alert" data-alert-id="${message.id}">Dismiss</a>]
 				</div>
 				#{/list}
 			#{/if}		
@@ -84,7 +85,7 @@
 		<script type="text/javascript">
 			(function($) {
 				$(document).ready(function() {
-					$(".user-message a.close").click(function() {
+					$(".user-message a.close, .user-message a.close-link").click(function() {
 						var id = $(this).data("alert-id");
 						$.post("@{ClientController.dismissMessage}?messageId=" + id);
 					})

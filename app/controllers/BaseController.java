@@ -108,6 +108,10 @@ public class BaseController extends Controller {
 	protected static void addGeneralError(Exception ex) {
 		Validation.addError("general", ex.getMessage());
 	}
+	
+	protected static void setGeneralErrorMessage(String message) {
+		addGeneralError(new MessageException(message));
+	}
 
 	protected static void setGeneralMessage(String message) {
 		flash.put("message", message);
