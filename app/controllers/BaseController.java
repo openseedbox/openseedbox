@@ -2,18 +2,12 @@ package controllers;
 
 import code.GenericResult;
 import code.MessageException;
-import com.googlecode.htmlcompressor.compressor.HtmlCompressor;
-import com.googlecode.htmlcompressor.compressor.XmlCompressor;
-import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.LogManager;
-import java.util.zip.GZIPOutputStream;
 import models.Account;
 import models.User;
 import notifiers.Mails;
-import org.apache.commons.lang.StringUtils;
-import play.Logger;
 import play.Play;
 import play.Play.Mode;
 import play.cache.Cache;
@@ -21,9 +15,6 @@ import play.data.validation.Validation;
 import play.mvc.Before;
 import play.mvc.Catch;
 import play.mvc.Controller;
-import play.mvc.Finally;
-import play.mvc.Http.Header;
-import play.mvc.Router;
 import play.templates.Template;
 import play.templates.TemplateLoader;
 
@@ -36,18 +27,6 @@ public class BaseController extends Controller {
 		if (!level.equals("INFO")) {
 			LogManager.getLogManager().reset();
 		}
-		
-		//check if http request. if it is, make https
-		/* Handled by NGINX now
-		if (!request.secure) {
-			String url = Router.reverse("MainController.index").secure().url;
-			if (Play.mode == Mode.DEV) {
-				String httpPort = Play.configuration.getProperty("http.port");
-				String httpsPort = Play.configuration.getProperty("https.port");
-				url = url.replace(httpPort, httpsPort);
-			}
-			redirect(url);
-		}*/
 		
 		User u = getCurrentUser();
 		renderArgs.put("currentUser", u);
@@ -157,58 +136,5 @@ public class BaseController extends Controller {
 				Mails.sendError(ex, request);
 			}
 		}
-	}
-
-	@Finally
-	public static void compress() throws IOException {
-		//dont compress in dev mode
-		if (play.Play.mode == Mode.DEV) {
-			return;
-		}
-		
-		String text = response.out.toString();
-		
-		if (StringUtils.isEmpty(text)) {
-			return;
-		}
-
-		if (!StringUtils.isEmpty(response.contentType)) {		
-			if (response.contentType.equals("text/xml")) {
-				text = new XmlCompressor().compress(text);
-			} else if (response.contentType.equals("text/html")) {
-				text = new HtmlCompressor().compress(text);
-			}
-		}
-		
-		//check if gzip is actually supported before compressing;
-		Header ae = request.headers.get("accept-encoding");
-		if (ae != null && ae.value().contains("gzip")) {
-			Logger.info("Gzipping response since user-agent supports it.");
-			final ByteArrayOutputStream gzip = gzip(text);
-			response.setHeader("Content-Encoding", "gzip");
-			response.setHeader("Content-Length", gzip.size() + "");
-			response.out = gzip;
-		} else {
-			Logger.info("User-Agent doesnt support gzip, not gzipping response.");
-			response.out = new ByteArrayOutputStream();
-			response.writeChunk(text);
-		}
-	}
-
-	private static ByteArrayOutputStream gzip(final String input) throws IOException {
-		final InputStream inputStream = new ByteArrayInputStream(input.getBytes());
-		final ByteArrayOutputStream stringOutputStream = new ByteArrayOutputStream((int) (input.length() * 0.75));
-		final OutputStream gzipOutputStream = new GZIPOutputStream(stringOutputStream);
-
-		final byte[] buf = new byte[5000];
-		int len;
-		while ((len = inputStream.read(buf)) > 0) {
-			gzipOutputStream.write(buf, 0, len);
-		}
-
-		inputStream.close();
-		gzipOutputStream.close();
-
-		return stringOutputStream;
 	}
 }
