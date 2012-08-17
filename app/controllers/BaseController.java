@@ -38,6 +38,7 @@ public class BaseController extends Controller {
 		}
 		
 		//check if http request. if it is, make https
+		/* Handled by NGINX now
 		if (!request.secure) {
 			String url = Router.reverse("MainController.index").secure().url;
 			if (Play.mode == Mode.DEV) {
@@ -46,7 +47,7 @@ public class BaseController extends Controller {
 				url = url.replace(httpPort, httpsPort);
 			}
 			redirect(url);
-		}
+		}*/
 		
 		User u = getCurrentUser();
 		renderArgs.put("currentUser", u);
