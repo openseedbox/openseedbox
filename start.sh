@@ -13,7 +13,7 @@ rm server.pid
 echo "Cleaning up the crap"
 play clean
 echo "Getting latest dependencies"
-play deps
+play deps --sync
 echo "Starting play server ($instance_name)"
-play start --%$instance_name
+play start --%$instance_name -javaagent:/src/newrelic/newrelic.jar
 
