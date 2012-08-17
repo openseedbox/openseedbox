@@ -399,9 +399,11 @@ public class User extends EnhancedModel {
 	
 	public boolean hasExceededLimits() throws MessageException {
 		UserStats us = this.getUserStats();
-		if (Double.parseDouble(us.usedSpaceGb) > Double.parseDouble(us.maxSpaceGb)) {
-			return true;
-		}		
+		if (Double.parseDouble(us.maxSpaceGb) > -1) {
+			if (Double.parseDouble(us.usedSpaceGb) > Double.parseDouble(us.maxSpaceGb)) {
+				return true;
+			}		
+		}
 		Plan p = this.getPlan();
 		if (p != null) {
 			if (p.maxActiveTorrents > -1) {
