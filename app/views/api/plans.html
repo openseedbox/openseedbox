@@ -1,10 +1,30 @@
+<div class="plans">
 #{if plans.size > 0}
 	#{list items:plans, as:"plan"}
-	<ul>
-		<li>${plan.name}</li>
-	</ul>
+	<div class="plan">
+		<div class="name">${plan.name}</div>
+		<div class="free-slots">${plan.getTotalFreeSlots()}</div>
+		<div class="monthly-cost">${plan.monthlyCost}</div>
+		<div class="active-torrents">
+			#{if plan.maxActiveTorrents <= -1}
+				Unlimited
+			#{/if}
+			#{else}
+				${plan.maxActiveTorrents}
+			#{/else}
+		</div>
+		<div class="max-diskspace">
+			#{if plan.maxDiskspaceGb <= -1}
+				Unlimited
+			#{/if}
+			#{else}
+				${plan.maxDiskspaceGb}GB
+			#{/else}
+		</div>
+	</div>
 	#{/list}
 #{/if}
 #{else}
-	<p>No plans are available.</p>
+	<p class="none-available">No plans are available.</p>
 #{/else}
+</div>
