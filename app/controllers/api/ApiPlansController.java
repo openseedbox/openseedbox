@@ -24,8 +24,10 @@ public class ApiPlansController extends ApiController {
 	}
 	
 	public static void renderPlans() {
-		List<Plan> plans = Plan.getVisiblePlans();
-		render("api/plans.html", plans);
+		Map<String, Object> args = new HashMap<String, Object>();
+		args.put("plans", Plan.getVisiblePlans());
+		String rendered = renderToString("api/plans.html", args);
+		result(rendered);
 	}
 	
 }
