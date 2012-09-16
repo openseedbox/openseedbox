@@ -21,6 +21,7 @@ import models.Torrent.TorrentGroup;
 import models.User;
 import models.UserMessage;
 import org.apache.commons.lang.StringUtils;
+import play.Logger;
 import play.cache.Cache;
 import play.data.validation.Validation;
 import play.libs.F.Promise;
@@ -32,6 +33,11 @@ public class ClientController extends BaseController {
 	
 	@Before(unless={"login","auth"})
 	public static void before() {
+		//uniquely identify this request. this is used as a key for caching objects just for a single request
+		String requestId = UUID.randomUUID().toString();
+		Logger.info("Set request id: " + requestId);
+		session.put("requestId", requestId);		
+		
 		User u = getCurrentUser();
 		if (u == null) {
 			AuthController.login();

@@ -399,20 +399,25 @@ public class User extends EnhancedModel {
 	
 	public boolean hasExceededLimits() throws MessageException {
 		UserStats us = this.getUserStats();
-		if (Double.parseDouble(us.maxSpaceGb) > -1) {
-			if (Double.parseDouble(us.usedSpaceGb) > Double.parseDouble(us.maxSpaceGb)) {
-				return true;
-			}		
-		}
-		Plan p = this.getPlan();
-		if (p != null) {
-			if (p.maxActiveTorrents > -1) {
-				if (getRunningTorrents().size() > p.maxActiveTorrents) {
+		if (us != null) {
+			if (Double.parseDouble(us.maxSpaceGb) > -1) {
+				if (Double.parseDouble(us.usedSpaceGb) > Double.parseDouble(us.maxSpaceGb)) {
 					return true;
+				}		
+			}
+			Plan p = this.getPlan();
+			if (p != null) {
+				if (p.maxActiveTorrents > -1) {
+					if (getRunningTorrents().size() > p.maxActiveTorrents) {
+						return true;
+					}
 				}
 			}
+			return false;
+		} else {
+			//if the userstats are null, then likely the seedbox is unreachable
+			throw new MessageException("Your seedbox appears to be unreachable! Please contact support.");
 		}
-		return false;
 	}
 	
 	public void notifyLimitsExceeded() {

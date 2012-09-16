@@ -9,12 +9,14 @@ import models.Account;
 import models.Torrent;
 import models.User;
 import org.apache.commons.lang.StringUtils;
+import play.Logger;
 import play.jobs.Job;
 
 public class GetTorrentsJob extends Job<GetTorrentsJobResult> {
 	
 	private User _user;
 	private String _group, _hash;
+	private Account _account;
 	
 	/**
 	 * Gets all the torrents in the specified users transmission-daemon
@@ -40,6 +42,7 @@ public class GetTorrentsJob extends Job<GetTorrentsJobResult> {
 	 * @param torrentHash The hash of a specific torrent to get details for
 	 */
 	public GetTorrentsJob(Account account, String group, String torrentHash) {
+		_account = account;
 		_user = account.getPrimaryUser();
 		_group = group;
 		_hash = torrentHash;
@@ -61,10 +64,16 @@ public class GetTorrentsJob extends Job<GetTorrentsJobResult> {
 			}
 		} catch (Exception ex) {
 			if (ex.getMessage().contains("java.net.ConnectException: No route to host")) {
-				res.error = new MessageException("Your seedbox appears to be unreachable! Please contact support.");
+				try {
+					_account.getTransmission().start();
+					return doJobWithResult();
+				} catch (Exception ex1) {
+					res.error = new MessageException("Your seedbox appears to be unreachable! Please contact support.");
+				}
 			} else {
 				res.error = ex;
 			}
+			//Logger.info("Error in GetTorrentsJob: %s", ex);
 		}
 		
 		//Logger.info("End of job, torrents are %s", res.torrents);
