@@ -1,4 +1,10 @@
-Avail: <strong>${stats.maxSpaceGb}gb</strong>
+Avail:
+#{if (stats.maxSpaceGb.toDouble() > -1)}
+	<strong>${stats.maxSpaceGb}gb</strong>
+#{/if}
+#{else}
+	<strong>Unlimited</strong>
+#{/else}
 Used: <strong>${stats.usedSpaceGb}gb</strong>
 Total Down: <strong>${stats.rateDownloadKb}kb/s</strong>
 Total Up: <strong>${stats.rateUploadKb}kb/s</strong>

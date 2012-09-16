@@ -4,10 +4,13 @@ import code.GenericResult;
 import code.MessageException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.logging.LogManager;
 import models.Account;
 import models.User;
 import notifiers.Mails;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import play.Logger;
 import play.Play;
 import play.Play.Mode;
 import play.cache.Cache;
@@ -107,7 +110,11 @@ public class BaseController extends Controller {
 
 	protected static String renderToString(String template, Map<String, Object> args) {
 		Template t = TemplateLoader.load(template);
-		return t.render(args);
+		try {
+			return t.render(args);
+		} catch (Exception ex) {
+			return ExceptionUtils.getStackTrace(ex);
+		}
 	}
 
 	protected static void result(Object o) {
@@ -131,7 +138,7 @@ public class BaseController extends Controller {
 		if (!(ex instanceof MessageException)) {
 			//send error email if the exception wasnt a message
 			if (Play.mode == Mode.DEV) {
-				
+				ex.printStackTrace();
 			} else {
 				Mails.sendError(ex, request);
 			}

@@ -12,8 +12,11 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import play.Logger;
+import play.cache.Cache;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
+import play.mvc.Http;
+import play.mvc.Scope.Session;
 
 public class Transmission {
 
@@ -311,10 +314,11 @@ public class Transmission {
 			if (!StringUtils.isEmpty(transmissionId)) {
 				req.headers.put("X-Transmission-Session-Id", transmissionId);
 			}
-			WS.HttpResponse res;
+			WS.HttpResponse res = null;
 			try {
 				res = req.post();
 			} catch (Exception ex) {
+				Logger.info("Error in RPC call: %s", ex);
 				if (ex.getMessage().contains("Connection refused")) {
 					throw new MessageException("Unable to connect to backend transmission-daemon!");
 				} else {
