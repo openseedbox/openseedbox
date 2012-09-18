@@ -32,12 +32,7 @@ import play.mvc.Before;
 public class ClientController extends BaseController {
 	
 	@Before(unless={"login","auth"})
-	public static void before() {
-		//uniquely identify this request. this is used as a key for caching objects just for a single request
-		String requestId = UUID.randomUUID().toString();
-		Logger.info("Set request id: " + requestId);
-		session.put("requestId", requestId);		
-		
+	public static void before() {	
 		User u = getCurrentUser();
 		if (u == null) {
 			AuthController.login();
