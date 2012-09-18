@@ -25,7 +25,7 @@ public class AuthController extends BaseController {
 		if (OpenID.isAuthenticationResponse()) {
 			UserInfo vu = OpenID.getVerifiedID();
 			if (vu == null) {
-				flash.error("Oops. Authentication has failed");
+				setGeneralErrorMessage("Oops. Authentication has failed");
 				login();
 			}
 			//check that user is in database. If not, create.
@@ -81,7 +81,7 @@ public class AuthController extends BaseController {
 			req.optional("fullname");
 			
 			if (!req.verify()) {
-				flash.error("Cannot verify your OpenID");
+				setGeneralErrorMessage("Cannot verify your OpenID");
 				login();
 			}
 		}
