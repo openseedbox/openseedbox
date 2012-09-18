@@ -51,7 +51,7 @@ public class WebRequest {
 	
 	private WebResponse doWebResponse(String page, Map<String, String> parameters, String type) throws WebRequestFailedException {
 		WSRequest req = getWebserviceUrl(page, parameters);
-		req.timeout = 2;
+		//req.timeout = 2;
 		HttpResponse res;
 		try {
 			if (type.equals("get")) {
