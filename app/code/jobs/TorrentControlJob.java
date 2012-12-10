@@ -1,8 +1,7 @@
 package code.jobs;
 
-import code.MessageException;
 import code.jobs.TorrentControlJob.TorrentControlJobResult;
-import code.transmission.Transmission;
+import com.openseedbox.backend.transmission.Transmission;
 import java.util.List;
 import models.Account;
 import models.Torrent;
@@ -23,7 +22,7 @@ public class TorrentControlJob extends Job<TorrentControlJobResult> {
 	
 	@Override
 	public TorrentControlJobResult doJobWithResult() throws Exception {
-		Transmission t = _user.getTransmission();
+		Transmission t = null;//_user.getTransmission();
 		TorrentControlJobResult res = new TorrentControlJobResult();
 		try {
 			if (_action == TorrentAction.START) {
@@ -34,7 +33,7 @@ public class TorrentControlJob extends Job<TorrentControlJobResult> {
 				res.success = t.removeTorrent(_hashes, false);
 				if (res.success && _hashes.size() > 0) {
 					//delete all the db entries for the torrents
-					Torrent.all().filter("hashString IN", _hashes).filter("user", _user).delete();
+					//Torrent.all().filter("hashString IN", _hashes).filter("user", _user).delete();
 				}
 			}
 		} catch (Exception ex) {

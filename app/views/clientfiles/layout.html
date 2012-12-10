@@ -5,7 +5,7 @@
 #{choose-account-dropdown user:currentUser, account:activeAccount, returnTo:"/client/files", what:"files" /}
 <p>&nbsp;</p>
 <ul class="breadcrumb">
-	<li><a href="@{ClientFilesController.index}">Files</a> <span class="divider">/</span></li>
+	<li><a href="@{ClientFiles.index}">Files</a> <span class="divider">/</span></li>
 	#{if (torrent)}
 		<li class="active">${torrent.name}</li>
 	#{/if}

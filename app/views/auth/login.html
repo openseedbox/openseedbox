@@ -10,45 +10,18 @@
 <br />
 <div>
 	<h2>Login to OpenSeedbox</h2>
-	<p>OpenSeedbox uses OpenID for logins so you can use existing credentials and dont have to signup for yet another account.</p>
-	<p>Choose your OpenID provider below:</p>
+	<br />
+	<p>You can login using OpenID below.</p>
 	<br />
 	<div class="oauth-images">
-	<a href="/auth/authenticate?openid_url=https://www.google.com/accounts/o8/id"><img src="#{asset.url '/images/google.png' /}" /></a>
-	<a href="/auth/authenticate?openid_url=http://www.myopenid.com/server"><img src="#{asset.url '/images/myopenid.png' /}" style="margin-bottom: 10px;"/></a>
+	<a href="@{Auth.authenticate()}?openid_url=https://www.google.com/accounts/o8/id"><img src="#{asset.url '/images/google.png' /}" /></a>
+	<a href="@{Auth.authenticate()}?openid_url=http://www.myopenid.com/server"><img src="#{asset.url '/images/myopenid.png' /}" style="margin-bottom: 10px;"/></a>
 	</div>
 	<br />
 	<strong>or use a Custom OpenID Url:</strong>
 	<br /><br />
-	<form class="form-horizontal" action="@{AuthController.authenticate()}" method="post">
+	<form class="form-horizontal" action="@{Auth.authenticate()}" method="post">
 		#{form.text name:"openid_url", value:request.params.openid_url, label:"Custom OpenID Url:" /}
 		#{form.actions buttons:["Login with Custom OpenID"] /}
 	</form>
-</div>
-<br />
-<div>
-	<h2>Common login questions</h2>
-	<br />
-	<div>
-		<h4>Why dont you support login with Facebook?</h4>
-		<p>
-			Facebook doesnt support OpenID. We only support OpenID because of its simplicity
-			and the fact that we just want login and not any of the services of the providing website.
-			If Facebook starts supporting OpenID, then we will start supporting Facebook login.
-		</p>
-	</div>
-	<div>
-		<h4>Why dont you allow account creation?</h4>
-		<p>
-			We hate remembering a separate set of credentials for every website we visit. Thats why we use OpenID.
-			Chances are you already have a Google account, or an account with a supported OpenID provider.
-			If you dont, we suggest you create one.
-		</p>
-	</div>
-	<div>
-		<h4>I'm sick of typing my OpenID url, can you please add my provider to the list of supported providers?</h4>
-		<p>
-			Sure, send an email to <a href="mailto:support@openseedbox.com">support@openseedbox.com</a> and we'll see what we can do
-		</p>
-	</div>
 </div>

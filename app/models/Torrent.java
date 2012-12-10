@@ -1,46 +1,47 @@
 package models;
 
-import code.Util;
-import code.transmission.TransmissionTorrent;
-import code.transmission.TransmissionTorrent.TransmissionFile;
-import code.transmission.TransmissionTorrent.TransmissionPeer;
-import code.transmission.TransmissionTorrent.TransmissionTrackerStats;
-import code.transmission.TransmissionTorrent.TreeNode;
+import com.openseedbox.code.Util;
+import com.openseedbox.backend.IFile;
+import com.openseedbox.backend.IPeer;
+import com.openseedbox.backend.ITorrent;
+import com.openseedbox.backend.ITracker;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import play.modules.siena.EnhancedModel;
-import siena.*;
-import siena.embed.Embedded;
-import siena.embed.EmbeddedMap;
+import javax.persistence.Column;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import play.data.validation.Max;
+import play.db.jpa.Model;
 
-@Table("torrent")
-public class Torrent extends EnhancedModel {
-
-	@Id(Generator.AUTO_INCREMENT)
-	public Long id;
+@Entity
+@Table(name="torrent")
+public class Torrent extends Model {
 	
 	@Max(40)
-	@Unique("hash_user_unique")
-	public String hashString;
+	protected String hashString;
 	
-	@Column("name")
-	public String name;
+	@Column(name="name")
+	protected String name;
 	
-	@Column("user_id")
-	@Unique("hash_user_unique")
-	public User user;
+	@Column(name="user_id")
+	protected User user;
 	
 	@Embedded
-	public List<TorrentGroup> groups = new ArrayList<TorrentGroup>();
+	protected List<String> groups = new ArrayList<String>();
 	
-	@Column("create_date_utc")
-	@DateTime
-	public Date createDateUTC = new Date();
+	@Column(name="create_date_utc")
+	@Temporal(TemporalType.TIMESTAMP)
+	protected Date createDateUTC = new Date();
 	
-	private transient TransmissionTorrent _torrent;
+	private transient ITorrent _torrent;
 	
 	public String getStatusString() {
+		return _torrent.getStatus().toString();
+		/*
 		switch(_torrent.status) {
 			case 0:
 				return "Paused";
@@ -57,14 +58,7 @@ public class Torrent extends EnhancedModel {
 			case 6:
 				return "Seeding";
 		}
-		return "Unknown status: " + _torrent.status;
-	}
-	
-	public String getSubStatusString() {
-		if (_torrent.metadataPercentComplete < 1) {
-			return String.format("Retrieving torrent from magnet link");
-		}
-		return "";
+		return "Unknown status: " + _torrent.status;*/
 	}
 	
 	/**
@@ -75,40 +69,44 @@ public class Torrent extends EnhancedModel {
 	 */
 	public List<String> getFileIds() {
 		List<String> ret = new ArrayList<String>();
-		for (int x = 0; x < _torrent.files.size(); x++) {
+		for (int x = 0; x < _torrent.getFiles().size(); x++) {
 			ret.add(String.valueOf(x));
 		}
 		return ret;
 	}
 	
-	public int getStatus() {
-		return _torrent.status;
+	public List<String> getGroups() {
+		return this.groups;
+	}
+	
+	public String getHashString() {
+		return this.hashString;
 	}
 	
 	public String getPercentDone() {
-		return String.format("%.2f", ((double) _torrent.percentDone * 100));
+		return String.format("%.2f", ((double) _torrent.getPercentComplete() * 100));
 	}
 	
 	public int getSeederCount() {
 		int total = 0;
-		for (TransmissionTrackerStats tracker : _torrent.trackerStats) {
-			total += tracker.seederCount;
+		for (ITracker tr : _torrent.getTrackers()) {
+			total += tr.getSeederCount();
 		}
 		return total;
 	}
 	
 	public int getLeecherCount() {
 		int total = 0;
-		for (TransmissionTrackerStats tracker : _torrent.trackerStats) {
-			total += tracker.leecherCount;
+		for (ITracker tr : _torrent.getTrackers()) {
+			total += tr.getLeecherCount();
 		}
-		return total;		
+		return total;	
 	}
 	
 	public int getPeersDownloadingFromCount() {
 		int total = 0;
-		for (TransmissionPeer peer : _torrent.peers) {
-			if (peer.isDownloadingFrom) {
+		for (IPeer peer : _torrent.getPeers()) {
+			if (peer.isDownloadingFrom()) {
 				total++;
 			}
 		}
@@ -117,8 +115,8 @@ public class Torrent extends EnhancedModel {
 	
 	public int getPeersUploadingToCount() {
 		int total = 0;
-		for (TransmissionPeer peer : _torrent.peers) {
-			if (peer.isUploadingTo) {
+		for (IPeer peer : _torrent.getPeers()) {
+			if (peer.isUploadingTo()) {
 				total++;
 			}
 		}
@@ -126,92 +124,59 @@ public class Torrent extends EnhancedModel {
 	}
 	
 	public int getPeerCount() {
-		return _torrent.peers.size();
+		return _torrent.getPeers().size();
 	}
 	
-	public List<TransmissionPeer> getPeers() {
-		return _torrent.peers;
+	public List<IPeer> getPeers() {
+		return _torrent.getPeers();
 	}
 	
 	public String getTotalSize() {
-		return Util.getBestRate(_torrent.totalSize);
+		return Util.getBestRate(_torrent.getTotalSizeBytes());
 	}
 	
 	public String getDownloadAmount() {
-		return Util.getBestRate(_torrent.downloadedEver);
+		return Util.getBestRate(_torrent.getDownloadedBytes());
 	}
 	
 	public String getUploadAmount() {
-		return Util.getBestRate(_torrent.uploadedEver);
+		return Util.getBestRate(_torrent.getUploadedBytes());
 	}
 	
 	public String getDownloadRate() {
-		return Util.getBestRate(_torrent.rateDownload);
+		return Util.getBestRate(_torrent.getDownloadSpeedBytes());
 	}
 	
 	public String getUploadRate() {
-		return Util.getBestRate(_torrent.rateUpload);
+		return Util.getBestRate(_torrent.getUploadSpeedBytes());
 	}
 	
 	public boolean isMetadataDownloading() {
-		return _torrent.metadataPercentComplete != 1;
+		return _torrent.getMetadataPercentComplete() != 1;
 	}
  	
 	public boolean isRunning() {
-		return (_torrent.status == 4 || _torrent.status == 6);
+		return (_torrent.isRunning());
 	}
 	
 	public String getMetadataPercentComplete() {
-		return String.format("%.2f", (double) (_torrent.metadataPercentComplete * 100));
+		return String.format("%.2f", (double) (_torrent.getMetadataPercentComplete() * 100));
 	}
 	
-	public void setTransmissionTorrent(TransmissionTorrent t) {
+	public void setBackendTorrent(ITorrent t) {
 		this._torrent = t;
 	}
 	
-	public TransmissionTorrent getTransmissionTorrent() {
+	public ITorrent getBackendTorrent() {
 		return this._torrent;
 	}
 	
-	public List<TransmissionTrackerStats> getTrackers() {
-		return this._torrent.trackerStats;
+	public List<ITracker> getTrackers() {
+		return this._torrent.getTrackers();
 	}
 	
-	public List<TransmissionFile> getFiles() {
-		return this._torrent.files;
+	public List<IFile> getFiles() {
+		return this._torrent.getFiles();
 	}
-	
-	public List<TreeNode> getFilesAsTree() {
-		return this._torrent.getFilesAsTree();
-	}
-
-	@EmbeddedMap
-	public static class TorrentGroup {
-		@Column("name")
-		public String name;
-		
-		public TorrentGroup(String name) {
-			this.name = name;
-		}
-		
-		public TorrentGroup() {}
-		
-		public String getHtmlName() {
-			return name.replace(" ", "-");
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj instanceof TorrentGroup) {
-				return (((TorrentGroup) obj).name.equals(this.name));
-			}
-			return super.equals(obj);
-		}
-
-		@Override
-		public int hashCode() {
-			return super.hashCode();
-		}
-	}	
 
 }

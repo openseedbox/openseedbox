@@ -39,7 +39,7 @@
 	
 </div>
 <div class="modal hide" id="add-torrent-dialog">
-	<form class="form-horizontal" enctype="multipart/form-data" method="post" action="@{ClientController.addTorrent}">
+	<form class="form-horizontal" enctype="multipart/form-data" method="post" action="@{Client.addTorrent}">
 	<div class="modal-header">
 		<a class="close" data-dismiss="modal">&times;</a>
 		<h2>Add Torrent</h2>
@@ -89,7 +89,7 @@
 				
 				$("#search").typeahead({
 					"ajax" : {
-						"url" : "@{ClientController.searchIsohunt}",
+						"url" : "@{Client.searchIsohunt}",
 						"displayField" : "label",
 						"preDispatch" : function(query) {
 							$("#search-loader").show();

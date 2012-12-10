@@ -4,7 +4,7 @@
 #{/if}
 <h3>Account Details</h3>
 <p>
-<form class="form-horizontal" method="post" action="@{AccountController.details()}">
+<form class="form-horizontal" method="post" action="@{Accounts.details()}">
 	#{form.hidden name:"user.id", value:user?.id /}
 	#{form.text name:"user.emailAddress", value:user?.emailAddress, label:"Email Address:" /}
 	#{form.text name:"user.avatarUrl", value:user?.avatarUrl, label:"Avatar URL" /}

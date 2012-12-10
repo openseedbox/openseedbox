@@ -2,19 +2,11 @@
 
 require:
     - play 1.2.5
-    - play -> siena 2.0.7
-    - local -> joda-time 2.1
-    - local -> htmlcompressor 1.5.3
+    - local -> openseedbox-common 0.1
     
 repositories:
     - local:
        type: local 
-       artifact: "${application.path}/extra-lib/[module]-[revision].jar"
+       artifact: ${application.path}/../openseedbox-common/libs/[module]-[revision].jar
        contains:
           - local
-       
-    - modules:
-       type: local
-       artifact: "${application.path}/extra-modules/[module]-[revision]"
-       contains:
-          - local-module

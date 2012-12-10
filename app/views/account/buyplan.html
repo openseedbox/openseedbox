@@ -11,15 +11,15 @@
 	</div>
 #{/else}
 <div class="form-actions">
-	<a id="buy" class="btn btn-primary" href="@{AccountController.invoicePlan(newPlan.id)}">Buy Plan</a>
-	<a class="btn btn-danger pull-right" href="@{AccountController.plans()}">Cancel</a>
+	<a id="buy" class="btn btn-primary" href="@{Account.invoicePlan(newPlan.id)}">Buy Plan</a>
+	<a class="btn btn-danger pull-right" href="@{Account.plans()}">Cancel</a>
 </div>
 <script type="text/javascript">
 	(function($) {
 		$(document).ready(function() {
 			$("#buy").click(function() {
 				setTimeout(function() {
-					document.location = "@{AccountController.plans()}";
+					document.location = "@{Account.plans()}";
 				}, 2000);
 			});
 		});

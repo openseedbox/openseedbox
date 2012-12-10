@@ -28,8 +28,8 @@
 			</td>
 			<td>
 				<div class="pull-right">
-					<a class="btn btn-danger" href="@{AccountController.removeInvitedUser(invitation.id)}">Remove</a>
-					<a class="btn" href="@{AccountController.resendInvitationEmail(invitation.id)}">Resend Email</a>
+					<a class="btn btn-danger" href="@{Account.removeInvitedUser(invitation.id)}">Remove</a>
+					<a class="btn" href="@{Account.resendInvitationEmail(invitation.id)}">Resend Email</a>
 				</div>
 			</td>
 		</tr>
@@ -40,7 +40,7 @@
 	<p>You have not invited any users to share your account yet.</p>
 #{/else}
 <h3>Invite a User</h3>
-<form class="form-inline" method="post" action="@{AccountController.inviteUser}">
+<form class="form-inline" method="post" action="@{Account.inviteUser}">
 	#{form.text label:"Email Address", name:"emailAddress" /}
 	#{form.actions buttons: [ "Invite a User" ] /}
 </form>

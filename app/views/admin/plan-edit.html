@@ -6,7 +6,7 @@
 	<h2>Editing plan ${plan?.name}</h2>
 #{/else}
 <p>
-<form method="post" class="form-horizontal" action="@{AdminController.updatePlan}">
+<form method="post" class="form-horizontal" action="@{Admin.updatePlan}">
 	#{form.hidden name:"plan.id", value:plan?.id /}
 	#{form.text name:"plan.name", value:plan?.name, label:"Plan Name" /}
 	#{form.text name:"plan.maxDiskspaceGb", value:plan?.maxDiskspaceGb, label:"Max. Diskspace (GB)" /}

@@ -1,6 +1,5 @@
 package code.jobs;
 
-import code.MessageException;
 import code.jobs.AddTorrentJob.AddTorrentJobResult;
 import java.io.File;
 import models.Account;
@@ -23,12 +22,12 @@ public class AddTorrentJob extends Job<AddTorrentJobResult> {
 	@Override
 	public AddTorrentJobResult doJobWithResult() {
 		AddTorrentJobResult res = new AddTorrentJobResult();
-		try {
+		try {/*
 			if (_file != null) {
 				res.torrent = _user.addTorrent(_file);
 			} else {
 				res.torrent = _user.addTorrent(_url);
-			}
+			}*/
 		} catch (Exception ex) {
 			res.error = ex;
 		}
