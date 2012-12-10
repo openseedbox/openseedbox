@@ -1,7 +1,5 @@
 package code.jobs;
 
-import code.MessageException;
-import code.Util;
 import code.jobs.GetTorrentsJob.GetTorrentsJobResult;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,8 +7,8 @@ import models.Account;
 import models.Torrent;
 import models.User;
 import org.apache.commons.lang.StringUtils;
-import play.Logger;
 import play.jobs.Job;
+import com.openseedbox.code.MessageException;
 
 public class GetTorrentsJob extends Job<GetTorrentsJobResult> {
 	
@@ -54,7 +52,7 @@ public class GetTorrentsJob extends Job<GetTorrentsJobResult> {
 		try {
 			if (!StringUtils.isEmpty(_hash)) {
 				res.torrents = new ArrayList<Torrent>();
-				res.torrents.add(_user.getTorrent(_hash, true));
+				//res.torrents.add(_user.getTorrent(_hash, true));
 			} else {
 				if (!StringUtils.isEmpty(_group)) {
 					res.torrents = _user.getTorrents(_group);
@@ -65,7 +63,7 @@ public class GetTorrentsJob extends Job<GetTorrentsJobResult> {
 		} catch (Exception ex) {
 			if (ex.getMessage().contains("java.net.ConnectException: No route to host")) {
 				try {
-					_account.getTransmission().start();
+					//_account.getTransmission().start();
 					return doJobWithResult();
 				} catch (Exception ex1) {
 					res.error = new MessageException("Your seedbox appears to be unreachable! Please contact support.");

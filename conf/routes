@@ -10,36 +10,36 @@ GET /favicon.ico										404
 GET /public/											staticDir:public
 
 # Auth
-* /auth/?													AuthController.login
-* /auth/{action}											AuthController.{action}
+* /auth/?												Auth.login
+* /auth/{action}										Auth.{action}
 
 # Admin screens
-* /admin/?												AdminController.index
-* /admin/{action}										AdminController.{action}
+* /admin/?												Admin.index
+* /admin/{action}										Admin.{action}
 
 #Account screens
-* /account/?											AccountController.index
-* /account/{action}										AccountController.{action}
+* /account/?											Accounts.index
+* /account/{action}									Accounts.{action}
 
 #API
-* /api/?												api.ApiController.index
-* /api/{sub}											api.Api{sub}Controller.index
-* /api/{sub}/{action}									api.Api{sub}Controller.{action}
+* /api/?													api.Api.index
+* /api/{sub}											api.Api{sub}.index
+* /api/{sub}/{action}								api.Api{sub}.{action}
 
 #Torrent client	
-* /client/?												ClientController.index
-* /client/files/?										ClientFilesController.index
-* /client/files/{action}							ClientFilesController.{action}
-* /client/settings/?									ClientSettingsController.index
-* /client/settings/{action}						ClientSettingsController.{action}
-* /client/{action}									ClientController.{action}
+* /client/?												Client.index
+* /client/files/?										ClientFiles.index
+* /client/files/{action}							ClientFiles.{action}
+* /client/settings/?									ClientSettings.index
+* /client/settings/{action}						ClientSettings.{action}
+* /client/{action}									Client.{action}
 
 # Main
-* /								MainController.index
-* /main/?					MainController.index
-* /main/{action}					MainController.{action}
+* /														Main.index
+* /main/?												Main.index
+* /main/{action}										Main.{action}
 
 # Catch all
-* /{controller}/?									{controller}Controller.index
-* /{controller}/{action}							{controller}Controller.{action}
+* /{controller}/?										{controller}.index
+* /{controller}/{action}							{controller}.{action}
 

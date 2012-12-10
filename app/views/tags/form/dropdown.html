@@ -1,25 +1,13 @@
 %{
-
-def options = [];
 def value_str = _value_str ?: "value";
 def name_str = _name_str ?: "name";
-for (option in _options) {
-	if (option instanceof HashMap) {
-		options.add(option)
-	} else if (option instanceof String) {
-		options.add([ name: option.trim(), value: option.trim()])
-	} else {
-		options.add([ name: option.class.getField(name_str).get(option), value: option.class.getField(value_str).get(option) ])
-	}
-}
 def id = (_id) ? _id : _name;
-
 }%
 <div class="control-group #{ifError _name}error#{/ifError}">
 	<label class="control-label" for="${_name}">${_label}</label>
 	<div class="controls">
 		<select id="${id}" name="${_name}">
-		#{list items:options, as:"option"}
+		#{list items:_options, as:"option"}
 			<option value="${option.value}"
 				#{if (option.value?.toString() == _value?.toString())}selected="selected"#{/if}>
 					${option.name}

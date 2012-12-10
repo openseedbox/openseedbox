@@ -6,3 +6,4 @@ modules/
 lib/
 precompiled/
 server.pid
+test-result/

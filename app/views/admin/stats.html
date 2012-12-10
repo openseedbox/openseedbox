@@ -1,3 +1,24 @@
 #{extends "admin/index.html" /}
 <h2>Stats</h2>
-<p>Not yet implemented</p>
+<table class="table table-bordered table-condensed">
+	<tr>
+		<th>Stat</th>
+		<th>Value</th>
+	</tr>
+	<tr>
+		<td>Number of Nodes</td>
+		<td>${nodeCount}</td>
+	</tr>
+	<tr>
+		<td>Number of Users</td>
+		<td>${userCount}</td>
+	</tr>
+	<tr>
+		<td>Number of Torrents</td>
+		<td>${torrentCount}</td>
+	</tr>
+	<tr>
+		<td>Average Torrents per User</td>
+		<td>${torrentCountAverage}</td>
+	</tr>
+</table>

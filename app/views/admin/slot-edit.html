@@ -6,7 +6,7 @@
 	<h2>Editing slot ${slot.id}</h2>
 #{/else}
 <p>
-	<form class="form-horizontal" action="@{AdminController.updateSlot()}" method="post">
+	<form class="form-horizontal" action="@{Admin.updateSlot()}" method="post">
 		#{form.hidden name:"slot.id", value:slot?.id /}
 		#{form.dropdown name:"slot.node.id", value:slot?.node, options:nodes, label:"Node", name_str:"name", value_str:"id" /}  
 		#{form.dropdown name:"slot.plan.id", value:slot?.plan?.id, options:plans, label:"Plan", name_str:"name", value_str:"id" /}

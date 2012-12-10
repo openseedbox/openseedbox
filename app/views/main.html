@@ -5,7 +5,7 @@
 		<link rel="stylesheet" href="#{asset.url '/stylesheets/bootstrap.min.css' /}">
 		<link rel="stylesheet" href="#{asset.url '/stylesheets/all.css' /}" />
 		<link rel="shortcut icon" href="#{asset.url '/images/favicon.ico' /}" />
-		#{get "moreStyles" /}
+		#{get "moreStyles" /}				
 		<script src="#{asset.url '/javascripts/jquery.min.js' /}" type="text/javascript"></script>
 		<script src="#{asset.url '/javascripts/bootstrap.min.js' /}" type="text/javascript"></script>
 		<script src="#{asset.url '/javascripts/jquery-ui.position.min.js' /}" type="text/javascript"></script>
@@ -15,15 +15,10 @@
 		<div class="navbar navbar-fixed-top">
 			<div class="navbar-inner">
 				<div class="container">
-					<a id="logo" class="brand" href="/"><img src="#{asset.url '/images/top-logo.png' /}" /></a>
+					<a id="logo" class="brand" href="@{Client.index()}"><img src="#{asset.url '/images/top-logo.png' /}" /></a>
 					<ul class="nav">
-						#{if (currentUser)}
-							<li class="#{get "torrents_active" /}"><a href="@{ClientController.index()}">Torrents</a></li>
-							<li class="#{get "files_active" /}"><a href="@{ClientFilesController.index()}">Files</a></li>
-							<li class="#{get "settings_active" /}"><a href="@{AccountController.plans()}">Settings</a></li>
-							#{if (currentUser.isAdmin)}
-								<li  class="#{get "admin_active" /}"><a href="@{AdminController.index()}">Admin</a></li>
-							#{/if}
+						#{if (currentUser?.isAdmin())}
+							<li  class="#{get "admin_active" /}"><a href="@{Admin.index()}">Admin</a></li>
 						#{/if}
 					</ul>
 					<ul class="nav pull-right">
@@ -32,14 +27,12 @@
 								<img src="${currentUser.avatarUrl}" style="padding-top:12px; height:45px;" />
 							</li>
 							<li>
-								<a href="@{AccountController.plans()}">${currentUser.displayName}</a>
+								<a href="@{Accounts.plans()}">${currentUser.displayName}</a>
 							</li>
-						#{/if}
-						#{if (currentUser)}
-							<li><a href="@{AuthController.logout()}">Logout</a></li>
+							<li><a href="@{Auth.logout()}">Logout</a></li>
 						#{/if}
 						#{else}
-							<li><a href="@{AuthController.login()}">Login</a></li>
+							<li><a href="@{Auth.login()}">Login</a></li>
 						#{/else}
 					</ul>
 				</div>
@@ -53,22 +46,25 @@
 					#{ifError "general"}#{error "general" /}#{/ifError}
 				</span>
 			</div>
-			<div id="flash-message" class="alert alert-success #{if (!flash.message)}hide#{/if}">
+			#{if (flash.warning)}
+			<div id="flash-warning" class="alert alert-warning">
+				<a class="close" data-dismiss="alert" href="#">&times;</a>
+				<h3 id="flash-success-heading" class="alert-heading">Warning</h3>
+				<span id="flash-message-content">
+					${flash.warning}
+				</span>
+			</div>				
+			#{/if}
+			#{if (flash.message)}
+			<div id="flash-message" class="alert alert-success">
 				<a class="close" data-dismiss="alert" href="#">&times;</a>
 				<h3 id="flash-success-heading" class="alert-heading">Success:</h3>
 				<span id="flash-message-content">
-					#{if (flash.message)}
-						${flash.message}
-					#{/if}
+					${flash.message}
 				</span>
 			</div>
-			#{if (currentUser)}
-				#{if (!currentUser.hasPaidForPlan() && active != "invoices")}
-				<div class="alert alert-error">
-					<h4 class="alert-heading">We cant switch your plan unless you've paid!</h4>
-					<p>You need to <a href="@{AccountController.invoices}">go pay your invoice</a> before you can start using a paid plan. If you have paid, please refresh the page.</p>
-				</div>
-				#{/if}				
+			#{/if}
+			#{if (currentUser)}			
 				%{ def messages = currentUser.getUnreadMessages(); %}
 				#{list items:messages, as:"message"}
 				<div class="user-message alert #{if (message.state == models.UserMessage.State.MESSAGE)}alert-success#{/if}#{else}alert-error#{/else}">
@@ -87,22 +83,23 @@
 				$(document).ready(function() {
 					$(".user-message a.close, .user-message a.close-link").click(function() {
 						var id = $(this).data("alert-id");
-						$.post("@{ClientController.dismissMessage}?messageId=" + id);
+						$.post("@{Client.dismissMessage}?messageId=" + id);
 					})
 				});
 			})(jQuery);
 		</script>
-		<script type="text/javascript">
-		var _gaq = _gaq || [];
-		_gaq.push(['_setAccount', 'UA-32647401-2']);
-		_gaq.push(['_trackPageview']);
+		#{if mode != "dev"}
+			<script type="text/javascript">
+			var _gaq = _gaq || [];
+			_gaq.push(['_setAccount', 'UA-32647401-2']);
+			_gaq.push(['_trackPageview']);
 
-		(function() {
-			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-		})();
-
+			(function() {
+				var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+				ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+				var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+			})();
+		#{/if}
 		</script>		
 	</body>
 </html>

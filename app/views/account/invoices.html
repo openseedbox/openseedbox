@@ -15,7 +15,7 @@
 	</tr>
 	#{list items:unpaid_invoices, as:"invoice"}
 	<tr>
-		<td><a href="@{AccountController.invoiceDetails(invoice.id)}">${invoice.id}</a></td>
+		<td><a href="@{Account.invoiceDetails(invoice.id)}">${invoice.id}</a></td>
 		<td>${invoice.invoiceDateUtc}</td>
 		<td>$${invoice.getTotalAmount()}</td>
 		<td>#{if (invoice.hasBeenPaid())}
@@ -29,7 +29,7 @@
 			#{if (!invoice.hasBeenPaid())}
 				#{pay-invoice invoice /}
 			#{/if}
-			<a class="btn" href="@{AccountController.invoiceDetails(invoice.id)}">Details</a>
+			<a class="btn" href="@{Account.invoiceDetails(invoice.id)}">Details</a>
 		</td>
 	</tr>
 	#{/list}
@@ -52,7 +52,7 @@
 	</tr>
 	#{list items:paid_invoices, as:"invoice"}
 	<tr>
-		<td><a href="@{AccountController.invoiceDetails(invoice.id)}">${invoice.id}</a></td>
+		<td><a href="@{Account.invoiceDetails(invoice.id)}">${invoice.id}</a></td>
 		<td>${invoice.invoiceDateUtc}</td>
 		<td>$${invoice.getTotalAmount()}</td>
 		<td>#{if (invoice.hasBeenPaid())}
@@ -66,7 +66,7 @@
 			#{if (!invoice.hasBeenPaid())}
 				#{pay-invoice invoice /}
 			#{/if}
-			<a class="btn" href="@{AccountController.invoiceDetails(invoice.id)}">Details</a>
+			<a class="btn" href="@{Account.invoiceDetails(invoice.id)}">Details</a>
 		</td>
 	</tr>
 	#{/list}

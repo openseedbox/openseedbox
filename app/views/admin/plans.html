@@ -37,13 +37,13 @@
 		<td>#{if (plan.visible)}yes#{/if}#{else}no#{/else}</td>
 		<td>
 			<div class="pull-right">
-				<a id="edit" class="btn btn-primary" href="@{AdminController.editPlan(plan)}">Edit</a>
-				<a id="delete" class="btn" href="@{AdminController.deletePlan(plan.id)}">Delete</a>
+				<a id="edit" class="btn btn-primary" href="@{Admin.editPlan(plan)}">Edit</a>
+				<a id="delete" class="btn" href="@{Admin.deletePlan(plan.id)}">Delete</a>
 			</div>
 		</td>
 	</tr>
 	#{/list}
 </table>
 <div class="form-actions">
-	<a class="btn btn-primary" href="@{AdminController.editPlan}">Create new Plan</a>
+	<a class="btn btn-primary" href="@{Admin.editPlan}">Create new Plan</a>
 </div>

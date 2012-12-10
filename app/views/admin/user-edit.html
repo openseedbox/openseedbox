@@ -1,6 +1,6 @@
 #{extends "admin/index.html" /}
 <h2>Edit user ${user.emailAddress}</h2>
-<form class="form-horizontal" action="@{AdminController.editUserPost}" method="post">
+<form class="form-horizontal" action="@{Admin.editUserPost}" method="post">
 	#{form.hidden name:"u.id", value:user?.id /}
 	#{form.checkbox name:"u.isAdmin", value:user?.isAdmin, label:"Is Administrator" /}
 	#{form.dropdown name:"plan_id", value:user?.primaryAccount?.plan?.id, label:"Plan", options:plans, name_str:"name", value_str:"id" /}

@@ -1,38 +1,44 @@
 package models;
 
-import code.Util;
+import com.openseedbox.code.Util;
 import java.util.Date;
-import org.joda.time.DateTime;
-import play.modules.siena.EnhancedModel;
-import siena.Column;
-import siena.Generator;
-import siena.Id;
-import siena.Table;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import play.db.jpa.Model;
 
-@Table("invitation")
-public class Invitation extends EnhancedModel {
+@Entity
+@Table(name="invitation")
+public class Invitation extends Model {
 	
-	@Id(Generator.AUTO_INCREMENT)
-	public Long id;
+	@Column(name="email_address")
+	protected String emailAddress;
 	
-	@Column("email_address")
-	public String emailAddress;
+	@Column(name="user_id")
+	protected User invitingUser;
 	
-	@Column("user_id")
-	public User invitingUser;
+	@Column(name="invitation_date")
+	@Temporal(TemporalType.TIMESTAMP)
+	protected Date invitationDate;	
 	
-	@Column("invitation_date") @siena.DateTime
-	public Date invitationDate;	
+	@Column(name="is_accepted")
+	protected boolean isAccepted;
 	
 	public String getInvitationDateLocal() {
-		return Util.formatDateTime(Util.getLocalDate(invitationDate, getInvitingUser()));
+		return null;//Util.formatDateTime(Util.getLocalDate(invitationDate, getInvitingUser()));
+	}
+	
+	public String getEmailAddress() {
+		return emailAddress;
 	}
 	
 	public User getInvitingUser() {
-		return User.getByKey(invitingUser.id);
+		return invitingUser;
 	}
 	
 	public boolean isAccepted() {
-		return User.all().filter("emailAddress", this.emailAddress).count() > 0;
+		return isAccepted;
 	}
 }

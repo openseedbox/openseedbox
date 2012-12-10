@@ -1,68 +1,61 @@
 package models;
 
-import code.BigDecimalUtils;
+import com.openseedbox.code.BigDecimalUtils;
 import java.math.BigDecimal;
 import java.util.List;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 import play.data.validation.CheckWith;
 import play.data.validation.Required;
-import play.modules.siena.EnhancedModel;
-import siena.Column;
-import siena.Generator;
-import siena.Id;
-import siena.Table;
-import siena.Unique;
+import play.db.jpa.Model;
 import validation.IsDecimalNumber;
 import validation.IsWholeNumber;
 
-@Table("plan")
-public class Plan extends EnhancedModel {
-	
-	@Id(Generator.AUTO_INCREMENT)
-	public Long id;
+@Entity
+@Table(name="plan")
+public class Plan extends Model {
 	
 	@Required
-	@Unique("name_unique")
-	@Column("name")
-	public String name;
+	@Column(name="name")
+	private String name;
 	
 	@Required
 	@CheckWith(IsWholeNumber.class)
-	@Column("max_diskspace_gb")
-	public int maxDiskspaceGb;
+	@Column(name="max_diskspace_gb")
+	private int maxDiskspaceGb;
 	
 	@Required
 	@CheckWith(IsWholeNumber.class)
-	@Column("max_active_torrents")
-	public int maxActiveTorrents;
+	@Column(name="max_active_torrents")
+	private int maxActiveTorrents;
 	
 	@Required
 	@CheckWith(IsDecimalNumber.class)
-	@Column("monthly_cost")
-	public BigDecimal monthlyCost;
+	@Column(name="monthly_cost")
+	private BigDecimal monthlyCost;
 	
-	@Column("visible")
-	public boolean visible;
+	@Column(name="visible")
+	private boolean visible;
+	
+	@Column(name="totalSlots")
+	private int totalSlots;
 	
 	public boolean isFree() {
 		return (BigDecimalUtils.LessThanOrEqual(monthlyCost, BigDecimal.ZERO));
 	}
 	
 	public int getUsedSlots() {
-		return Account.all().filter("plan", this).count();
+		return (int) Account.count("plan = ?", this);
 	}
 	
-	public List<FreeSlot> getFreeSlots() {
-		List<FreeSlot> slots = FreeSlot.all().filter("plan", this).fetch();
-		return slots;
+	public int getFreeSlots() {
+		int used = getUsedSlots();
+		return totalSlots - used;
 	}
 	
-	public int getTotalFreeSlots() {
-		List<FreeSlot> slots = getFreeSlots();
-		int ret = 0;
-		for (FreeSlot fs : slots) {
-			ret += fs.freeSlots;
-		}
-		return ret;
+	public int getTotalSlots() {
+		return totalSlots;
  	}
 	
 	public String getInvoiceLineName() {
@@ -74,7 +67,49 @@ public class Plan extends EnhancedModel {
 	}
 	
 	public static List<Plan> getVisiblePlans() {
-		return Plan.all().filter("visible", true).fetch();
+		return Plan.find("visible = ?", true).fetch();
+	}
+	
+	/* Getters and Setters */
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public int getMaxDiskspaceGb() {
+		return maxDiskspaceGb;
+	}
+
+	public void setMaxDiskspaceGb(int maxDiskspaceGb) {
+		this.maxDiskspaceGb = maxDiskspaceGb;
+	}
+
+	public int getMaxActiveTorrents() {
+		return maxActiveTorrents;
+	}
+
+	public void setMaxActiveTorrents(int maxActiveTorrents) {
+		this.maxActiveTorrents = maxActiveTorrents;
+	}
+
+	public BigDecimal getMonthlyCost() {
+		return monthlyCost;
+	}
+
+	public void setMonthlyCost(BigDecimal monthlyCost) {
+		this.monthlyCost = monthlyCost;
+	}
+
+	public boolean isVisible() {
+		return visible;
+	}
+
+	public void setVisible(boolean visible) {
+		this.visible = visible;
 	}
 	
 }

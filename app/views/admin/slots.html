@@ -16,13 +16,13 @@
 		<td>${slot.usedSlots}</td>
 		<td>
 			<div class="pull-right">
-				<a class="btn btn-primary" href="@{AdminController.editSlot(slot.id)}">Edit</a>
-				<a class="btn btn-error" href="@{AdminController.deleteSlot(slot.id)}">Delete</a>
+				<a class="btn btn-primary" href="@{Admin.editSlot(slot.id)}">Edit</a>
+				<a class="btn btn-error" href="@{Admin.deleteSlot(slot.id)}">Delete</a>
 			</div>
 		</td>
 	</tr>
 	#{/list}
 </table>
 <div class="form-actions">
-	<a class="btn btn-primary" href="@{AdminController.editSlot()}">Create new slots</a>
+	<a class="btn btn-primary" href="@{Admin.editSlot()}">Create new slots</a>
 </div>

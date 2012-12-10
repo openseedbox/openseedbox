@@ -1,73 +1,64 @@
 package models;
 
-import code.MessageException;
-import code.Util;
+import com.openseedbox.code.MessageException;
+import com.openseedbox.code.Util;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import play.Play;
+import play.db.jpa.Model;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
 import play.libs.WS.WSRequest;
-import play.modules.siena.EnhancedModel;
 import play.mvc.Router;
-import siena.Column;
-import siena.DateTime;
-import siena.Generator;
-import siena.Id;
-import siena.Index;
-import siena.Table;
 
-@Table("invoice")
-public class Invoice extends EnhancedModel {
+@Entity
+@Table(name="invoice")
+public class Invoice extends Model {
 	
-	@Id(Generator.AUTO_INCREMENT)
-	public Long id;
+	@Column(name="account_id")
+	private Account account;
 	
-	@Column("account_id")
-	@Index("account_payment_index")
-	public Account account;
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name="invoice_date_utc")
+	private Date invoiceDateUtc;
 	
-	@DateTime
-	@Column("invoice_date_utc")
-	public Date invoiceDateUtc;
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name="payment_date_utc")
+	private Date paymentDateUtc;
 	
-	@DateTime
-	@Column("payment_date_utc")
-	@Index("account_payment_index")
-	public Date paymentDateUtc;
+	@Column(name="paypal_token")
+	private String paypalToken;
 	
-	@Column("paypal_token")
-	public String paypalToken;
+	@OneToMany
+	private List<InvoiceLine> invoiceLines;
 	
 	public boolean hasBeenPaid() {
 		return paymentDateUtc != null;
 	}
 	
 	public Account getAccount() {
-		return Account.all().filter("id", account.id).get();
+		return account;
 	}
 	
-	private transient List<InvoiceLine> _items;
-	public List<InvoiceLine> getItems() {
-		if (_items == null) {
-			_items = InvoiceLine.all().filter("parentInvoice", this).fetch();
-		}
-		return _items;
+	public List<InvoiceLine> getInvoiceLines() {
+		return invoiceLines;
 	}
 	
 	public BigDecimal getTotalAmount() {
-		List<InvoiceLine> items = getItems();
-		if (items != null) {
-			BigDecimal total = BigDecimal.ZERO;
-			for (InvoiceLine line : items) {
-				total = total.add(line.price);
-			}
-			return total;
+		BigDecimal total = BigDecimal.ZERO;
+		for (InvoiceLine line : invoiceLines) {
+//			total = total.add(line.getPrice());
 		}
-		return BigDecimal.ZERO;
+		return total;
 	}
 	
 	public String getPaymentUrl() throws MessageException {
@@ -83,20 +74,20 @@ public class Invoice extends EnhancedModel {
 		req.setParameter("CANCELURL", Router.reverse("PaymentController.paymentCancel").secure().toString());
 		req.setParameter("NOSHIPPING", "1");
 		req.setParameter("REQNOSHIPPING", "0");		
-		req.setParameter("EMAIL", this.getAccount().getPrimaryUser().emailAddress);
+		req.setParameter("EMAIL", this.getAccount().getPrimaryUser().getEmailAddress());
 		req.setParameter("BRANDNAME", "OpenSeedbox");
 		req.setParameter("PAYMENTREQUEST_0_INVNUM", this.id);
 		req.setParameter("PAYMENTREQUEST_0_AMT", Util.formatMoney(this.getTotalAmount()));
 		req.setParameter("PAYMENTREQUEST_0_CURRENCYCODE", "NZD");
 		req.setParameter("PAYMENTREQUEST_0_PAYMENTACTION", "Sale");
 			
-		List<InvoiceLine> items = getItems();
+		List<InvoiceLine> items = getInvoiceLines();
 		for (int x = 0; x < items.size(); x++) {
 			InvoiceLine item = items.get(x);
-			req.setParameter("L_PAYMENTREQUEST_0_AMT" + x, Util.formatMoney(item.price));
-			req.setParameter("L_PAYMENTREQUEST_0_NAME" + x, item.name);
-			req.setParameter("L_PAYMENTREQUEST_0_DESC" + x, item.description);	
-			req.setParameter("L_PAYMENTREQUEST_0_QTY" + x, item.quantity);
+			req.setParameter("L_PAYMENTREQUEST_0_AMT" + x, Util.formatMoney(item.getPrice()));
+			req.setParameter("L_PAYMENTREQUEST_0_NAME" + x, item.getName());
+			req.setParameter("L_PAYMENTREQUEST_0_DESC" + x, item.getDescription());	
+			req.setParameter("L_PAYMENTREQUEST_0_QTY" + x, item.getQuantity());
 			req.setParameter("L_PAYMENTREQUEST_0_ITEMCATEGORY" + x, "Digital");
 		}
 		
@@ -107,29 +98,29 @@ public class Invoice extends EnhancedModel {
 		if (ack != null && ack.contains("Success")) {
 			String contextUrl = c.getProperty("paypal.api.contexturl");
 			this.paypalToken = token;
-			this.save();
+			//this.save();
 			return String.format("%s?token=%s", contextUrl, token);
 		}
 		throw new MessageException("ACK: " + ack + " Bad PayPal response: " + res.getString());
 	}
 	
 	public static Invoice getByPayPalToken(String token) {
-		return Invoice.all().filter("paypalToken", token).get();
+		return Invoice.find("paypalToken = ?", token).first();
 	}
 	
 	public static Invoice createInvoice(Account a, Plan p) {
 		Invoice i = new Invoice();
 		i.account = a;
 		i.invoiceDateUtc = new Date();
-		i.save();
+		//i.save();
 		
 		InvoiceLine line = new InvoiceLine();
-		line.name = p.getInvoiceLineName();
-		line.description = p.getInvoiceLineDescription();
-		line.quantity = 1;
-		line.price = p.monthlyCost;
-		line.parentInvoice = i;
-		line.save();
+		line.setName(p.getInvoiceLineName());
+		line.setDescription(p.getInvoiceLineDescription());
+		line.setQuantity(1);
+		line.setPrice(p.getMonthlyCost());
+		line.setParentInvoice(i);
+		//line.save();
 		
 		return i;
 	}
