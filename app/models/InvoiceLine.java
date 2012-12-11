@@ -6,9 +6,9 @@ import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import play.data.validation.Max;
 import play.db.jpa.Model;
 
-@Entity
 @Table(name="invoice_line")
 public class InvoiceLine extends Model {
 	

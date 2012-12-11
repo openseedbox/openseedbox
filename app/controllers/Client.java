@@ -1,28 +1,17 @@
 package controllers;
 
-import com.openseedbox.mvc.controllers.Base;
-import com.openseedbox.code.MessageException;
-import com.openseedbox.code.Util;
-import code.jobs.AddTorrentJob;
-import code.jobs.AddTorrentJob.AddTorrentJobResult;
-import code.jobs.GetTorrentsJob;
-import code.jobs.GetTorrentsJob.GetTorrentsJobResult;
-import code.jobs.TorrentControlJob;
 import code.jobs.TorrentControlJob.TorrentAction;
 import code.jobs.TorrentControlJob.TorrentControlJobResult;
-import com.openseedbox.backend.transmission.Transmission;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.openseedbox.code.MessageException;
+import com.openseedbox.code.Util;
 import java.io.File;
 import java.util.*;
-import models.Account;
-import models.Torrent;
 import models.User;
-import models.UserMessage;
 import org.apache.commons.lang.StringUtils;
 import play.cache.Cache;
-import play.data.validation.Validation;
 import play.libs.F.Promise;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
@@ -37,11 +26,13 @@ public class Client extends Base {
 			Auth.login();
 		}
 		//check that a plan has been purchased
+		/*
 		if (u.getPrimaryAccount().getPlan() == null) {
 			Accounts.index();
-		}
+		}*/
 
 		//check that limits have not been exceeded. if they have, pause all the torrents and notify user
+		/*
 		try {
 			if (u.hasExceededLimits()) {
 				List<Torrent> running = u.getRunningTorrents();
@@ -61,7 +52,7 @@ public class Client extends Base {
 			}
 		} catch (Exception ex) {
 			addGeneralError(ex);
-		}		
+		}	*/	
 	}
 	
 	public static void index() {		
@@ -79,6 +70,7 @@ public class Client extends Base {
 	}
 	
 	public static void addTorrent(String urlOrMagnet, File fileFromComputer) {
+		/*
 		if (StringUtils.isEmpty(urlOrMagnet) && fileFromComputer == null) {
 			setGeneralErrorMessage("Please enter a valid URL or magent link, or choose a valid file to upload.");
 		} else {
@@ -90,7 +82,7 @@ public class Client extends Base {
 			}
 		}
 		Validation.keep();
-		index();
+		index();*/
 	}
 	
 	public static void setActiveAccount(Long id, String returnTo) {
@@ -164,6 +156,7 @@ public class Client extends Base {
 	}	*/
 	
 	public static void update(String group) {
+		/*
 		Account a = getActiveAccount();
 		
 		//use a job to prevent tying up server if backend transmission-daemon is being slow
@@ -195,15 +188,16 @@ public class Client extends Base {
 		res.put("torrent-list", tlist);
 		res.put("user-stats", us);
 		res.put("client-tabs", ct);
-		result(res);
+		result(res);*/
 	}
 	
 	public static void renderTorrentInfo(String torrentHash) throws MessageException {
+		/*
 		//torrent info is seeders, peers, files, tracker stats
 		Promise<GetTorrentsJobResult> job = new GetTorrentsJob(getActiveAccount(), null, torrentHash).now();
 		GetTorrentsJobResult res = await(job);
 		Torrent torrent = res.torrents.get(0);
-		renderTemplate("client/torrent-info.html", torrent);
+		renderTemplate("client/torrent-info.html", torrent);*/
 	}
 	
 	public static void setIncludedTorrentFiles(String torrentHash, String[] fw, String[] fa,
@@ -272,9 +266,11 @@ public class Client extends Base {
 	}	
 	
 	protected static TorrentControlJobResult runTorrentControlJob(List<String> torrentHashes, TorrentAction action) {
+		return null;
+		/*
 		Promise<TorrentControlJobResult> tcj = new TorrentControlJob(getActiveAccount(), torrentHashes, action).now();
 		TorrentControlJobResult res = await(tcj);
-		return res;
+		return res;*/
 	}
 	
 	

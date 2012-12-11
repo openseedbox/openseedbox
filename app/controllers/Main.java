@@ -1,6 +1,5 @@
 package controllers;
 
-import com.openseedbox.mvc.controllers.Base;
 import com.openseedbox.code.MessageException;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.SimpleEmail;

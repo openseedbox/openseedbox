@@ -8,7 +8,6 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
-import com.openseedbox.backend.BackendConfig;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -16,14 +15,12 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.text.DecimalFormat;
 import javax.persistence.Column;
-import javax.persistence.Entity;
 import javax.persistence.Table;
 import models.Node.NodeStatus;
 import org.apache.commons.io.FilenameUtils;
 import play.data.validation.Required;
 import play.db.jpa.Model;
 
-@Entity
 @Table(name="node")
 public class Node extends Model {
 
@@ -203,10 +200,11 @@ public class Node extends Model {
 	}
 	
 	private boolean storageDirectoryIsWritable() {
+		return false;/*
 		BackendConfig bc = Settings.getBackendConfig();
 		String res = executeCommandSafe("if [ -w " + bc.getBaseFolder() +
 				  " ]; then echo 'yes'; else echo 'no'; fi");
-		return res.trim().equals("yes");
+		return res.trim().equals("yes");*/
 	}
 	
 	/* Getters and Setters */

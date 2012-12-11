@@ -64,6 +64,7 @@
 				</span>
 			</div>
 			#{/if}
+			*{
 			#{if (currentUser)}			
 				%{ def messages = currentUser.getUnreadMessages(); %}
 				#{list items:messages, as:"message"}
@@ -74,7 +75,7 @@
 					[<a class="close-link" href="#" data-dismiss="alert" data-alert-id="${message.id}">Dismiss</a>]
 				</div>
 				#{/list}
-			#{/if}		
+			#{/if}}*		
 			<div class="clearfix"></div>
 			#{doLayout /}
 		</div>

@@ -8,7 +8,6 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import play.db.jpa.Model;
 
-@Entity
 @Table(name="user_message")
 public class UserMessage extends Model {
 	

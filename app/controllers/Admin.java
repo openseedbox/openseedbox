@@ -1,11 +1,7 @@
 package controllers;
 
-import com.openseedbox.mvc.controllers.Base;
 import com.openseedbox.code.MessageException;
 import com.openseedbox.code.Util;
-import com.openseedbox.backend.BackendConfig;
-import com.openseedbox.backend.BackendManager;
-import com.openseedbox.backend.BackendManager.SupportedBackend;
 import java.io.File;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -54,9 +50,8 @@ public class Admin extends Base {
 
 	public static void editNode(long id) {
 		String active = "nodes";
-		Node node = Node.findById(id);
-		List<SupportedBackend> backends = BackendManager.getSupportedBackends();
-		renderTemplate("admin/node-edit.html", active, node, backends);
+		Node node = Node.findById(id);		
+		renderTemplate("admin/node-edit.html", active, node);
 	}
 
 	public static void updateNode(@Valid Node node) {
@@ -67,25 +62,15 @@ public class Admin extends Base {
 				prepareNode(node.getId());
 			}
 			nodes();
-		}
-		
-		List<SupportedBackend> backends = BackendManager.getSupportedBackends();
+		}				
 		String active = "nodes";
-		renderTemplate("admin/node-edit.html", active, node, backends);
+		renderTemplate("admin/node-edit.html", active, node);
 	}
 
 	public static void deleteNode(Long id) {
 		Node n = Node.findById(id);
 		n.delete();
 		nodes();
-	}
-
-	private static void users() {
-		try {
-			users(-1L);
-		} catch (MessageException ex) {
-			Base.onException(ex);
-		}
 	}
 
 	public static void users(Long node_filter) throws MessageException {
@@ -258,6 +243,7 @@ public class Admin extends Base {
 	 Validation.keep();
 	 users();
 	 }*/
+	/*
 	public static void updateBackendConfig(boolean redirectToCreateNode) {
 		String active = "nodes";
 		BackendConfig config = Settings.getBackendConfig();
@@ -281,7 +267,7 @@ public class Admin extends Base {
 			editNode(-1);
 		}
 		nodes();
-	}
+	}*/
 	
 	public static void nodeStatus(long id) {
 		Node n = Node.findById(id);
@@ -336,12 +322,12 @@ public class Admin extends Base {
 	private static String getPrepareNodeScript(Node n) {
 		try {
 			String script = FileUtils.readFileToString(Play.getFile("conf/prepare-node.sh"));
-			BackendConfig bc = Settings.getBackendConfig();
+			/*BackendConfig bc = Settings.getBackendConfig();
 			script = script.replace("${config.completeFolder}", bc.getCompleteFolder());
 			script = script.replace("${config.incompleteFolder}", bc.getIncompleteFolder());
 			script = script.replace("${config.torrentFolder}", bc.getTorrentFolder());
 			script = script.replace("${config.baseFolder}", bc.getBaseFolder());
-			script = script.replace("${config.ipAddress}", n.getIpAddress());
+			script = script.replace("${config.ipAddress}", n.getIpAddress());*/
 			return script;
 		} catch (Exception ex) {
 			throw new MessageException("Unable to get prepare node script. " + ex.getMessage());
