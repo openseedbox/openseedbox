@@ -1,61 +1,55 @@
 package models;
 
 import com.openseedbox.code.MessageException;
-import com.openseedbox.backend.BackendManager;
-import com.openseedbox.backend.ITorrent;
-import com.openseedbox.backend.transmission.TransmissionTorrent;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 import play.Play;
 import play.data.validation.Email;
 import play.data.validation.Max;
 import play.db.jpa.Model;
+import siena.Column;
+import siena.Table;
+import siena.embed.Embedded;
 
-@Entity
-@Table(name="user")
-public class User extends Model {
+@Table("user")
+public class User extends ModelBase {
 	
-	@Email
-	@Column(name="email_address")
-	private String emailAddress;
-	
-	@Column(name="open_id")
-	private String openId;
-	
-	@Column(name="is_admin")
-	private boolean admin;
-	
-	@Column(name="avatar_url")
-	private String avatarUrl;
-	
-	@Column(name="display_name")
-	private String displayName;
-	
-	@Column(name="last_access")
-	@Temporal(TemporalType.TIMESTAMP)
-	private Date lastAccess;
-	
-	@OneToOne
-	@JoinColumn(name="primary_account_id")
-	private Account primaryAccount;
-	
-	@Column(name="time_zone")
-	private String timeZone;
-	
-	@Column(name="api_key")
-	@Max(32)
-	private String apiKey;
+	@Email @Column("email_address") private String emailAddress;	
+	@Column("open_id") private String openId;	
+	@Column("is_admin") private boolean isAdmin;	
+	@Column("avatar_url") private String avatarUrl;	
+	@Column("display_name") private String displayName;	
+	@Column("last_access") private Date lastAccess;			
+	@Column("time_zone") private String timeZone;	
+	@Max(32) @Column("api_key") private String apiKey;
+	@Column("plan_id") private Plan plan;
+	@Embedded private List<String> groups;
+
+	public void generateApiKey() {
+		String salt = Play.configuration.getProperty("application.secret", "salt value");
+		String key = this.emailAddress + salt;
+		this.apiKey = DigestUtils.md5Hex(key);
+		this.save();
+	}
+
+	public String getDisplayName() {
+		return StringUtils.isEmpty(this.displayName) ? this.emailAddress : this.displayName;
+	}
+
+	public void setDisplayName(String displayName) {
+		this.displayName = displayName;
+	}
+
+	public String getEmailAddress() {
+		return emailAddress;
+	}
+
+	public void setEmailAddress(String emailAddress) {
+		this.emailAddress = emailAddress;
+	}
 
 	public String getOpenId() {
 		return openId;
@@ -63,6 +57,14 @@ public class User extends Model {
 
 	public void setOpenId(String openId) {
 		this.openId = openId;
+	}
+
+	public boolean isAdmin() {
+		return isAdmin;
+	}
+
+	public void setAdmin(boolean isAdmin) {
+		this.isAdmin = isAdmin;
 	}
 
 	public String getAvatarUrl() {
@@ -97,152 +99,24 @@ public class User extends Model {
 		this.apiKey = apiKey;
 	}
 
-	public void generateApiKey() {
-		String salt = Play.configuration.getProperty("application.secret", "salt value");
-		String key = this.emailAddress + salt;
-		this.apiKey = DigestUtils.md5Hex(key);
-		//this.save();
-	}
-	
-	public boolean isAdmin() {
-		return admin;
-	}
-	
-	public void setAdmin(boolean isAdmin) {
-		this.admin = isAdmin;
-	}
-	
-	public List<Invitation> getInvitations() {
-		return null;
-		//return Invitation.all().filter("invitingUser", this).order("invitationDate").fetch();
-	}
-	
-	public List<Account> getAvailableAccounts() {
-		List<Account> ret = new ArrayList<Account>();
-		
-		//add the users account since it needs to be in the list of available accounts so the user can switch back to it
-		ret.add(this.getPrimaryAccount());
-		
-		//available accounts are all the invitations where the emailAddress is the same as the current user
-		List<Invitation> invitations = null;//Invitation.all().filter("emailAddress", this.emailAddress).fetch();
-		for (Invitation i : invitations) {
-			User u = i.getInvitingUser();
-			ret.add(u.getPrimaryAccount());
-		}
-		return ret;
+	public Plan getPlan() {
+		return plan;
 	}
 
-	public Account getPrimaryAccount() {
-		return this.primaryAccount;
+	public void setPlan(Plan plan) {
+		this.plan = plan;
+	}
+
+	public List<String> getGroups() {
+		return groups;
+	}
+
+	public void setGroups(List<String> groups) {
+		this.groups = groups;
 	}
 	
-	public void setPrimaryAccount(Account primaryAccount) {
-		this.primaryAccount = primaryAccount;
-	}
 	
-	public String getEmailAddress() {
-		return this.emailAddress;
-	}
-	
-	public void setEmailAddress(String emailAddress) {
-		this.emailAddress = emailAddress;
-	}
-	
-	public boolean hasPlan() {
-		return getPrimaryAccount().getPlan() != null;
-	}
-	
-	public Plan getPlan() {
-		Account a = getPrimaryAccount();
-		if (a != null) {
-			return a.getPlan();
-		}
-		return null;
-	}
-	
-	public void setPlan(Plan p) throws MessageException {
-		Account a = getPrimaryAccount();
-		if (a != null) {
-			a.plan = p;
-			//a.save();
-		} else {
-			throw new MessageException("User " + this.emailAddress + " isnt associated with an account!");
-		}
-	}
-	
-	public ITorrent addTorrent(File f) throws MessageException {
-		return BackendManager.getForAccount(primaryAccount).addTorrent(f);	
-	}
-	
-	public ITorrent addTorrent(String urlOrMagnet) throws MessageException {
-		return BackendManager.getForAccount(primaryAccount).addTorrent(urlOrMagnet);
-	}
-	
-	private Torrent newTorrent(TransmissionTorrent tt) {
-		return null;
-		/*
-		Torrent t = new Torrent();
-		t.hashString = tt.hashString;
-		//for some reason, the names are URLEncoded. Strip it
-		String name = tt.name;
-		try {
-			name = URLDecoder.decode(name, "UTF8");
-		} catch (Exception ex) {
-			//fuck off java and your checked UnsupportedEncodingException's
-		}
-		t.name = name;
-		t.user = this;
-		t.insert();
-		t.setTransmissionTorrent(tt);
-		return t;	*/	
-	}
-	
-	public Torrent getTorrent(String hashString) {
-		return Torrent.find("hashString = ? AND account = ?", hashString, this.primaryAccount).first();
-	}	
-	
-	public List<Torrent> getTorrents() {
-		return Torrent.find("account = ?", this.primaryAccount).fetch();
-	}
-	
-	public List<Torrent> getRunningTorrents() {
-		List<Torrent> ret = new ArrayList<Torrent>();
-		for (Torrent t : getTorrents()) {
-			if (t.isRunning()) {
-				ret.add(t);
-			}
-		}
-		return ret;
-	}
-	
-	public List<Torrent> getTorrents(String group) throws MessageException {
-		if (group.equals("All")) {
-			return getTorrents();
-		}
-		return Torrent.find("account = ? AND groups IN ?", this.primaryAccount, group).fetch();
-	}	
-	
-	public List<String> getTorrentGroups() {
-		List<Torrent> ts = Torrent.find("select groups from Torrent t WHERE account=?",
-				  this.primaryAccount).fetch();
-		List<String> ret = new ArrayList<String>();
-		for (Torrent t : ts) {
-			for (String g : t.getGroups()) {
-				if (!ret.contains(g)) {
-					ret.add(g);
-				}
-			}
-		}
-		return ret;
-	}
-	
-	public String getDisplayName() {
-		return StringUtils.isEmpty(this.displayName) ? this.emailAddress : this.displayName;
-	}
-	
-	public void setDisplayName(String name) {
-		this.displayName = name;
-	}
+
 	/*
 	private void calculateUserStats(List<Torrent> torrents) throws MessageException {
 		long totalSize = 0;
@@ -260,7 +134,7 @@ public class User extends Model {
 		us.rateUploadKb = Util.getRateKb(totalRateUpload);		
 		_userStats = us;	
 	}*/
-	
+	/*
 	private transient UserStats _userStats;
 	public UserStats getUserStats() {
 		return null;/*
@@ -272,17 +146,17 @@ public class User extends Model {
 				//do nothing
 			}
 		}
-		return _userStats;*/
+		return _userStats;*//*
 	}	
 	
 	public List<UserMessage> getUnreadMessages() {
 		return null;/*
-		return UserMessage.all().filter("user", this).filter("dismissDateUtc", null).fetch();*/
+		return UserMessage.all().filter("user", this).filter("dismissDateUtc", null).fetch();*//*
 	}
 	
 	public List<UserMessage> getAllMessages() {
 		return null;/*
-		return UserMessage.all().filter("user", this).fetch();*/
+		return UserMessage.all().filter("user", this).fetch();*//*
 	}
 	
 	public UserMessage addUserMessage(String heading, String message) {
@@ -324,7 +198,7 @@ public class User extends Model {
 		return null;/*
 		return Invoice.all()
 				.filter("account", this.getPrimaryAccount())
-				.filter("paymentDateUtc", null).fetch();*/
+				.filter("paymentDateUtc", null).fetch();*//*
 	}
 	
 	public List<Invoice> getPaidInvoices() {
@@ -332,7 +206,7 @@ public class User extends Model {
 		return Invoice.all()
 				.filter("account", this.getPrimaryAccount())
 				.filter("paymentDateUtc !=", null)
-				.order("-paymentDateUtc").fetch();*/	
+				.order("-paymentDateUtc").fetch();*/	/*
 	}
 	
 	public boolean hasExceededLimits() throws MessageException {
@@ -374,18 +248,18 @@ public class User extends Model {
 		public String usedSpaceGb;
 		public String rateDownloadKb;
 		public String rateUploadKb;
+	}*/
+	
+	public static User findByApiKey(String apiKey) {
+		return User.all().filter("apiKey", apiKey).get();
 	}
 	
-	public static User getByApiKey(String apiKey) {
-		return User.find("apiKey = ?", apiKey).first();
+	public static User findByOpenId(String openId) {
+		return User.all().filter("openId", openId).get();
 	}
 	
-	public static User getByOpenId(String openId) {
-		return User.find("openId = ?", openId).first();
-	}
-	
-	public static User getByEmailAddress(String emailAddress) {
-		return User.find("emailAddress = ?", emailAddress).first();
+	public static User findByEmailAddress(String emailAddress) {
+		return User.all().filter("emailAddress", emailAddress).get();
 	}
 	
 }

@@ -1,6 +1,6 @@
 package controllers.api;
 
-import com.openseedbox.mvc.controllers.Base;
+import controllers.Base;
 import models.User;
 import play.cache.Cache;
 import play.mvc.Before;
@@ -32,7 +32,7 @@ public class Api extends Base {
 		if (key != null) {
 			User u = Cache.get(getApiUserCacheKey(), User.class);
 			if (u == null) {
-				u = User.getByApiKey(key);
+				u = User.findByApiKey(key);
 				Cache.set(getApiUserCacheKey(), u, "10mn");
 			}
 			return u;

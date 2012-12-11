@@ -1,14 +1,12 @@
 package models;
 
 import com.openseedbox.code.Util;
-import com.openseedbox.backend.BackendConfig;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 import play.db.jpa.Model;
 
-@Entity
 @Table(name="setting")
 public class Settings extends Model {
 	
@@ -38,18 +36,6 @@ public class Settings extends Model {
 		}
 		s.setValue(value);
 		s.save();
-	}
-	
-	public static BackendConfig getBackendConfig() {
-		String json = getValue(SETTING_BACKEND_CONFIG);
-		if (json != null) {
-			return Util.fromJson(json, BackendConfig.class);
-		}
-		return BackendConfig.getDefaultConfig();
-	}
-	
-	public static void storeBackendConfig(BackendConfig bc) {
-		store(SETTING_BACKEND_CONFIG, Util.toJson(bc));
 	}
 
 	/* Getters and Setters */

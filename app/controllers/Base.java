@@ -1,7 +1,5 @@
 package controllers;
 
-import com.openseedbox.mvc.controllers.BaseController;
-import models.Account;
 import models.User;
 import org.apache.commons.lang.StringUtils;
 import play.cache.Cache;
@@ -12,8 +10,8 @@ public class Base extends BaseController {
 	protected static void before() {
 		User u = getCurrentUser();
 		renderArgs.put("currentUser", u);
-		Account a = getActiveAccount();
-		renderArgs.put("activeAccount", a);
+		//Account a = getActiveAccount();
+		//renderArgs.put("activeAccount", a);
 		
 		String mode = play.Play.configuration.getProperty("application.mode");
 		if (StringUtils.isEmpty(mode)) {
@@ -39,7 +37,7 @@ public class Base extends BaseController {
 		}
 		return fromCache;
 	}
-
+/*
 	protected static Account getActiveAccount() {
 		//if no user, then there will be no account
 		User u = getCurrentUser();
@@ -63,7 +61,7 @@ public class Base extends BaseController {
 			Cache.set(getActiveAccountCacheKey(), fromCache, "10mn");
 		}
 		return fromCache;
-	}
+	}*/
 
 	protected static String getCurrentUserCacheKey() {
 		return session.getId() + "_currentUser";

@@ -3,50 +3,32 @@ package models;
 import com.openseedbox.code.BigDecimalUtils;
 import java.math.BigDecimal;
 import java.util.List;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
 import play.data.validation.CheckWith;
 import play.data.validation.Required;
-import play.db.jpa.Model;
+import siena.Column;
+import siena.Table;
 import validation.IsDecimalNumber;
 import validation.IsWholeNumber;
 
-@Entity
-@Table(name="plan")
-public class Plan extends Model {
+@Table("plan")
+public class Plan extends ModelBase {
 	
-	@Required
-	@Column(name="name")
-	private String name;
-	
-	@Required
-	@CheckWith(IsWholeNumber.class)
-	@Column(name="max_diskspace_gb")
-	private int maxDiskspaceGb;
-	
-	@Required
-	@CheckWith(IsWholeNumber.class)
-	@Column(name="max_active_torrents")
-	private int maxActiveTorrents;
-	
-	@Required
-	@CheckWith(IsDecimalNumber.class)
-	@Column(name="monthly_cost")
-	private BigDecimal monthlyCost;
-	
-	@Column(name="visible")
-	private boolean visible;
-	
-	@Column(name="totalSlots")
-	private int totalSlots;
+	@Required @Column("name") private String name;	
+	@Required @CheckWith(IsWholeNumber.class)
+	@Column("max_diskspace_gb") private int maxDiskspaceGb;	
+	@Required @CheckWith(IsWholeNumber.class)
+	@Column("max_active_torrents") private int maxActiveTorrents;	
+	@Required @CheckWith(IsDecimalNumber.class)
+	@Column("monthly_cost") private BigDecimal monthlyCost;	
+	@Column("visible") private boolean visible;	
+	@Column("totalSlots") private int totalSlots;
 	
 	public boolean isFree() {
 		return (BigDecimalUtils.LessThanOrEqual(monthlyCost, BigDecimal.ZERO));
 	}
 	
 	public int getUsedSlots() {
-		return (int) Account.count("plan = ?", this);
+		return User.all().filter("plan", this).count();
 	}
 	
 	public int getFreeSlots() {
@@ -67,7 +49,7 @@ public class Plan extends Model {
 	}
 	
 	public static List<Plan> getVisiblePlans() {
-		return Plan.find("visible = ?", true).fetch();
+		return Plan.all().filter("visible", true).fetch();
 	}
 	
 	/* Getters and Setters */

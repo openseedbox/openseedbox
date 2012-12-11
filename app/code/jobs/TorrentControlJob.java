@@ -1,10 +1,7 @@
 package code.jobs;
 
 import code.jobs.TorrentControlJob.TorrentControlJobResult;
-import com.openseedbox.backend.transmission.Transmission;
 import java.util.List;
-import models.Account;
-import models.Torrent;
 import models.User;
 import play.jobs.Job;
 
@@ -13,15 +10,17 @@ public class TorrentControlJob extends Job<TorrentControlJobResult> {
 	private List<String> _hashes;
 	private TorrentAction _action;
 	private User _user;
-
+/*
 	public TorrentControlJob(Account account, List<String> hashes, TorrentAction ta) {
 		this._hashes = hashes;
 		this._action = ta;
 		this._user = account.getPrimaryUser();
-	}
+	}*/
 	
 	@Override
 	public TorrentControlJobResult doJobWithResult() throws Exception {
+			  return null;
+		/*
 		Transmission t = null;//_user.getTransmission();
 		TorrentControlJobResult res = new TorrentControlJobResult();
 		try {
@@ -39,7 +38,7 @@ public class TorrentControlJob extends Job<TorrentControlJobResult> {
 		} catch (Exception ex) {
 			res.error = ex;
 		}
-		return res;
+		return res;*/
 	}
 	
 	public enum TorrentAction {

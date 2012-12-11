@@ -1,6 +1,5 @@
 package controllers;
 
-import com.openseedbox.mvc.controllers.Base;
 import java.io.IOException;
 
 public class Payment extends Base {

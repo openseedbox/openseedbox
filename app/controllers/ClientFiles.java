@@ -10,22 +10,24 @@ import play.libs.F.Promise;
 public class ClientFiles extends Client {
 	
 	public static void index() {
+		/*
 		Promise<GetTorrentsJobResult> job = new GetTorrentsJob(getActiveAccount()).now();
 		GetTorrentsJobResult res = await(job);
 		if (res.hasError()) {
 			addGeneralError(res.error);
 		}
 		List<Torrent> torrents = res.torrents;
-		renderTemplate("clientfiles/index.html", torrents);
+		renderTemplate("clientfiles/index.html", torrents);*/
 	}
 	
 	public static void singleTorrent(String hashString) {
+		/*
 		Promise<GetTorrentsJobResult> job = new GetTorrentsJob(getActiveAccount(), null, hashString).now();
 		GetTorrentsJobResult res = await(job);
 		if (res.hasError()) {
 			addGeneralError(res.error);
 		}
 		Torrent torrent = res.torrents.get(0);
-		renderTemplate("clientfiles/single-torrent.html", torrent);		
+		renderTemplate("clientfiles/single-torrent.html", torrent);	*/	
 	}
 }

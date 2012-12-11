@@ -1,8 +1,6 @@
 package controllers;
 
-import com.openseedbox.mvc.controllers.Base;
 import java.util.Date;
-import models.Account;
 import models.User;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
@@ -30,13 +28,13 @@ public class Auth extends Base {
 				login();
 			}
 			//check that user is in database. If not, create.
-			User u = User.getByOpenId(vu.id);
+			User u = User.findByOpenId(vu.id);
 			String emailAddress = vu.extensions.get("email");
 			
 			if (u == null) {
 				//check that the email isnt already in the database. if it is, the user is probably being re-authenticated by the provider and sometimes the openID changes.
 				if (!StringUtils.isEmpty(emailAddress)) {
-					User temp = User.getByEmailAddress(emailAddress);
+					User temp = User.findByEmailAddress(emailAddress);
 					if (temp != null) {
 						temp.setOpenId(vu.id);
 						temp.save();
@@ -64,13 +62,9 @@ public class Auth extends Base {
 				u.setLastAccess(new Date());
 				u.setAdmin(false);
 				u.save();
-				Account a = new Account();
-				a.setPrimaryUser(u);
-				a.save();
-				u.setPrimaryAccount(a);
 				u.save();
 			}
-			session.put("currentUserId", u.id);
+			session.put("currentUserId", u.getId());
 			redirect("/client");
 		} else {
 			OpenID req = OpenID.id(openid_url);

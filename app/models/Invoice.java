@@ -20,12 +20,11 @@ import play.libs.WS.HttpResponse;
 import play.libs.WS.WSRequest;
 import play.mvc.Router;
 
-@Entity
 @Table(name="invoice")
 public class Invoice extends Model {
 	
 	@Column(name="account_id")
-	private Account account;
+	private User user;
 	
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name="invoice_date_utc")
@@ -43,10 +42,6 @@ public class Invoice extends Model {
 	
 	public boolean hasBeenPaid() {
 		return paymentDateUtc != null;
-	}
-	
-	public Account getAccount() {
-		return account;
 	}
 	
 	public List<InvoiceLine> getInvoiceLines() {
@@ -74,7 +69,7 @@ public class Invoice extends Model {
 		req.setParameter("CANCELURL", Router.reverse("PaymentController.paymentCancel").secure().toString());
 		req.setParameter("NOSHIPPING", "1");
 		req.setParameter("REQNOSHIPPING", "0");		
-		req.setParameter("EMAIL", this.getAccount().getPrimaryUser().getEmailAddress());
+//		req.setParameter("EMAIL", this.getAccount().getPrimaryUser().getEmailAddress());
 		req.setParameter("BRANDNAME", "OpenSeedbox");
 		req.setParameter("PAYMENTREQUEST_0_INVNUM", this.id);
 		req.setParameter("PAYMENTREQUEST_0_AMT", Util.formatMoney(this.getTotalAmount()));
@@ -108,9 +103,9 @@ public class Invoice extends Model {
 		return Invoice.find("paypalToken = ?", token).first();
 	}
 	
-	public static Invoice createInvoice(Account a, Plan p) {
+	public static Invoice createInvoice(/*Account a, */Plan p) {
 		Invoice i = new Invoice();
-		i.account = a;
+		//i.account = a;
 		i.invoiceDateUtc = new Date();
 		//i.save();
 		

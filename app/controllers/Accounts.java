@@ -1,6 +1,5 @@
 package controllers;
 
-import com.openseedbox.mvc.controllers.Base;
 import com.openseedbox.code.MessageException;
 import java.util.List;
 import models.*;
@@ -42,7 +41,7 @@ public class Accounts extends Base {
 		User user = getCurrentUser();
 		
 		Plan newPlan = null;//Plan.getByKey(newPlanID);
-		
+		/*
 		List<Invoice> unpaid = user.getUnpaidInvoices();
 		if (unpaid.size() > 0) {
 			setGeneralErrorMessage("You cannot change your plan if you have unpaid invoices!");
@@ -56,7 +55,7 @@ public class Accounts extends Base {
 		
 		Plan oldPlan = user.getPlan();
 		String active = "plans";
-		render("account/buyplan.html", active, user, newPlan, oldPlan);
+		render("account/buyplan.html", active, user, newPlan, oldPlan);*/
 	}
 	
 	public static void invoicePlan(Long newPlanID) throws MessageException {
@@ -114,11 +113,11 @@ public class Accounts extends Base {
 	}		
 	
 	public static void invoices() {
-		String active = "invoices";
+/*		String active = "invoices";
 		User u = getCurrentUser();
 		List<Invoice> unpaid_invoices = u.getUnpaidInvoices();
 		List<Invoice> paid_invoices = u.getPaidInvoices();	
-		render("account/invoices.html", active, unpaid_invoices, paid_invoices);
+		render("account/invoices.html", active, unpaid_invoices, paid_invoices);*/
 	}
 	
 	public static void invoiceDetails(Long invoiceId) {
@@ -149,9 +148,10 @@ public class Accounts extends Base {
 	}
 	
 	public static void invite() {
+		/*
 		String active = "invite";
 		List<Invitation> invitations = getCurrentUser().getInvitations();
-		render("account/invite.html", active, invitations);
+		render("account/invite.html", active, invitations);*/
 	}
 	
 	public static void removeInvitedUser(Long id) {

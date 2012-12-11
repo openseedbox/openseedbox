@@ -6,7 +6,6 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 import play.db.jpa.Model;
 
-@Entity
 @Table(name="module_setting")
 public class ModuleSetting extends Model {
 	

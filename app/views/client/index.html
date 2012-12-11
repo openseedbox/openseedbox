@@ -1,121 +1,107 @@
 #{extends "main.html" /}
-#{set title: "Seedbox" /}
-#{set torrents_active: "active" /}
-#{set "moreScripts"}
-	<script type="text/javascript" src="#{asset.url '/javascripts/client.js' /}"></script>
-	<script type="text/javascript" src="#{asset.url '/javascripts/ajax-typeahead.min.js' /}"></script>
-#{/set}
-#{set "moreStyles"}
-	<link rel="stylesheet" type="text/css" href="#{asset.url '/stylesheets/client.css' /}" />
-#{/set}
-
-#{choose-account-dropdown user:currentUser, account:activeAccount, returnTo:"/client", what:"torrents" /}
-
-<div id="tab-header">
-	<br />
-	<ul class="nav nav-tabs">
-		<li class="active"><a href="#"><img src="#{asset.ajax /}" /> Loading tabs...</a></li>
-	</ul>
+#{set title:"Torrents" /}
+<div class="row">
+	<div class="span2">
+		<ul class="nav nav-pills nav-stacked nav-list">
+			<li class="active"><a href="#">All</a></li>
+			<li class="group">
+				<a href="#">Music <i class="icon-minus pull-right hide" rel="tooltip" title="test"></i></a>
+			</li>
+			<li><a href="#">TV Shows</a></li>
+			<li><a href="#">${"Really Fricken Long Group Name Lalala".substring(0,15)}</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="icon-plus"></i> Add Group</a></li>
+		</ul>
+	</div>
+	<div class="span10">	
+		<input type="checkbox" style="margin-right: 25px; margin-left: 10px; margin-top: 8px;" class="pull-left"/>
+		<div class="btn-group pull-left">
+			<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">With Selected <span class="caret"></span></a>
+			<ul class="dropdown-menu">
+				<li><a href="#">Start</a></li>
+				<li><a href="#">Pause</a></li>
+				<li><a href="#">Remove</a></li>				
+			</ul>
+		</div>		
+		<a class="btn btn-success pull-right"><i class="icon-plus-sign"></i>Add Torrent</a>
+		<div class="clearfix" style="margin-bottom: 5px;"></div>
+		<table class="table table-condensed table-hover">
+			<tr style="width:100%;">
+				<td>
+					<table class="no-table" style="width:100%;">
+						<tr>
+							<td colspan="3">
+								<h5 class="torrent-title">Some Really Cool Torrent With A Sweet Name <small>- Downloading, 82%</small></h5>
+								
+							</td>
+						</tr>
+						<tr>
+							<td style="width:5%;"><input class="torrent-checkbox" type="checkbox" /></td>
+							<td style="width:80%;">
+								<div class="progress progress-striped active">
+									<div class="bar bar-success" style="width:82%"></div>
+								</div>
+							</td>
+							<td style="width:15%;">
+								<div class="btn-group pull-right">
+									<a class="btn btn-mini" href="#"><i class="icon-info-sign"></i></a>
+									<a class="btn btn-mini" href="#"><i class="icon-pause"></i></a>									
+									<a class="btn btn-mini" href="#"><i class="icon-remove"></i></a>
+								</div>									
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+			<tr style="width:100%;">
+				<td>
+					<table class="no-table" style="width:100%;">
+						<tr>
+							<td colspan="3"><h5 class="torrent-title">Another Really Cool Torrent With A Sweet Name <small>- Paused</small></h5></td>
+						</tr>
+						<tr>
+							<td style="width:5%;"><input class="torrent-checkbox" type="checkbox" /></td>
+							<td style="width:80%;">
+								<div class="progress progress-warning">
+									<div class="bar" style="width:40%"></div>	
+								</div>								
+							</td>
+							<td style="width:15%;">
+								<div class="btn-group pull-right">
+									<a class="btn btn-mini" href="#"><i class="icon-info-sign"></i></a>
+									<a class="btn btn-mini" href="#"><i class="icon-play"></i></a>												
+									<a class="btn btn-mini" href="#"><i class="icon-remove"></i></a>
+								</div>									
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div class="pull-right">
+						<h5><small>Used: 50gb, Down: 153kb/s, Up: 762kb/s</small></h5>
+					</div>
+				</td>
+			</tr>
+		</table>		
+	</div>
 </div>
-<div class="pull-right" style="margin-top: -50px;">
-	<img id="global-loader" src="#{asset.ajax /}" />
-	<a href="#add-torrent-dialog" class="btn btn-success add-torrent" data-toggle="modal"><i class="icon-plus"></i>Add Torrent</a>
-</div>
-<div id="user-stats" class="pull-right">
+<style type="text/css">
+.no-table tr, .no-table td {
+	border: 0 none;
+}
+</style>
+<script type="text/javascript">
+$(document).ready(function() {
+	$(".group").mouseover(function() {
+		$(".group .icon-minus").show();
+	}).mouseout(function() {
+		$(".group .icon-minus").hide();
+	});
 	
-</div>
-<div id="with-selected" class="btn-group">
-	<a href="#" class="btn dropdown-toggle" data-toggle="dropdown">With selected: <span class="caret"></span></a>
-	<ul id="group-actions" class="dropdown-menu">
-		<li><a href="#" class="group-actions-start">Start</a></li>
-		<li><a href="#" class="group-actions-pause">Pause</a></li>
-		<li><a href="#" class="group-actions-remove">Remove</a></li>
-		<li><a href="#" class="group-actions-add-group">Add group</a></li>
-	</ul>
-	<img id="group-actions-loader" class="hide" src="#{asset.ajax /}" style="margin-left: 10px;"/>
-</div>
-<div class="clearfix"></div>
-<div id="torrent-list" class="tab-content">
-	
-</div>
-<div class="modal hide" id="add-torrent-dialog">
-	<form class="form-horizontal" enctype="multipart/form-data" method="post" action="@{Client.addTorrent}">
-	<div class="modal-header">
-		<a class="close" data-dismiss="modal">&times;</a>
-		<h2>Add Torrent</h2>
-	</div>
-	<div class="modal-body">
-		#{set "ajax_url"}
-			#{asset.ajax /}
-		#{/set}
-		#{form.text label:"Search Isohunt:", name:"search", placeholder:"Enter search terms", extra:"<a id='clear' class='btn' href='#'>Clear</a><img class='hide' id='search-loader' src='${ajax_url.trim()}' />" /}
-		#{form.text label:"URL or Magnet:", name:"urlOrMagnet", placeholder:"Paste torrent URL or Magnet link" /}
-		#{form.upload label:"Upload from computer:", name:"fileFromComputer" /}
-	</div>
-	<div class="modal-footer">
-		<input type="submit" class="btn btn-primary" value="Add Torrent" />
-		<a href="#" class="btn" data-dismiss="modal">Close</a>
-	</div>	
-	</form>
-</div>
-<div class="modal hide" id="remove-torrent-dialog">
-	<div class="modal-header">
-		<a class="close" data-dismiss="modal">&times;</a>
-		<h2>Remove Torrent</h2>
-	</div>	
-	<div class="modal-body">
-		<p>Are you sure you want to remove <strong class="torrent-name"></strong> (including all files)?</p>
-	</div>
-	<div class="modal-footer">
-		<a id="remove-torrent-button" class="btn btn-danger" href="#">Remove</a>
-		<a href="#" class="btn" data-dismiss="modal">Close</a>
-	</div>
-	<script type="text/javascript">
-		(function($) {
-			$(document).ready(function() {
-				$("#remove-torrent-button").click(function() {
-					var hash = $(this).data("torrent-hash");
-					$.post("/client/removeTorrent?ext=json", {
-						"torrentHash" : hash
-					}, function() {
-						$("#t_" + hash).fadeOut("slow", function() {
-							$(this).remove();
-						});
-						$("#remove-torrent-dialog").modal("hide");
-						window.refresh_disabled = false;
-					});
-					return false;
-				});
-				
-				$("#search").typeahead({
-					"ajax" : {
-						"url" : "@{Client.searchIsohunt}",
-						"displayField" : "label",
-						"preDispatch" : function(query) {
-							$("#search-loader").show();
-							return {
-								"query" : query
-							}
-						},
-						"preProcess" : function(data) {
-							$("#search-loader").hide();
-							return data;
-						}
-					},
-					"matcher" : function() { return true; },
-					"display" : "label",
-					"val" : "torrent_url",
-					"itemSelected" : function(item, val, text) {
-						$("#urlOrMagnet").val(val);
-					}
-				});
-				
-				$("#clear").click(function() {
-					$("#search").val("");
-					$("#urlOrMagnet").val("");
-					return false;
-				});
-			});
-		})(jQuery);
-	</script>
-</div>
+	$("i[rel=tooltip]").tooltip({
+		"title" : "Hey Ya!"
+	});
+});
+</script>
