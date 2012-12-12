@@ -61,8 +61,7 @@ public class Auth extends Base {
 				}
 				u.setLastAccess(new Date());
 				u.setAdmin(false);
-				u.save();
-				u.save();
+				u.save();				
 			}
 			session.put("currentUserId", u.getId());
 			redirect("/client");

@@ -4,22 +4,15 @@
 		vertical-align: middle;
 	}
 </style>
-<script type="text/javascript">
-	(function($) {
-		$(document).ready(function() {
-			$("#delete").click(function() {
-				return confirm("Are you sure?");
-			});
-		});
-	})(jQuery);
-</script>
 <h2>Plans</h2>
-<table id="plans" class="table table-bordered table-striped">
+#{if plans}
+<table id="plans" class="table table-condensed">
 	<tr>
 		<th>Plan Name</th>
 		<th>Max. Diskspace (GB)</th>
 		<th>Max. Active Torrents</th>
 		<th>Monthly Cost</th>
+		<th>Total Slots</th>
 		<th>Free Slots</th>
 		<th>Visible</th>
 		<th>Action</th>
@@ -33,17 +26,25 @@
 			#{else}${plan.maxActiveTorrents}#{/else}
 		</td>
 		<td>$${plan.monthlyCost}</td>
-		<td>${plan.totalFreeSlots}</td>
-		<td>#{if (plan.visible)}yes#{/if}#{else}no#{/else}</td>
+		<td>${plan.totalSlots}</td>
+		<td>${plan.freeSlots}</td>
+		<td>
+			#{if (plan.visible)}<span class="text-success">yes</span>#{/if}
+			#{else}<span class="text-error">no</span>#{/else}
+		</td>
 		<td>
 			<div class="pull-right">
-				<a id="edit" class="btn btn-primary" href="@{Admin.editPlan(plan)}">Edit</a>
-				<a id="delete" class="btn" href="@{Admin.deletePlan(plan.id)}">Delete</a>
+				<a id="edit" class="btn btn-mini" href="@{Admin.editPlan(plan.id)}"><i class="icon-edit"></i></a>
+				<a id="delete" class="btn btn-danger btn-mini" href="@{Admin.deletePlan(plan.id)}"><i class="icon-remove"></i></a>
 			</div>
 		</td>
 	</tr>
 	#{/list}
 </table>
+#{/if}
+#{else}
+	<p>No plans in the system.</p>
+#{/else}
 <div class="form-actions">
-	<a class="btn btn-primary" href="@{Admin.editPlan}">Create new Plan</a>
+	<a class="btn btn-primary" href="@{Admin.createPlan}">Create new Plan</a>
 </div>

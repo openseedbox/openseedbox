@@ -1,7 +1,6 @@
 package models;
 
-import com.openseedbox.code.MessageException;
-import java.util.ArrayList;
+import com.openseedbox.code.Util;
 import java.util.Date;
 import java.util.List;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -9,15 +8,17 @@ import org.apache.commons.lang.StringUtils;
 import play.Play;
 import play.data.validation.Email;
 import play.data.validation.Max;
-import play.db.jpa.Model;
 import siena.Column;
+import siena.Query;
 import siena.Table;
+import siena.Unique;
 import siena.embed.Embedded;
 
 @Table("user")
 public class User extends ModelBase {
 	
-	@Email @Column("email_address") private String emailAddress;	
+	@Email @Column("email_address")
+	@Unique("email_address_unique") private String emailAddress;	
 	@Column("open_id") private String openId;	
 	@Column("is_admin") private boolean isAdmin;	
 	@Column("avatar_url") private String avatarUrl;	
@@ -34,7 +35,18 @@ public class User extends ModelBase {
 		this.apiKey = DigestUtils.md5Hex(key);
 		this.save();
 	}
+	
+	public long getUsedSpaceBytes() {		
+		//TODO: this properly
+		long sum = 0;
+		return sum;
+	}
+	
+	public String getUsedSpace() {
+		return Util.getBestRate(getUsedSpaceBytes());
+	}
 
+	/* Getters and Setters */
 	public String getDisplayName() {
 		return StringUtils.isEmpty(this.displayName) ? this.emailAddress : this.displayName;
 	}
@@ -100,6 +112,9 @@ public class User extends ModelBase {
 	}
 
 	public Plan getPlan() {
+		if (plan != null) {
+			plan.get();
+		}
 		return plan;
 	}
 

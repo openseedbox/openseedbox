@@ -12,7 +12,7 @@
 		#{get "moreScripts" /}
 	</head>
 	<body style="padding-top:70px;">
-		<div class="navbar navbar-fixed-top">
+		<div id="main-menu" class="navbar navbar-fixed-top">
 			<div class="navbar-inner">
 				<div class="container">
 					<a id="logo" class="brand" href="@{Client.index()}"><img src="#{asset.url '/images/top-logo.png' /}" /></a>
@@ -22,17 +22,17 @@
 						#{/if}
 					</ul>
 					<ul class="nav pull-right">
-						#{if (currentUser)}
+						#{if (currentUser)}						
 							<li>
-								<img src="${currentUser.avatarUrl}" style="padding-top:12px; height:45px;" />
+								<a href="@{Account.index}"><img id="avatar" src="${currentUser.avatarUrl}" /></a>
 							</li>
 							<li>
-								<a href="@{Accounts.plans()}">${currentUser.displayName}</a>
+								<a href="@{Account.index}">${currentUser.displayName}</a>
 							</li>
-							<li><a href="@{Auth.logout()}">Logout</a></li>
+							<li><a href="@{Auth.logout}">Logout</a></li>
 						#{/if}
 						#{else}
-							<li><a href="@{Auth.login()}">Login</a></li>
+							<li><a href="@{Auth.login}">Login</a></li>
 						#{/else}
 					</ul>
 				</div>
@@ -41,7 +41,7 @@
 		<div id="container" class="container" style="padding-top: 20px;">
 			<div id="flash-error" class="alert alert-error #{ifError "general"}#{/ifError}#{else}hide#{/else}">
 				<a class="close" data-dismiss="alert" href="#">&times;</a>
-				<h3 id="flash-error-heading" class="alert-heading">An error occured:</h3>
+				<h4 id="flash-error-heading" class="alert-heading">An error occured:</h4>
 				<span id="flash-error-content">
 					#{ifError "general"}#{error "general" /}#{/ifError}
 				</span>
@@ -49,7 +49,7 @@
 			#{if (flash.warning)}
 			<div id="flash-warning" class="alert alert-warning">
 				<a class="close" data-dismiss="alert" href="#">&times;</a>
-				<h3 id="flash-success-heading" class="alert-heading">Warning</h3>
+				<h4 id="flash-success-heading" class="alert-heading">Warning</h4>
 				<span id="flash-message-content">
 					${flash.warning}
 				</span>
@@ -58,24 +58,12 @@
 			#{if (flash.message)}
 			<div id="flash-message" class="alert alert-success">
 				<a class="close" data-dismiss="alert" href="#">&times;</a>
-				<h3 id="flash-success-heading" class="alert-heading">Success:</h3>
+				<h4 id="flash-success-heading" class="alert-heading">Success:</h4>
 				<span id="flash-message-content">
 					${flash.message}
 				</span>
 			</div>
 			#{/if}
-			*{
-			#{if (currentUser)}			
-				%{ def messages = currentUser.getUnreadMessages(); %}
-				#{list items:messages, as:"message"}
-				<div class="user-message alert #{if (message.state == models.UserMessage.State.MESSAGE)}alert-success#{/if}#{else}alert-error#{/else}">
-					<a class="close" data-dismiss="alert" href="#" data-alert-id="${message.id}">&times;</a>
-					<h3 class="alert-heading">${message.heading}</h3>
-					<span>${message.message.raw()}</span>
-					[<a class="close-link" href="#" data-dismiss="alert" data-alert-id="${message.id}">Dismiss</a>]
-				</div>
-				#{/list}
-			#{/if}}*		
 			<div class="clearfix"></div>
 			#{doLayout /}
 		</div>
@@ -100,7 +88,16 @@
 				ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
 				var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
 			})();
+			</script>
 		#{/if}
-		</script>		
+		<style type="text/css">			
+			#main-menu .nav a {
+				line-height: 41px;
+			}
+			#avatar {
+				height: 40px;
+				margin-top: -8px;
+			}
+		</style>
 	</body>
 </html>

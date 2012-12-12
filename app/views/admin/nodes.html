@@ -6,34 +6,37 @@
 </style>
 <h2>Nodes</h2>
 #{if (nodes.size() > 0)}
-<table id="nodes" class="table table-bordered table-condensed">
+<table id="nodes" class="table table-condensed">
 	<tr>
 		<th>Name</th>
-		<th>IP Address</th>
+		<th>IP Address</th>		
 		<th style="width:20%;">Uptime</th>
 		<th>Free Space</th>
 		<th>Used Space</th>
 		<th>Active</th>
+		<th>Backend Up</th>
 		<th>Action</th>
 	</tr>
 #{list items:nodes, as:"node"}
 	<tr class="node-line" data-node-id="${node.id}">
-		<td><a href="https://${node.ipAddress}/openseedbox-server/status.php" target="_blank">${node.name}</a></td>
+		<td><a href="${com.openseedbox.Config.nodeAccessType}://${node.ipAddress}:${node.port}/" target="_blank">${node.name}</a></td>
 		<td>${node.ipAddress}</td>
 		<td class="node-uptime"><img src="#{asset.ajax /}" /></td>
 		<td class="node-free-space"></td>
 		<td class="node-used-space"></td>
 		<td>
 			#{if (node.active)}
-				<span style="color:green;">Yes</span>
+				<span style="color:green;">yes</span>
 			#{/if}
 			#{else}
-				<span style="color:red;">No</span>
+				<span style="color:red;">no</span>
 			#{/else}
 		</td>
+		<td class="node-backend-up"></td>
 		<td>			
-			<a class="btn btn-primary btn-small" href="@{Admin.editNode(node.id)}">Edit</a>
-			<a class="btn btn-danger btn-small pull-right" href="@{Admin.deleteNode(node.id)}">Delete</a>
+			<a class="btn btn-small" href="@{Admin.restartBackend(node.id)}"><i class="icon-retweet"></i></a>
+			<a class="btn btn-small" href="@{Admin.editNode(node.id)}"><i class="icon-edit"></i></a>
+			<a class="btn btn-danger btn-small" href="@{Admin.deleteNode(node.id)}"><i class="icon-remove"></i></a>
 		</td>
 	</tr>
 #{/list}
@@ -42,19 +45,9 @@
 #{else}
 	No nodes have been added yet.
 #{/else}
-<div class="form-actions">
-	#{if nodes.size() > 0}
-		<a href="@{Admin.editNode}" class="btn btn-primary">Create new Node</a>
-	#{/if}
-	#{else}
-		<a href="@{Admin.updateBackendConfig(true)}" class="btn btn-primary">Create new Node</a>
-	#{/else}
-	<a class="btn pull-right" href="@{Admin.updateBackendConfig}">Update Backend Config</a>
+<div class="form-actions">	
+		<a href="@{Admin.createNode}" class="btn btn-primary">Create new Node</a>	
 </div>
-#{if nodes.size() > 0}
-	<h2>Actions for All Nodes</h2>
-	<a class="btn btn-primary" href="@{Admin.runPrepareScript}">Run prepare script on all nodes</a>
-#{/if}
 <script type="text/javascript">
 	$(document).ready(function() {
 		$(".node-line").each(function() {
@@ -62,15 +55,18 @@
 			var self = this;
 			$.getJSON("@{Admin.nodeStatus}?ext=json", { "id" : id }, function(data) {
 				if (data.success) {
-					data = data.data;
-					if (data.isReachable) {
-						$(self).find(".node-uptime").html(data.uptime);
-						$(self).find(".node-free-space").html(data.freeSpaceGb + "GB");
-						$(self).find(".node-used-space").html(data.usedSpaceGb + "GB");
-					} else {
-						$(self).find(".node-uptime").html("<span class='error'>Node is unreachable.</span>");
-					}		
+					data = data.data;					
+					$(self).find(".node-uptime").html(data.uptime);
+					$(self).find(".node-free-space").html(parseInt(data['free-space-bytes'] / (1024 * 1024 * 1024)) + "GB");
+					$(self).find(".node-used-space").html(parseInt(data['used-space-bytes'] / (1024 * 1024 * 1024)) + "GB");	
+					var running = data['is-backend-running'];					
+					var html = (!running) ? "<span class='text-error'>no</span>" : "<span class='text-success'>yes</span>";
+					$(self).find(".node-backend-up").html(html);					
+				} else {
+					$(self).find(".node-uptime").html("<span class='text-error'>Error: " + data.error + "</span>");
 				}
+			}).error(function() {
+				
 			});
 		});
 	});

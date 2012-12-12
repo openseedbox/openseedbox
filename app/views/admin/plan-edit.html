@@ -1,21 +1,28 @@
 #{extends "admin/index.html" /}
-#{if plan == null}
-	<h2>Create new Plan</h2>
+#{if plan}
+	<h2>Editing Plan '${plan.name}'</h2>
 #{/if}
 #{else}
-	<h2>Editing plan ${plan?.name}</h2>
+	<h2>Create new Plan</h2>
 #{/else}
 <p>
 <form method="post" class="form-horizontal" action="@{Admin.updatePlan}">
-	#{form.hidden name:"plan.id", value:plan?.id /}
+	#{if plan}
+		#{form.hidden name:"plan.id", value:plan?.id /}
+	#{/if}
 	#{form.text name:"plan.name", value:plan?.name, label:"Plan Name" /}
-	#{form.text name:"plan.maxDiskspaceGb", value:plan?.maxDiskspaceGb, label:"Max. Diskspace (GB)" /}
-	#{form.text name:"plan.maxActiveTorrents", value:plan?.maxActiveTorrents, label:"Max. Active Torrents", help:"(-1 for unlimited)" /}
+	#{form.text name:"plan.maxDiskspaceGb", value:plan?.maxDiskspaceGb, label:"Max. Diskspace (GB)", css_class:"input-mini" /}
+	#{form.text name:"plan.maxActiveTorrents", value:plan?.maxActiveTorrents, label:"Max. Active Torrents", help:"(-1 for unlimited)", css_class:"input-mini" /}
 	#{form.text name:"plan.monthlyCost", value:plan?.monthlyCost, label:"Monthly Cost" /}
+	#{form.text name:"plan.totalSlots", value:plan?.totalSlots, label:"Total Slots Available", css_class:"input-small" /}
 	#{form.checkbox name:"plan.visible", value:plan?.visible, label:"Visible to Customers" /}
-	%{ buttons = (plan == null) ?
-			[ [ label:"Create new Plan", value:"create" ], [ label:"Cancel", value:"cancel" ] ] :
-			[ [ label:"Update Plan", value:"update" ], [ label:"Cancel", value:"cancel" ] ]}%
-	#{form.actions buttons: buttons /}
+	<div class="form-actions">
+		#{if plan}
+			<input class="btn btn-primary" type="submit" value="Update Plan" />
+		#{/if}
+		#{else}
+			<input class="btn btn-primary" type="submit" value="Create new Plan" />
+		#{/else}
+	</div>
 </form>
 </p>

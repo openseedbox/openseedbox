@@ -8,7 +8,7 @@ import play.data.validation.Email;
 import play.data.validation.Valid;
 import play.mvc.Before;
 
-public class Accounts extends Base {
+public class Account extends Base {
 	
 	@Before
 	public static void checkLoggedIn() {

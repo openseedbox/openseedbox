@@ -1,63 +1,55 @@
 package models;
 
-import com.openseedbox.code.Util;
-import com.jcraft.jsch.Channel;
-import com.jcraft.jsch.ChannelExec;
-import com.jcraft.jsch.ChannelSftp;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
-import com.jcraft.jsch.SftpException;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.InetAddress;
-import java.text.DecimalFormat;
-import javax.persistence.Column;
-import javax.persistence.Table;
-import models.Node.NodeStatus;
-import org.apache.commons.io.FilenameUtils;
+import com.google.gson.Gson;
+import com.openseedbox.Config;
+import com.openseedbox.backend.INodeStatus;
+import com.openseedbox.backend.ITorrentBackend;
+import com.openseedbox.backend.NodeStatus;
+import com.openseedbox.backend.node.NodeBackend;
+import com.openseedbox.code.MessageException;
+import play.data.validation.CheckWith;
 import play.data.validation.Required;
-import play.db.jpa.Model;
+import play.libs.WS;
+import play.libs.WS.HttpResponse;
+import play.libs.WS.WSRequest;
+import siena.Column;
+import siena.Table;
+import validation.IsWholeNumber;
 
-@Table(name="node")
-public class Node extends Model {
+@Table("node")
+public class Node extends ModelBase {
 
-	@Required
-	private String name;
+	@Required private String name;
 	
-	@Required
-	@Column(name="ip_address")
-	private String ipAddress;
+	@Required @Column("ip_address") private String ipAddress;
 	
-	@Required
-	private String username;
+	@Required @CheckWith(IsWholeNumber.class) private String port;
 	
-	@Required
-	private String password;
-	
-	@Required
-	@Column(name="root_password")
-	private String rootPassword;
-	
+	@Required @Column("api_key") private String apiKey;
+		
 	private boolean active;
 	
-	@Column(name="backend_class")
-	private String backendClass;
-	
-	public NodeStatus getNodeStatus() {
-		NodeStatus ns = new NodeStatus();
-		ns.setReachable(this.isReachable());
-		if (ns.isReachable()) {
-			ns.setUptime(getUptime());
-			ns.setFreeSpaceGb(Double.parseDouble(Util.stripNonNumeric(getFreeSpace())));
-			ns.setTotalSpaceGb(Double.parseDouble(Util.stripNonNumeric(getTotalSpace())));
-			ns.setStorageDirectoryWritable(storageDirectoryIsWritable());
+	public INodeStatus getNodeStatus() {
+		try {
+			HttpResponse res = getWebService("/status").get();
+			if (res.success()) {			
+				INodeStatus status = new Gson().fromJson(res.getJson().getAsJsonObject().get("data"), NodeStatus.class);
+				return status;
+			}	
+		} catch (Exception ex) {
+			if (ex.getMessage().contains("Connection refused")) {
+				throw new MessageException("Connection refused");
+			}
+			throw new MessageException(ex.getMessage());
 		}
-		return ns;
+		return null;
 	}
 	
+	public ITorrentBackend getNodeBackend() {
+		return new NodeBackend(this);
+	}
+	
+	/*
 	public void writeFileToNode(String data, String destinationLocation)
 			throws JSchException, IOException, SftpException {
 		writeFileToNode(data, destinationLocation, 0644);
@@ -204,17 +196,19 @@ public class Node extends Model {
 		BackendConfig bc = Settings.getBackendConfig();
 		String res = executeCommandSafe("if [ -w " + bc.getBaseFolder() +
 				  " ]; then echo 'yes'; else echo 'no'; fi");
-		return res.trim().equals("yes");*/
+		return res.trim().equals("yes");*//*
+	}*/
+	
+	public WSRequest getWebService(String action) {		
+		if (!action.startsWith("/")) {
+			action = "/" + action;
+		}
+		return WS.url("%s://%s:%s%s", Config.getNodeAccessType(), this.ipAddress, this.port, action)
+				  .setParameter("ext", "json")
+				  .setParameter("api_key", this.apiKey);
 	}
 	
 	/* Getters and Setters */
-	public String getRootPassword() {
-		return rootPassword;
-	}
-
-	public void setRootPassword(String rootPassword) {
-		this.rootPassword = rootPassword;
-	}
 
 	public String getName() {
 		return name;
@@ -232,22 +226,6 @@ public class Node extends Model {
 		this.ipAddress = ipAddress;
 	}
 
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
-
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
-	}
-
 	public boolean isActive() {
 		return active;
 	}
@@ -256,80 +234,27 @@ public class Node extends Model {
 		this.active = active;
 	}
 
-	public String getBackendClass() {
-		return backendClass;
+	public String getPort() {
+		return port;
 	}
 
-	public void setBackendClass(String backendClass) {
-		this.backendClass = backendClass;
+	public void setPort(String port) {
+		this.port = port;
 	}
+
+	public String getApiKey() {
+		return apiKey;
+	}
+
+	public void setApiKey(String apiKey) {
+		this.apiKey = apiKey;
+	}	
 	
 	/* End Getters and Setters */
 	
-	public class NodeStatus {
-		
-		private double freeSpaceGb;
-		private double totalSpaceGb;
-		private boolean storageDirectoryWritable;
-		private boolean isReachable;
-		private String uptime;
-		private double usedSpaceGb;
-		
-		public double getUsedSpaceGb() {
-			return usedSpaceGb;
-		}
-		
-		private void calculateUsedSpaceGb() {
-			DecimalFormat df = new DecimalFormat("#.##");
-			usedSpaceGb = Double.valueOf(df.format(totalSpaceGb - freeSpaceGb));
-		}
-		
-		public double getFreeSpaceGb() {
-			return freeSpaceGb;
-		}
-
-		public void setFreeSpaceGb(double freeSpaceGb) {
-			this.freeSpaceGb = freeSpaceGb;
-			calculateUsedSpaceGb();
-		}
-
-		public double getTotalSpaceGb() {
-			return totalSpaceGb;
-		}
-
-		public void setTotalSpaceGb(double totalSpaceGb) {
-			this.totalSpaceGb = totalSpaceGb;
-			calculateUsedSpaceGb();
-		}
-
-		public boolean isStorageDirectoryWritable() {
-			return storageDirectoryWritable;
-		}
-
-		public void setStorageDirectoryWritable(boolean storageDirectoryWritable) {
-			this.storageDirectoryWritable = storageDirectoryWritable;
-		}
-
-		public String getUptime() {
-			return uptime;
-		}
-
-		public void setUptime(String uptime) {
-			this.uptime = uptime;
-		}
-
-		public boolean isReachable() {
-			return isReachable;
-		}
-
-		public void setReachable(boolean isReachable) {
-			this.isReachable = isReachable;
-		}
-
-	}
-	
+	/*
 	public interface ISshOutputReporter {
 		public void onOutputLine(String line);
-	}
+	}*/
 
 }

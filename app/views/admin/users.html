@@ -1,82 +1,39 @@
 #{extends "admin/index.html" /}
+<style type="text/css">
+	#plans td {
+		vertical-align: middle;
+	}
+</style>
 <h2>Users</h2>
-<form method="get" action="">
-#{form.dropdown label:"Filter by Node:", name:"node_filter", value:node_filter, options:nodes, name_str:"name", value_str:"id"/}
-<button type="submit" class="btn btn-success">Filter</button>
-</form>
-<table class="table table-bordered">
+<table class="table table-condensed">
 	<tr>
 		<th>Email Address</th>
-		<th>Node</th>
+		<th>Plan</th>
 		<th>Available</th>
-		<th>Used</th>
-		<th>Status</th>
-		<th>Password</th>
-		<th>Port</th>
-		<th width="20%">Action</th>
+		<th>Used</th>					
+		<th>Action</th>
 	</tr>
 	#{list items:users, as:"user"}
-	%{ def stats = user.getUserStats()
-	   def transmission = user.getTransmission()
-	   def node = user.getNode()
-	   def account = user.getPrimaryAccount()
-	   def plan = account?.getPlan()
-	   def hasPlanAndNode = user.hasPlanAndNode()
-	   def transmissionIsRunning = false;
-	   def transmissionError = "";
-	   try {
-		transmissionIsRunning = transmission?.isRunning()
-	   } catch (ex) {
-		transmissionIsRunning = false;
-		transmissionError = ex.message;
-	   }
-	   }%
 	<tr>
 		<td>${user.emailAddress}</td>
 		<td>
-			#{if (hasPlanAndNode)}
-			<a target="_blank" href="http://${user.emailAddress}:${account.getTransmissionPassword()}@${node?.ipAddress}:${account?.getTransmissionPort()}/">${node?.name}</a>
-			#{/if}
-		</td>
-		<td>${plan?.maxDiskspaceGb} GB</td>
-		<td>${stats?.usedSpaceGb} GB</td>
-		<td>
-			#{if (hasPlanAndNode)}
-				#{if (transmissionIsRunning)}
-					<span class="success">Running</span>
-				#{/if}
-				#{else}
-					#{if (transmissionError)}
-						<span class="error">${transmissionError}</span>
-					#{/if}
-					#{else}
-						<span class="error">Stopped</span>
-					#{/else}
-				#{/else}
+			#{if user.plan}
+				${user.plan.name}
 			#{/if}
 			#{else}
-				<span>Unknown</span>
+				<span class="text-error">Not on a plan</span>
 			#{/else}
 		</td>
 		<td>
-			#{if (hasPlanAndNode)}${account.getTransmissionPassword()}#{/if}
-		</td>
-		<td>
-			#{if (hasPlanAndNode)}${account.transmissionPort}#{/if}</td>
-		<td>
-			<a class="btn btn-primary" href="@{Admin.editUser(user.id)}">Edit</a>
-			#{if (hasPlanAndNode)}
-				#{if (!transmissionError)}
-					#{if (transmissionIsRunning)}
-						<a class="btn btn-error" href="@{Admin.stopTransmission(user.id)}">Stop</a>
-						<a class="btn" href="@{Admin.restartTransmission(user.id)}">Restart</a>
-					#{/if}
-					#{else}
-						<a class="btn btn-success" href="@{Admin.startTransmission(user.id)}">Start</a>
-					#{/else}
-				#{/if}
+			#{if user.plan}
+				${user.plan.maxDiskspaceGb} GB
 			#{/if}
 		</td>
+		<td>${user.usedSpace}</td>
+		<td>
+			<a class="btn btn-primary btn-small" href="@{Admin.editUser(user.id)}"><i class="icon-edit"></i></a>
+			<a class="btn btn-danger btn-small" href="@{Admin.deleteUser(user.id)}"><i class="icon-remove"></i></a>
+		</td>
 	</tr>
-	#{/list}
+	#{/list}	
 </table>
