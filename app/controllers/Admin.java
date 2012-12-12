@@ -2,19 +2,15 @@ package controllers;
 
 import com.openseedbox.code.MessageException;
 import com.openseedbox.code.Util;
-import java.io.File;
-import java.math.BigDecimal;
+import com.openseedbox.code.Util.SelectItem;
+import com.openseedbox.mvc.ISelectListItem;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import models.*;
-import models.Node.ISshOutputReporter;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
 import play.Play;
 import play.data.validation.Valid;
 import play.data.validation.Validation;
-import play.db.jpa.JPA;
 import play.mvc.Before;
 
 public class Admin extends Base {
@@ -36,8 +32,7 @@ public class Admin extends Base {
 		long nodeCount = Node.count();
 		long userCount = User.count();
 		long torrentCount = Torrent.count();
-		long torrentCountAverage =
-				  ((BigDecimal) JPA.em().createNativeQuery("SELECT IFNULL(AVG(torrent_count), 0) FROM (SELECT count(id) as torrent_count FROM torrent GROUP BY user_id) s").getSingleResult()).longValue();
+		int torrentCountAverage = -1;//TODO - figure out how to do this in Siena
 		renderTemplate("admin/stats.html", active, nodeCount, userCount, torrentCount,
 				  torrentCountAverage);
 	}
@@ -47,293 +42,121 @@ public class Admin extends Base {
 		List<Node> nodes = Node.all().fetch();
 		renderTemplate("admin/nodes.html", active, nodes);
 	}
+	
+	public static void createNode() {
+		String active = "nodes";
+		renderTemplate("admin/node-edit.html", active);
+	}
 
-	public static void editNode(long id) {
+	public static void editNode(long id) {		
 		String active = "nodes";
 		Node node = Node.findById(id);		
 		renderTemplate("admin/node-edit.html", active, node);
 	}
 
 	public static void updateNode(@Valid Node node) {
-		if (!Validation.hasErrors()) {
-			boolean isNew = node.getId() == null;
-			node.save();
-			if (isNew) {
-				prepareNode(node.getId());
-			}
+		if (!Validation.hasErrors()) {			
+			node.insertOrUpdate();
+			setGeneralMessage("Node '" + node.getName() + "' created/updated successfully.");
 			nodes();
 		}				
-		String active = "nodes";
-		renderTemplate("admin/node-edit.html", active, node);
+		Validation.keep();
+		params.flash();
+		if (node.isNew()) {
+			createNode();
+		}
+		editNode(node.getId());
 	}
 
-	public static void deleteNode(Long id) {
+	public static void deleteNode(long id) {
 		Node n = Node.findById(id);
 		n.delete();
+		setGeneralMessage("Node '" + n.getName() + "' deleted successfully.");
 		nodes();
-	}
-
-	public static void users(Long node_filter) throws MessageException {
-		/*
-		 String active = "users";
-		 if (node_filter == null) {
-		 node_filter = -1L;
-		 }
-		 List<User> all_users = User.all().fetch();
-		 List<User> users = new ArrayList<User>();
-		 if (node_filter > 0) {
-		 for (User u : all_users) {
-		 Node n = u.getNode();
-		 if (n != null && n.id == node_filter) {
-		 users.add(u);
-		 }
-		 }
-		 } else {
-		 users = all_users;
-		 }
-		 List<Node> nodes = Node.all().fetch();
-		 Node dummy = new Node();
-		 dummy.id = -1L;
-		 dummy.name = "All Nodes";
-		 nodes.add(0, dummy);
-		 renderTemplate("admin/users.html", active, users, nodes, node_filter);*/
 	}
 
 	public static void plans() {
 		String active = "plans";
-		List<Plan> plans = null;// Plan.all().order("monthlyCost").fetch();
+		List<Plan> plans = Plan.all().order("monthlyCost").fetch();
 		renderTemplate("admin/plans.html", active, plans);
 	}
-
-	public static void editPlan(Plan plan) {
+	
+	public static void createPlan() {
 		String active = "plans";
+		renderTemplate("admin/plan-edit.html", active);
+	}
+
+	public static void editPlan(long id) {
+		String active = "plans";
+		Plan plan = Plan.findById(id);
 		renderTemplate("admin/plan-edit.html", active, plan);
 	}
 
 	public static void updatePlan(@Valid Plan plan) {
-		if (params.get("button").equals("cancel")) {
-			plans();
-		}
-		if (params.get("plan.visible") == null) {
-			plan.setVisible(false);
-		}
 		if (!Validation.hasErrors()) {
-			plan.save();
+			plan.insertOrUpdate();
+			setGeneralMessage("Plan '" + plan.getName() + "' created/updated successfully.");
 			plans();
 		}
 		Validation.keep();
-		editPlan(plan);
+		params.flash();
+		if (plan.isNew()) {
+			createPlan();
+		}
+		editPlan(plan.getId());
 	}
 
-	public static void deletePlan(Long id) {
-		/*
+	public static void deletePlan(long id) {		
 		 Plan p = Plan.findById(id);
 		 p.delete();
-		 plans();*/
+		 setGeneralMessage("Plan '" + p.getName() + "' deleted successfully.");
+		 plans();
 	}
+	
+	public static void users() {		
+		 String active = "users";
+		 List<User> users = User.all().fetch();		 
+		 renderTemplate("admin/users.html", active, users);
+	}	
 
-	public static void editUser(long id) {
-		/*
+	public static void editUser(long id) {		
 		 String active = "users";
 		 User user = User.findById(id);
-		 List<Plan> plans = Plan.getVisiblePlans();
-		 List<Node> nodes = Node.all().filter("active", true).fetch();
-		 renderTemplate("admin/user-edit.html", active, user, plans, nodes);*/
+		 List<Plan> all_plans = Plan.all().filter("visible", true).fetch();		 
+		 List<ISelectListItem> plans = new ArrayList<ISelectListItem>();
+		 plans.add(new SelectItem("None", "", false));
+		 plans.addAll(Util.toSelectItems(all_plans, "id", "name"));		 
+		 renderTemplate("admin/user-edit.html", active, user, plans);
 	}
 
-	public static void editUserPost(User u, long plan_id, long node_id) throws MessageException {
-		/*
-		 if (params.get("button").equals("cancel")) {
-		 users();
-		 }
-		 User us = User.findById(u.id);
-		 us.isAdmin = (params.get("u.isAdmin") != null);
-		 Account a = us.getPrimaryAccount();
-		 Node n = Node.findById(node_id);
-		 us.setNode(n);
-		 if (a != null) {
-		 a.transmissionPort = Account.getAvailableTransmissionPort(n);
-		 a.save();
-		 }
-		 us.save();
-		 users();*/
-	}
-
-	public static void slots() {
-		/*
-		 String active = "slots";
-		 List<FreeSlot> slots = FreeSlot.all().fetch();
-		 render("admin/slots.html", active, slots);*/
-	}
-
-	public static void editSlot(long slotId) {
-		/*
-		 String active = "slots";
-		 List<Node> nodes = Node.all().filter("active", true).fetch();
-		 List<Plan> plans = Plan.getVisiblePlans();
-		 FreeSlot slot = FreeSlot.findById(slotId);
-		
-		 render("admin/slot-edit.html", active, slot, nodes, plans);*/
-	}
-
-	/*
-	 public static void updateSlot(@Valid FreeSlot slot) {
-	 if (!Validation.hasErrors()) {
-	 try {
-	 if (slot.id == null) {
-	 slot.insert();
-	 } else {
-	 slot.save();
-	 }
-	 slots();
-	 } catch (SienaException ex) {
-	 if (ex.getMessage().contains("Duplicate entry")) {
-	 Validation.addError("slot.node", "Plan/Node combination already exists!");
-	 }				
-	 }
-	 }
-	 Validation.keep();
-	 editSlot(slot.id);
-	 }
-	
-	 public static void deleteSlot(Long id) {
-	 FreeSlot.findById(id).delete();
-	 slots();
-	 }
-	
-	 public static void stopTransmission(Long userId) {
-	 User u = User.getByKey(userId);
-	 Transmission t = u.getTransmission();
-	 try {
-	 if (t != null) {
-	 t.stop();
-	 }
-	 } catch (MessageRuntimeException ex) {
-	 addGeneralError(ex);
-	 }
-	 Validation.keep();
-	 users();
-	 }
-	
-	 public static void startTransmission(Long userId) {
-	 User u = User.getByKey(userId);
-	 Transmission t = u.getTransmission();
-	 try {
-	 if (t != null) {
-	 t.start();
-	 }
-	 setGeneralMessage("Start request sent! Refresh the page in a few moments to see the status change.");
-	 } catch (MessageRuntimeException ex) {
-	 addGeneralError(ex);
-	 }
-	 Validation.keep();
-	 users();
-	 }	
-	
-	 public static void restartTransmission(Long userId) {
-	 User u = User.getByKey(userId);
-	 Transmission t = u.getTransmission();
-	 try {
-	 if (t != null) {
-	 t.restart();
-	 }
-	 } catch (MessageRuntimeException ex) {
-	 Validation.addError("general", ex.getMessage());
-	 }
-	 Validation.keep();
-	 users();
-	 }*/
-	/*
-	public static void updateBackendConfig(boolean redirectToCreateNode) {
-		String active = "nodes";
-		BackendConfig config = Settings.getBackendConfig();
-		render("admin/update-backend-config.html", active, config, redirectToCreateNode);
-	}
-
-	public static void updateBackendConfigPost(@Valid BackendConfig config, String blocklistUrls, boolean redirectToCreateNode) {
-		if (!validation.errorsMap().isEmpty()) {
-			Validation.keep();
-			updateBackendConfig(redirectToCreateNode);
-		} else {
-			if (!StringUtils.isEmpty(blocklistUrls)) {
-				config.setBlocklistUrls(Arrays.asList(blocklistUrls.split("\n")));
-			} else {
-				config.setBlocklistUrls(new ArrayList<String>());
-			}
-			Settings.storeBackendConfig(config);
-			setGeneralMessage("Backend config updated.");
+	public static void updateUser(@Valid User user) {
+		if (!Validation.hasErrors()) {
+			user.update();
+			setGeneralMessage("User updated successfully.");
+			users();
 		}
-		if (redirectToCreateNode) {
-			editNode(-1);
-		}
+		Validation.keep();
+		params.flash();
+		editUser(user.getId());
+	}
+	
+	public static void deleteUser(long id) {
+		User u = User.findById(id);
+		u.delete();
+		//TODO: delete all UserTorrents and invoices and shit
+		setGeneralMessage("User '" + u.getEmailAddress() + "' deleted.");
+		users();
+	}
+	
+	public static void restartBackend(long id) {
+		Node n = Node.getByKey(id);
+		n.getNodeBackend().restart();
+		setGeneralMessage("Restart request sent successfully!");
 		nodes();
-	}*/
+	}
 	
 	public static void nodeStatus(long id) {
 		Node n = Node.findById(id);
 		result(n.getNodeStatus());
-	}
-
-	public static void runPrepareScript() {
-	}
-
-	public static void prepareNode(long id) {
-		Node node = Node.findById(id);
-		String active = "nodes";
-		render("admin/node-prepare.html", node, active);
-	}
-
-	public static void prepareNodeIframe(long id) {
-		Node n = Node.findById(id);
-		write("Checking if node is reachable...");
-		if (!n.getNodeStatus().isReachable()) {
-			writeLine(" it isnt. Aborting.");
-			return;
-		}
-		writeLine(" it is.");
-		writeLine(String.format("Running prepare script on node '%s'", n.getName()));
-		try {
-			File hostkey = Play.getFile("conf/host.key");
-			File hostcert = Play.getFile("conf/host.cert");
-			write("Writing prepare-node.sh...");
-			n.writeFileToNode(getPrepareNodeScript(n),
-					  String.format("/home/%s/prepare-node.sh", n.getUsername()), 0755);
-			writeLine("done.");
-			write("Transferring host.key...", hostkey.getAbsolutePath());
-			n.transferFileToNode(hostkey, "~/");
-			writeLine("done.");
-			write("Transferring host.cert...", hostcert.getAbsolutePath());
-			n.transferFileToNode(hostcert, "~/");
-			writeLine("done.");
-			String command = String.format("echo %s | sudo -S /home/%s/prepare-node.sh 2>&1",
-					  Util.shellEscape(n.getRootPassword()), Util.shellEscape(n.getUsername()));
-			writeLine("Executing '%s'", command);
-			n.executeCommand(command, new ISshOutputReporter() {
-				public void onOutputLine(String line) {
-					writeLine(line);
-				}
-			});
-		} catch (Exception ex) {
-			writeLine("Unable to transfer file to node: %s", Util.getStackTrace(ex));
-		}
-		writeLine("All done.");
-	}
-	
-	private static String getPrepareNodeScript(Node n) {
-		try {
-			String script = FileUtils.readFileToString(Play.getFile("conf/prepare-node.sh"));
-			/*BackendConfig bc = Settings.getBackendConfig();
-			script = script.replace("${config.completeFolder}", bc.getCompleteFolder());
-			script = script.replace("${config.incompleteFolder}", bc.getIncompleteFolder());
-			script = script.replace("${config.torrentFolder}", bc.getTorrentFolder());
-			script = script.replace("${config.baseFolder}", bc.getBaseFolder());
-			script = script.replace("${config.ipAddress}", n.getIpAddress());*/
-			return script;
-		} catch (Exception ex) {
-			throw new MessageException("Unable to get prepare node script. " + ex.getMessage());
-		}
-	}
-
-	public static void prepareNodeBackendIframe(long id) {
 	}
 }

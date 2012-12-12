@@ -1,10 +1,10 @@
 #{extends "admin/index.html" /}
 <h2>Edit user ${user.emailAddress}</h2>
-<form class="form-horizontal" action="@{Admin.editUserPost}" method="post">
-	#{form.hidden name:"u.id", value:user?.id /}
-	#{form.checkbox name:"u.isAdmin", value:user?.isAdmin, label:"Is Administrator" /}
-	#{form.dropdown name:"plan_id", value:user?.primaryAccount?.plan?.id, label:"Plan", options:plans, name_str:"name", value_str:"id" /}
-	#{form.dropdown name:"node_id", value:user?.primaryAccount?.node?.id, label:"Node", options:nodes, name_str:"name", value_str:"id" /}
-	#{form.actions buttons:[ [ label: "Update", value: "update" ],
-							 [ label: "Cancel", value: "cancel" ] ] /}
+<form class="form-horizontal" action="@{Admin.updateUser}" method="post">
+	#{form.hidden name:"user.id", value:user.id /}
+	#{form.checkbox name:"user.isAdmin", value:user.isAdmin, label:"Is Administrator" /}
+	#{form.dropdown name:"user.plan.id", value:user.plan?.id, label:"Plan", options:plans, name_str:"name", value_str:"id" /}	
+	<div class="form-actions">
+		<input class="btn btn-primary" value="Update User" type="submit" />
+	</div>
 </form>

@@ -18,8 +18,8 @@ GET /public/											staticDir:public
 * /admin/{action}										Admin.{action}
 
 #Account screens
-* /account/?											Accounts.index
-* /account/{action}									Accounts.{action}
+* /account/?											Account.index
+* /account/{action}									Account.{action}
 
 #API
 * /api/?													api.Api.index

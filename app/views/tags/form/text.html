@@ -1,3 +1,8 @@
+%{
+if (!_value) {
+	_value = flash.get(_name)
+}
+}%
 <div class="control-group #{ifError _name}error#{/ifError}">
 	<label class="control-label" for="${_name}">${_label}</label>
 	<div class="controls">

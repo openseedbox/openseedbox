@@ -28,17 +28,17 @@
 		<table class="table table-condensed table-hover">
 			<tr style="width:100%;">
 				<td>
-					<table class="no-table" style="width:100%;">
+					<table class="no-table torrent-info" style="width:100%;">
 						<tr>
-							<td colspan="3">
-								<h5 class="torrent-title">Some Really Cool Torrent With A Sweet Name <small>- Downloading, 82%</small></h5>
-								
+							<td colspan="4">
+								<h5 class="torrent-title pull-left">Some Really Cool Torrent With A Sweet Name <small>- Downloading, 82%</small></h5>
+								<h5 class="torrent-speed pull-right hide"><small>182kb/s down, 300kb/s up</small></h5>
 							</td>
 						</tr>
 						<tr>
 							<td style="width:5%;"><input class="torrent-checkbox" type="checkbox" /></td>
 							<td style="width:80%;">
-								<div class="progress progress-striped active">
+								<div class="progress torrent-progress progress-striped active">
 									<div class="bar bar-success" style="width:82%"></div>
 								</div>
 							</td>
@@ -48,16 +48,18 @@
 									<a class="btn btn-mini" href="#"><i class="icon-pause"></i></a>									
 									<a class="btn btn-mini" href="#"><i class="icon-remove"></i></a>
 								</div>									
-							</td>
+							</td>							
 						</tr>
 					</table>
 				</td>
 			</tr>
 			<tr style="width:100%;">
 				<td>
-					<table class="no-table" style="width:100%;">
+					<table class="no-table torrent-info" style="width:100%;">
 						<tr>
-							<td colspan="3"><h5 class="torrent-title">Another Really Cool Torrent With A Sweet Name <small>- Paused</small></h5></td>
+							<td colspan="3"><h5 class="torrent-title pull-left">Another Really Cool Torrent With A Sweet Name <small>- Paused</small></h5>													
+								<h5 class="torrent-speed pull-right hide"><small>182kb/s down, 300kb/s up</small></h5>						
+							</td>
 						</tr>
 						<tr>
 							<td style="width:5%;"><input class="torrent-checkbox" type="checkbox" /></td>
@@ -77,6 +79,32 @@
 					</table>
 				</td>
 			</tr>
+			<tr style="width:100%;">
+				<td>
+					<table class="no-table torrent-info" style="width:100%;">
+						<tr>
+							<td colspan="3"><h5 class="torrent-title pull-left">Blahdey Blah A Sweet Name <small>- Seeding, 300kb/s</small></h5>																					
+								<h5 class="hide pull-right"><small><a href="#" class="download-link">Download</a></small></h5>
+							</td>
+						</tr>
+						<tr>
+							<td style="width:5%;"><input class="torrent-checkbox" type="checkbox" /></td>
+							<td style="width:80%;">
+								<div class="progress progress-success">
+									<div class="bar" style="width:100%"></div>	
+								</div>								
+							</td>
+							<td style="width:15%;">
+								<div class="btn-group pull-right">
+									<a class="btn btn-mini" href="#"><i class="icon-info-sign"></i></a>
+									<a class="btn btn-mini" href="#"><i class="icon-play"></i></a>												
+									<a class="btn btn-mini" href="#"><i class="icon-remove"></i></a>
+								</div>									
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>			
 			<tr>
 				<td>
 					<div class="pull-right">
@@ -91,6 +119,16 @@
 .no-table tr, .no-table td {
 	border: 0 none;
 }
+.torrent-progress {
+	margin-bottom: 0px;
+}
+.torrent-speed h5 {
+	margin-left: 40px;
+}
+
+a.download-link, a.download-link:hover {
+	text-decoration: none;
+}
 </style>
 <script type="text/javascript">
 $(document).ready(function() {
@@ -99,6 +137,12 @@ $(document).ready(function() {
 	}).mouseout(function() {
 		$(".group .icon-minus").hide();
 	});
+	
+	$(".torrent-info").mouseover(function() {
+		$(this).find(".hide").show();
+	}).mouseout(function() {
+		$(this).find(".hide").hide();
+	});	
 	
 	$("i[rel=tooltip]").tooltip({
 		"title" : "Hey Ya!"

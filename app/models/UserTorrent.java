@@ -1,7 +1,9 @@
 package models;
 
+import java.sql.Connection;
 import siena.Column;
 import siena.Table;
+import siena.jdbc.JdbcPersistenceManager;
 
 @Table("torrent_group")
 public class UserTorrent extends ModelBase {
@@ -10,8 +12,13 @@ public class UserTorrent extends ModelBase {
 	private String groupName;
 	@Column("user_id") private User user;
 	private String hashString;
+	
+	public static int getAverageTorrentsPerUser() {
+		
+		return -1;
+	}
 
-	public String getGroupName() {
+	public String getGroupName() {		
 		return groupName;
 	}
 

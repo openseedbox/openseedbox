@@ -36,10 +36,6 @@ public class Plan extends ModelBase {
 		return totalSlots - used;
 	}
 	
-	public int getTotalSlots() {
-		return totalSlots;
- 	}
-	
 	public String getInvoiceLineName() {
 		return String.format("Seedbox Plan: %s", this.name);
 	}
@@ -93,5 +89,12 @@ public class Plan extends ModelBase {
 	public void setVisible(boolean visible) {
 		this.visible = visible;
 	}
-	
+
+	public int getTotalSlots() {
+		return totalSlots;
+	}
+
+	public void setTotalSlots(int totalSlots) {
+		this.totalSlots = totalSlots;
+	}	
 }
