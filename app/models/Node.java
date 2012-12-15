@@ -7,6 +7,8 @@ import com.openseedbox.backend.ITorrentBackend;
 import com.openseedbox.backend.NodeStatus;
 import com.openseedbox.backend.node.NodeBackend;
 import com.openseedbox.code.MessageException;
+import java.net.InetAddress;
+import java.util.List;
 import play.data.validation.CheckWith;
 import play.data.validation.Required;
 import play.libs.WS;
@@ -28,6 +30,11 @@ public class Node extends ModelBase {
 	@Required @Column("api_key") private String apiKey;
 		
 	private boolean active;
+	
+	public static Node getBestForNewTorrent() {
+		//TODO: work this out properly. For now, just use the first one
+		return Node.all().limit(1).get();
+	}
 	
 	public INodeStatus getNodeStatus() {
 		try {
@@ -169,7 +176,7 @@ public class Node extends ModelBase {
 		session.setPassword(this.password);
 		session.connect();
 		return session;
-	}
+	}*/
 	
 	private boolean isReachable() {
 		try {
@@ -178,26 +185,6 @@ public class Node extends ModelBase {
 			return false;
 		}
 	}	
-
-	private String getUptime() {
-		return executeCommandSafe("uptime");
-	}
-	
-	private String getFreeSpace() {
-		return executeCommandSafe("df -h / | grep /dev/ | awk '{print $4}'");
-	}
-	
-	private String getTotalSpace() {
-		return executeCommandSafe("df -h / | grep /dev/ | awk '{print $2}'");
-	}
-	
-	private boolean storageDirectoryIsWritable() {
-		return false;/*
-		BackendConfig bc = Settings.getBackendConfig();
-		String res = executeCommandSafe("if [ -w " + bc.getBaseFolder() +
-				  " ]; then echo 'yes'; else echo 'no'; fi");
-		return res.trim().equals("yes");*//*
-	}*/
 	
 	public WSRequest getWebService(String action) {		
 		if (!action.startsWith("/")) {
@@ -207,6 +194,18 @@ public class Node extends ModelBase {
 				  .setParameter("ext", "json")
 				  .setParameter("api_key", this.apiKey);
 	}
+	
+	public WSRequest getWebService(String action, String hash) {		
+		WSRequest req = getWebService(action);
+		req.setParameter("hash", hash);
+		return req;
+	}
+	
+	public WSRequest getWebService(String action, List<String> hashes) {		
+		WSRequest req = getWebService(action);
+		req.setParameter("hashes", hashes);
+		return req;
+	}	
 	
 	/* Getters and Setters */
 

@@ -1,6 +1,8 @@
 package models;
 
+import com.openseedbox.backend.ITorrent;
 import com.openseedbox.code.Util;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -9,7 +11,6 @@ import play.Play;
 import play.data.validation.Email;
 import play.data.validation.Max;
 import siena.Column;
-import siena.Query;
 import siena.Table;
 import siena.Unique;
 import siena.embed.Embedded;
@@ -28,7 +29,7 @@ public class User extends ModelBase {
 	@Max(32) @Column("api_key") private String apiKey;
 	@Column("plan_id") private Plan plan;
 	@Embedded private List<String> groups;
-
+	
 	public void generateApiKey() {
 		String salt = Play.configuration.getProperty("application.secret", "salt value");
 		String key = this.emailAddress + salt;
@@ -44,6 +45,26 @@ public class User extends ModelBase {
 	
 	public String getUsedSpace() {
 		return Util.getBestRate(getUsedSpaceBytes());
+	}
+	
+	public List<UserTorrent> getTorrents() {
+		List<UserTorrent> ut = UserTorrent.getByUser(this);
+		if (ut.isEmpty()) {
+			return ut;
+		}
+		List<String> hashes = new ArrayList<String>();
+		for (UserTorrent u : ut) {
+			hashes.add(u.getTorrentHash());
+		}
+		List<Torrent> all = Torrent.getByHash(hashes);
+		for (UserTorrent u : ut) {
+			for (Torrent t : all) {
+				if (u.getTorrentHash().equals(t.getTorrentHash())) {
+					u.setTorrent(t);
+				}
+			}
+		}
+		return ut;
 	}
 
 	/* Getters and Setters */
