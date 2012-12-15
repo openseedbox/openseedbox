@@ -1,17 +1,22 @@
 package controllers;
 
-import code.jobs.TorrentControlJob.TorrentAction;
-import code.jobs.TorrentControlJob.TorrentControlJobResult;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.openseedbox.backend.ITorrent;
+import com.openseedbox.backend.ITorrentBackend;
 import com.openseedbox.code.MessageException;
 import com.openseedbox.code.Util;
+import com.openseedbox.jobs.GenericJob;
+import com.openseedbox.jobs.GenericJobResult;
 import java.io.File;
 import java.util.*;
+import models.Node;
+import models.Torrent;
 import models.User;
+import models.UserTorrent;
 import org.apache.commons.lang.StringUtils;
-import play.cache.Cache;
+import play.Logger;
 import play.libs.F.Promise;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
@@ -59,41 +64,159 @@ public class Client extends Base {
 		render("client/index.html");
 	}
 	
-	public static void dismissMessage(long messageId) {
-		/*
-		UserMessage um = UserMessage.getByKey(messageId);
-		if (um != null) {
-			um.dismissDateUtc = new Date();
-			um.save();
-		}
-		result(true);*/
+	public static void update(String group) {
+		//this is intended to be invoked via ajax
+		List<UserTorrent> torrents = getCurrentUser().getTorrents();
+		String data = renderToString("client/torrent-list.html", Util.convertToMap(new Object[] { "torrents", torrents }));
+		result(data);
 	}
 	
-	public static void addTorrent(String urlOrMagnet, File fileFromComputer) {
-		/*
+	public static void addTorrent(final String urlOrMagnet, final File fileFromComputer) {		
 		if (StringUtils.isEmpty(urlOrMagnet) && fileFromComputer == null) {
 			setGeneralErrorMessage("Please enter a valid URL or magent link, or choose a valid file to upload.");
-		} else {
-			Account a = getActiveAccount();
-			Promise<AddTorrentJobResult> p = new AddTorrentJob(a, urlOrMagnet, fileFromComputer).now();
-			AddTorrentJobResult result = await(p);
-			if (result.hasError()) {
-				addGeneralError(result.error);
+		} else {					
+			final User u = getCurrentUser();
+			Promise<GenericJobResult> p = new GenericJob() {
+				@Override
+				public Object doGenericJob() {	
+					Node node = Node.getBestForNewTorrent();
+					ITorrentBackend backend = node.getNodeBackend();
+					//TODO: check that we dont already have the torrent somewhere in the system
+					ITorrent added = (fileFromComputer != null)
+							  ? backend.addTorrent(fileFromComputer)
+							  : backend.addTorrent(urlOrMagnet);
+					//put in database
+					
+					Torrent t = new Torrent();
+					t.setHashString(added.getTorrentHash());
+					t.setStatus(added.getStatus());
+					t.setName(added.getName());
+					t.setNode(node);
+					t.save();
+					UserTorrent ut = new UserTorrent();
+					ut.setUser(u);
+					ut.setTorrentHash(added.getTorrentHash());
+					ut.insert();	
+					return null;
+				}
+			}.now();					  
+			successOrError(p);
+		}		
+		index();
+	}
+	
+	public static void torrentInfo(String hash) {		
+		//torrent info is seeders, peers, files, tracker stats
+		final Torrent fromDb = Torrent.getByHash(hash);
+		Promise<GenericJobResult> p = new GenericJob() {
+
+			@Override
+			public Object doGenericJob() {
+				//trigger the caching of these objects, inside a job because the WS
+				//calls could take ages
+				fromDb.getPeers();
+				fromDb.getTrackers();
+				fromDb.getFiles();
+				return fromDb;
 			}
+			
+		}.now();
+		ITorrent torrent = (ITorrent) successOrError(p);
+		renderTemplate("client/torrent-info.html", torrent);
+	}		
+	
+	public static void action(String what, String hash, List<String> hashes) {
+		if (!StringUtils.isEmpty(what)) {
+			if (what.equals("start")) {
+				doTorrentAction(hash, hashes, TorrentAction.START);
+			} else if (what.equals("stop")) {
+				doTorrentAction(hash, hashes, TorrentAction.STOP);
+			} else if (what.equals("remove")) {
+				doTorrentAction(hash, hashes, TorrentAction.REMOVE);
+			}
+		} else {
+			setGeneralErrorMessage("Please specify an 'action'");
 		}
-		Validation.keep();
-		index();*/
+		index();
 	}
 	
-	public static void setActiveAccount(Long id, String returnTo) {
-		session.put("activeAccountId", id);
-		Cache.delete(getActiveAccountCacheKey()); //remove old active account from cache
-		//Account a = getActiveAccount();
-		//setGeneralMessage("Account changed to " + a.getDisplayName() + ".");
-		redirect(returnTo);
+	private enum TorrentAction { START, STOP, REMOVE }
+	private static void doTorrentAction(final String hash, final List<String> hashes, final TorrentAction action) {
+		final User user = getCurrentUser();
+		Promise<GenericJobResult> p = new GenericJob() {
+			@Override
+			public Object doGenericJob() {				
+				if (!StringUtils.isEmpty(hash)) {
+					UserTorrent ut = UserTorrent.getByUser(user, hash);
+					if (ut == null) {
+						setGeneralErrorMessage("User has no such torrent with hash: " + hash);
+						return null;
+					}
+					ITorrentBackend backend = ut.getTorrent().getNode().getNodeBackend();			
+					switch(action) {
+						case START:							
+							backend.startTorrent(hash);
+							break;
+						case STOP:
+							backend.stopTorrent(hash);
+							break;
+						case REMOVE:
+							backend.removeTorrent(hash);	
+							ut.delete();
+							removeTorrentsCompletelyIfRequired(hash);
+							break;
+					}			
+				} else if (hashes != null) {
+					List<UserTorrent> utList = UserTorrent.getByUser(user, hashes);
+					for (UserTorrent ut : utList) {
+						ITorrentBackend backend = ut.getTorrent().getNode().getNodeBackend();
+						switch(action) {
+							case START:
+								backend.startTorrent(hashes);
+								break;
+							case STOP:
+								backend.stopTorrent(hashes);
+								break;
+							case REMOVE:
+								backend.removeTorrent(hashes);
+								UserTorrent.batch().delete(utList);
+								removeTorrentsCompletelyIfRequired(hashes);
+								break;
+						}	
+					}			
+				} else {
+					setGeneralErrorMessage("Please specify a 'hash' or 'hashes'");
+				}		
+				return null;
+			}			
+		}.now();
+		successOrError(p);
 	}
 	
+	private static void removeTorrentsCompletelyIfRequired(String hash) {
+		List<String> l = new ArrayList<String>();
+		l.add(hash);			
+		removeTorrentsCompletelyIfRequired(l);
+	}
 	
+	private static void removeTorrentsCompletelyIfRequired(final List<String> hashList) {
+		Promise<GenericJobResult> p = new GenericJob() {
+			@Override
+			public Object doGenericJob() {
+				for(String hash : hashList) {
+					if (UserTorrent.getUsersWithTorrentCount(hash) == 0) {
+						Torrent to = Torrent.getByHash(hash);
+						to.getNode().getNodeBackend().removeTorrent(hash);
+						to.delete();
+					}
+				}
+				return null;
+			}			
+		}.now();
+		successOrError(p);
+	}	
+	
+	/*
 	public static void startTorrent(String torrentHash) {
 		handleTorrentControlRequest(torrentHash, TorrentAction.START);	
 	}
@@ -116,7 +239,7 @@ public class Client extends Base {
 	
 	public static void removeTorrents(String[] torrentHashes) {
 		handleTorrentControlRequest(torrentHashes, TorrentAction.REMOVE);
-	}	
+	}	*/
 	/*
 	public static void addTorrentGroup(String torrentHash, String group) throws MessageException {
 		Torrent t = getActiveAccount().getPrimaryUser().getTorrent(torrentHash);
@@ -155,7 +278,7 @@ public class Client extends Base {
 		result(true);		
 	}	*/
 	
-	public static void update(String group) {
+//	public static void update(String group) {
 		/*
 		Account a = getActiveAccount();
 		
@@ -189,16 +312,9 @@ public class Client extends Base {
 		res.put("user-stats", us);
 		res.put("client-tabs", ct);
 		result(res);*/
-	}
+//	}
 	
-	public static void renderTorrentInfo(String torrentHash) throws MessageException {
-		/*
-		//torrent info is seeders, peers, files, tracker stats
-		Promise<GetTorrentsJobResult> job = new GetTorrentsJob(getActiveAccount(), null, torrentHash).now();
-		GetTorrentsJobResult res = await(job);
-		Torrent torrent = res.torrents.get(0);
-		renderTemplate("client/torrent-info.html", torrent);*/
-	}
+
 	
 	public static void setIncludedTorrentFiles(String torrentHash, String[] fw, String[] fa,
 			String[] ph, String[] pn, String[] pl) throws MessageException {/*
@@ -249,30 +365,16 @@ public class Client extends Base {
 		renderJSON(new ArrayList<String>());
 	}
 	
-	protected static void handleTorrentControlRequest(String torrentHash, TorrentAction action) {
-		handleTorrentControlRequest(new String[] { torrentHash }, action);
-	}
-	
-	protected static void handleTorrentControlRequest(String[] torrentHashes, TorrentAction action) {
-		TorrentControlJobResult res = runTorrentControlJob(Arrays.asList(torrentHashes), action);
+	protected static Object successOrError(Promise<GenericJobResult> p) {
+		GenericJobResult res = await(p);
 		if (res.hasError()) {
-			resultError(Util.getStackTrace(res.error));
+			if (res.getError() instanceof MessageException) {
+				setGeneralErrorMessage(res.getError().getMessage());
+				return null;
+			}
+			Logger.info(res.getError(), "Error occured in job.");
+			throw new RuntimeException(res.getError());
 		}
-		result(res.success);	
-	}
-	
-	protected static TorrentControlJobResult runTorrentControlJob(String torrentHash, TorrentAction action) {
-		return runTorrentControlJob(Arrays.asList(new String[] { torrentHash }), action);
-	}	
-	
-	protected static TorrentControlJobResult runTorrentControlJob(List<String> torrentHashes, TorrentAction action) {
-		return null;
-		/*
-		Promise<TorrentControlJobResult> tcj = new TorrentControlJob(getActiveAccount(), torrentHashes, action).now();
-		TorrentControlJobResult res = await(tcj);
-		return res;*/
-	}
-	
-	
-		
+		return res.getResult();
+	}		
 }

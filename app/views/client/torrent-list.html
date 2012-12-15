@@ -1,5 +1,94 @@
+%{
+	def Util = com.openseedbox.code.Util
+}%
+#{if torrents.size > 0}
+<table class="table table-condensed table-hover">
+	#{list items:torrents, as:"item"}
+	<tr style="width:100%;" data-torrent-hash="${item.torrent.torrentHash}">
+		<td>
+			<table class="no-table torrent-info" style="width:100%;">
+				<tr>
+					<td colspan="4">
+						<h5 class="torrent-title pull-left">
+							${item.torrent.name} <small>- ${item.niceStatus}#{if item.torrent.percentComplete < 1}, ${(int) item.torrent.percentComplete * 100}%#{/if}
+							(${Util.getBestRate(item.torrent.totalSizeBytes)})
+							</small>
+						</h5>
+						#{if (item.torrent.running)}
+						<h5 class="torrent-speed pull-right hide">
+							<small>${Util.getBestRate(item.torrent.downloadSpeedBytes)} down, 
+									 ${Util.getBestRate(item.torrent.uploadSpeedBytes)} up</small></h5>
+						#{/if}
+					</td>
+				</tr>
+				<tr>
+					<td style="width:5%;"><input class="torrent-checkbox" data-torrent-hash="${item.torrent.torrentHash}" type="checkbox" /></td>
+					<td style="width:80%;">
+						#{if !item.torrent.running}
+						<div class="progress torrent-progress active">
+							<div class="bar bar-warning" style="width:${item.torrent.percentComplete * 100}%"></div>
+						</div>								
+						#{/if}
+						#{elseif item.torrent.metadataDownloading}
+						<div class="progress torrent-progress progress-striped active">
+							<div class="bar bar-danger" style="width:${item.torrent.metadataPercentComplete * 100}%"></div>
+						</div>									
+						#{/elseif}
+						#{elseif item.torrent.downloading}
+						<div class="progress torrent-progress #{if item.torrent.downloadSpeedBytes > 0}progress-striped#{/if} active">
+							<div class="bar" style="width:${item.torrent.percentComplete * 100}%"></div>
+						</div>								
+						#{/elseif}
+						#{elseif item.torrent.seeding}
+						<div class="progress torrent-progress #{if item.torrent.uploadSpeedBytes > 0}progress-striped#{/if} active">
+							<div class="bar bar-success" style="width:${item.torrent.percentComplete * 100}%"></div>
+						</div>
+						#{/elseif}
+					</td>
+					<td style="width:15%;">
+						<form action="@{Client.action}" method="post" class="no-margin pull-left">
+							<input type="hidden" name="hash" value="${item.torrent.torrentHash}" />
+							<div class="btn-group pull-right">							
+								<a class="btn btn-mini show-torrent-info" data-torrent-hash="${item.torrent.torrentHash}" href="#"><i class="icon-info-sign"></i></a>
+								#{if item.torrent.running}
+									<button type="submit" class="btn btn-mini" name="what" value="stop"><i class="icon-pause"></i></button>
+								#{/if}
+								#{else}
+									<button type="submit" class="btn btn-mini" name="what" value="start"><i class="icon-play"></i></button>
+								#{/else}
+								<a class="btn btn-mini remove-torrent" data-torrent-hash="${item.torrent.torrentHash}" data-torrent-name="${item.torrent.name}" href="#"><i class="icon-remove"></i></a>
+							</div>									
+						</form>				
+					</td>							
+				</tr>
+			</table>
+		</td>
+	</tr>			
+	#{/list}	
+	<tr>
+		<td>
+			<div class="pull-right">
+				%{
+					def used = 0; def down = 0; def up = 0;
+					torrents.each {
+						used += it.torrent.totalSizeBytes;
+						down += it.torrent.downloadSpeedBytes;
+						up += it.torrent.uploadSpeedBytes;
+					}
+				}%
+				<h5><small>Used: ${Util.getBestRate(used)}, Down: ${Util.getBestRate(down)}/s, Up: ${Util.getBestRate(up)}/s</small></h5>
+			</div>
+		</td>
+	</tr>	
+</table>
+#{/if}
+#{else}
+	<p>No torrents found.</p>
+#{/else}
+
+*{
 #{if (torrents.size() == 0)}
-	No torrents in '${group}' group.
+<p>No torrents in '${group}' group.
 #{/if}
 #{else}
 	<table class="table table-bordered table-condensed">
@@ -85,3 +174,4 @@
 		})(jQuery);
 	</script>
 #{/else}
+}*

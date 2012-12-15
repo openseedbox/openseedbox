@@ -23,98 +23,52 @@
 				<li><a href="#">Remove</a></li>				
 			</ul>
 		</div>		
-		<a class="btn btn-success pull-right"><i class="icon-plus-sign"></i>Add Torrent</a>
+		<a class="btn btn-success pull-right" data-toggle="modal" href="#add-torrent-dialog"><i class="icon-plus-sign"></i>Add Torrent</a>
 		<div class="clearfix" style="margin-bottom: 5px;"></div>
-		<table class="table table-condensed table-hover">
-			<tr style="width:100%;">
-				<td>
-					<table class="no-table torrent-info" style="width:100%;">
-						<tr>
-							<td colspan="4">
-								<h5 class="torrent-title pull-left">Some Really Cool Torrent With A Sweet Name <small>- Downloading, 82%</small></h5>
-								<h5 class="torrent-speed pull-right hide"><small>182kb/s down, 300kb/s up</small></h5>
-							</td>
-						</tr>
-						<tr>
-							<td style="width:5%;"><input class="torrent-checkbox" type="checkbox" /></td>
-							<td style="width:80%;">
-								<div class="progress torrent-progress progress-striped active">
-									<div class="bar bar-success" style="width:82%"></div>
-								</div>
-							</td>
-							<td style="width:15%;">
-								<div class="btn-group pull-right">
-									<a class="btn btn-mini" href="#"><i class="icon-info-sign"></i></a>
-									<a class="btn btn-mini" href="#"><i class="icon-pause"></i></a>									
-									<a class="btn btn-mini" href="#"><i class="icon-remove"></i></a>
-								</div>									
-							</td>							
-						</tr>
-					</table>
-				</td>
-			</tr>
-			<tr style="width:100%;">
-				<td>
-					<table class="no-table torrent-info" style="width:100%;">
-						<tr>
-							<td colspan="3"><h5 class="torrent-title pull-left">Another Really Cool Torrent With A Sweet Name <small>- Paused</small></h5>													
-								<h5 class="torrent-speed pull-right hide"><small>182kb/s down, 300kb/s up</small></h5>						
-							</td>
-						</tr>
-						<tr>
-							<td style="width:5%;"><input class="torrent-checkbox" type="checkbox" /></td>
-							<td style="width:80%;">
-								<div class="progress progress-warning">
-									<div class="bar" style="width:40%"></div>	
-								</div>								
-							</td>
-							<td style="width:15%;">
-								<div class="btn-group pull-right">
-									<a class="btn btn-mini" href="#"><i class="icon-info-sign"></i></a>
-									<a class="btn btn-mini" href="#"><i class="icon-play"></i></a>												
-									<a class="btn btn-mini" href="#"><i class="icon-remove"></i></a>
-								</div>									
-							</td>
-						</tr>
-					</table>
-				</td>
-			</tr>
-			<tr style="width:100%;">
-				<td>
-					<table class="no-table torrent-info" style="width:100%;">
-						<tr>
-							<td colspan="3"><h5 class="torrent-title pull-left">Blahdey Blah A Sweet Name <small>- Seeding, 300kb/s</small></h5>																					
-								<h5 class="hide pull-right"><small><a href="#" class="download-link">Download</a></small></h5>
-							</td>
-						</tr>
-						<tr>
-							<td style="width:5%;"><input class="torrent-checkbox" type="checkbox" /></td>
-							<td style="width:80%;">
-								<div class="progress progress-success">
-									<div class="bar" style="width:100%"></div>	
-								</div>								
-							</td>
-							<td style="width:15%;">
-								<div class="btn-group pull-right">
-									<a class="btn btn-mini" href="#"><i class="icon-info-sign"></i></a>
-									<a class="btn btn-mini" href="#"><i class="icon-play"></i></a>												
-									<a class="btn btn-mini" href="#"><i class="icon-remove"></i></a>
-								</div>									
-							</td>
-						</tr>
-					</table>
-				</td>
-			</tr>			
-			<tr>
-				<td>
-					<div class="pull-right">
-						<h5><small>Used: 50gb, Down: 153kb/s, Up: 762kb/s</small></h5>
-					</div>
-				</td>
-			</tr>
-		</table>		
+		<div id="torrent-list">
+			*{AJAX call to show torrent list populates this }*
+			<h5><img src="#{asset.ajax /}" /> <small>Loading your torrents...</small></h5>
+		</div>
 	</div>
 </div>
+<div class="modal hide" id="add-torrent-dialog">
+	<form class="no-margin form-horizontal" enctype="multipart/form-data" method="post" action="@{Client.addTorrent}">
+	<div class="modal-header">
+		<a class="close" data-dismiss="modal">&times;</a>
+		<h2>Add Torrent</h2>
+	</div>
+	<div class="modal-body">
+		#{set "ajax_url"}
+			#{asset.ajax /}
+		#{/set}
+		#{form.text label:"Search Isohunt:", name:"search", placeholder:"Enter search terms", extra:"<a id='clear' class='btn' href='#'>Clear</a><img class='hide' id='search-loader' src='${ajax_url.trim()}' />" /}
+		#{form.text label:"URL or Magnet:", name:"urlOrMagnet", placeholder:"Paste torrent URL or Magnet link" /}
+		#{form.upload label:"Upload from computer:", name:"fileFromComputer" /}
+	</div>
+	<div class="modal-footer">
+		<input type="submit" class="btn btn-primary" value="Add Torrent" />
+		<a href="#" class="btn" data-dismiss="modal">Close</a>
+	</div>	
+	</form>
+</div>
+<div class="modal hide" id="remove-torrent-dialog">
+	<form action="@{Client.action}" method="post" class="no-margin" style="margin:0px;">
+		<input name="hash" value="" type="hidden" />
+		<input name="hashes" value="" type="hidden" />
+		<input name="what" value="remove" type="hidden" />
+		<div class="modal-header">
+			<a class="close" data-dismiss="modal">&times;</a>
+			<h3>Remove Torrent</h3>
+		</div>	
+		<div class="modal-body">
+			<p>Are you sure you want to remove <strong class="torrent-name"></strong>?</p>
+		</div>
+		<div class="modal-footer">
+			<input class="btn btn-danger" type="submit" value="Remove" />
+			<a href="#" class="btn" data-dismiss="modal">Close</a>
+		</div>
+	</form>
+</div>	
 <style type="text/css">
 .no-table tr, .no-table td {
 	border: 0 none;
@@ -129,6 +83,10 @@
 a.download-link, a.download-link:hover {
 	text-decoration: none;
 }
+
+form.no-margin {
+	margin: 0px;
+}
 </style>
 <script type="text/javascript">
 $(document).ready(function() {
@@ -137,15 +95,259 @@ $(document).ready(function() {
 	}).mouseout(function() {
 		$(".group .icon-minus").hide();
 	});
-	
-	$(".torrent-info").mouseover(function() {
-		$(this).find(".hide").show();
-	}).mouseout(function() {
-		$(this).find(".hide").hide();
-	});	
-	
+		
 	$("i[rel=tooltip]").tooltip({
 		"title" : "Hey Ya!"
 	});
 });
 </script>
+<script type="text/javascript">
+(function($) {
+	
+	window.refresh_disabled = false;
+	
+	//setup ajax to show global loader on every request
+	$.ajaxSetup({
+		beforeSend : function() {
+			//$("#global-loader").show();
+		},
+		complete : function() {
+			//$("#global-loader").hide();
+		}
+	});
+	
+	$(document).ajaxSuccess(function(evt, xhr) {
+		var data = $.parseJSON(xhr.responseText);
+		if (data.error) {
+			$.flashError(data.error);
+		}
+	});
+	
+	$(document).ready(function() {
+		var already_refreshing = false;
+		var activeGroup = "All";
+		var activeAjaxRequest;
+		var refresh = function(force) {
+			if (already_refreshing && !force) {return;} //wait for previous refresh to finish before starting a new one, unless force is set
+			if (window.refresh_disabled) {return;} //refresh gets disabled when window loses focus to take load off server
+			already_refreshing = true;
+			if (activeAjaxRequest && force) {
+				activeAjaxRequest.abort();
+			}
+			activeAjaxRequest = $.getJSON("/client/update", {"group" : activeGroup, "ext" :"json" }, function(data) {
+				
+				if (!data) { return; }				
+
+				//hide any tooltips before replacing, otherwise bootstrap loses the reference to the tooltip text
+				//and it will never disappear
+				$(".torrent-add-group").tooltip("hide");
+				
+				//update torrent list
+				$("#torrent-list").html(data.data);
+				
+				//update tabs incase user was adding/removing groups
+				//$("#tab-header").html(data.data["client-tabs"]);
+				
+				//process checked hashes
+				$(".torrent-checkbox").each(function() {
+					var my_hash = $(this).data("torrent-hash");
+					if ($.inArray(my_hash, checked_hashes) != -1) {
+						$(this).attr("checked", "checked");
+					}
+				});
+				already_refreshing = false;
+			});
+		};
+		refresh(); //load initial data
+		setInterval(refresh, 10000); //db is only populated every 10 seconds so refreshing faster than this just causes undue load
+		
+		$(window).on("focus", function() {
+			window.refresh_disabled = false;
+			refresh(); //refresh immediately as soon as window gains focus
+		}).on("blur", function() {
+			window.refresh_disabled = true;
+		});		
+		
+		//NORMAL EVENT HANDLERS
+		var do_action = function(action, callback) {
+			if (checked_hashes.length > 0) {
+				if (action == "removeTorrents") {
+					if (!confirm("Are you sure you want to remove the " + checked_hashes.length + " selected torrents?")) { return; }
+				}
+				var group = "";
+				if (action == "addTorrentGroups") {
+					group = prompt("Please enter the name of the group to add these " + checked_hashes.length + " torrents to:");
+					if (!group) { return; }
+				}
+				$("#group-actions-loader").show();
+				window.refresh_disabled = true;
+				$.post("/client/" + action + "?ext=json", {
+					"torrentHashes" : checked_hashes,
+					"group" : group
+				}, function(data) {
+					window.refresh_disabled = false;
+					$("#group-actions-loader").hide();
+					refresh();
+					if (callback && $.isFunction(callback)) {
+						callback();
+					}
+				});
+			}			
+		}
+		$("#group-actions a.group-actions-start").click(function() {
+			do_action("startTorrents");
+		});
+		$("#group-actions a.group-actions-pause").click(function() {
+			do_action("pauseTorrents");
+		});
+		$("#group-actions a.group-actions-remove").click(function() {
+			do_action("removeTorrents");
+		});
+		$("#group-actions a.group-actions-add-group").click(function() {
+			do_action("addTorrentGroups");
+		});		
+		
+		//LIVE EVENT HANDLERS
+		var checked_hashes = []; //for persisting checkboxes between requests 
+				
+		$("body")..on("click", "a.remove-torrent", function() {
+			var dialog = $("#remove-torrent-dialog");
+			var hash = $(this).data("torrent-hash");
+			var name = $(this).data("torrent-name");	
+			$(dialog).find("input[name=hash]").val(hash);
+			$(dialog).find(".torrent-name").html(name);			
+			$(dialog).modal("show");
+			window.refresh_disabled = true;			
+		}).on("click", "a.torrent-add-group", function() {
+			$("<input class='torrent-add-group' type='text' style='width:80px;' name='group' placeholder='Type name'/>")
+				.insertAfter(".container") //do it here so it can stick outside the container bounds 
+				.position({
+					"my" : "left",
+					"at" : "left",
+					"of" : this,
+					"offset" : "40 0"
+				})
+				.focus()
+				.data("torrent-hash", $(this).data("torrent-hash"));
+			window.refresh_disabled = true;
+			return false;
+		}).on("keypress", "input.torrent-add-group", function(evt) {
+			if (evt.keyCode == 13) {
+				var group_name = $(this).val();
+				var hash = $(this).data("torrent-hash");
+				if (group_name) {
+					$.post("/client/addTorrentGroup?ext=json", {
+						"torrentHash" : hash,
+						"group" : group_name
+					}, function() {
+						$("input.torrent-add-group").remove(); //for some reason, doing the self/this thing doesnt work
+						window.refresh_disabled = false;
+						refresh();
+					});
+				}
+			}
+		}).on("click", "a.torrent-remove-group", function() {
+			var hash = $(this).data("torrent-hash");
+			var self = this;
+			$.post("/client/removeTorrentGroup?ext=json", {
+				"torrentHash" : hash,
+				"group" : $(this).siblings("span:first").text()
+			}, function() {
+				$(self).parents("div.btn:first").fadeOut("slow");
+				refresh();
+			})
+		}).on("click", "a.show-torrent-info", function() {
+			var self = this;
+			$(self).loading();
+			$.post("/client/renderTorrentInfo", {
+				"hash" : $(this).data("torrent-hash")
+			}, function(data) {
+				$(self).loading();
+				$("body>.container").append(data);
+				$("#torrent-info-modal").modal({
+					"backdrop" : false
+				});
+			})
+		}).on("click", ".torrent-checkbox", function() {
+			var hash = $(this).data("torrent-hash");
+			if ($(this).is(":checked")) {
+				checked_hashes.push(hash);
+			} else {
+				var idx = $.inArray(hash, checked_hashes);
+				if (idx != -1) {
+					checked_hashes = checked_hashes.slice(idx + 1);
+				}
+			}
+		}).on("mouseover", ".torrent-info", function() {
+			$(this).find(".hide").show();
+		}).on("mouseout", ".torrent-info", function() {
+			$(this).find(".hide").hide();
+		});	
+	});
+})(jQuery);
+
+/*
+ * Loading Icon plugin - replaces the first icon it finds in the element with an ajax loader
+ * Flash Error plugin - easy way to flash error messages to the user
+ */
+(function($) {
+	$.fn.loading = function() {
+		return this.each(function() {
+			var icon = $(this).find("i:first");
+			$(icon).toggleClass("icon-loader");			
+		});
+	};
+	$.extend({
+		flashError : function(error) {
+			$("#flash-error-content").html(error);
+			$("#flash-error").show();
+		}
+	});
+	
+	$(document).ready(function() {
+		$(".remove-torrent")
+		$("#remove-torrent-button").click(function() {
+			var hash = $(this).data("torrent-hash");
+			$.post("/client/removeTorrent?ext=json", {
+				"torrentHash" : hash
+			}, function() {
+				$("#t_" + hash).fadeOut("slow", function() {
+					$(this).remove();
+				});
+				$("#remove-torrent-dialog").modal("hide");
+				window.refresh_disabled = false;
+			});
+			return false;
+		});
+
+		$("#search").typeahead({
+			"ajax" : {
+				"url" : "@{Client.searchIsohunt}",
+				"displayField" : "label",
+				"preDispatch" : function(query) {
+					$("#search-loader").show();
+					return {
+						"query" : query
+					}
+				},
+				"preProcess" : function(data) {
+					$("#search-loader").hide();
+					return data;
+				}
+			},
+			"matcher" : function() { return true; },
+			"display" : "label",
+			"val" : "torrent_url",
+			"itemSelected" : function(item, val, text) {
+				$("#urlOrMagnet").val(val);
+			}
+		});
+
+		$("#clear").click(function() {
+			$("#search").val("");
+			$("#urlOrMagnet").val("");
+			return false;
+		});
+	});
+})(jQuery);
+	</script>
