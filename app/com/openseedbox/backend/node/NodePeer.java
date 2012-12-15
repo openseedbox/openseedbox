@@ -10,6 +10,7 @@ public class NodePeer implements IPeer {
 	private boolean encryptionEnabled;
 	private long downloadRateBytes;
 	private long uploadRateBytes;
+	private String ipAddress;
 
 	public String getClientName() {
 		return clientName;
@@ -57,6 +58,14 @@ public class NodePeer implements IPeer {
 
 	public void setUploadRateBytes(long uploadRateBytes) {
 		this.uploadRateBytes = uploadRateBytes;
+	}
+
+	public String getIpAddress() {
+		return ipAddress;
+	}
+
+	public void setIpAddress(String ipAddress) {
+		this.ipAddress = ipAddress;
 	}
 	
 }

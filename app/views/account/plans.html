@@ -19,36 +19,28 @@
 			</div>
 			<div class="clearfix"></div>
 			<p>
-			<ul>
-				<li><strong>Max. Diskspace:</strong> ${plan.maxDiskspaceGb}gb</li>
-				<li><strong>Max. Active Torrents:</strong>
-					#{if (plan.maxActiveTorrents == -1)}Unlimited#{/if}
-					#{else}${plan.maxActiveTorrents}#{/else}
-				</li>
-			</ul>
-			<div class="pull-right">
-				#{if (!isCurrentPlan)}
-					#{if (plan.totalFreeSlots > 0)}
-					<span class="success"><strong>Free Slots:</strong> ${plan.totalFreeSlots}</span><br /><span>&nbsp;</span>
+				<ul>
+					<li><strong>Max. Diskspace:</strong> ${plan.maxDiskspaceGb} GB</li>
+					<li><strong>Max. Active Torrents:</strong>
+						#{if (plan.maxActiveTorrents == -1)}Unlimited#{/if}
+						#{else}${plan.maxActiveTorrents}#{/else}
+					</li>
+					#{if (!isCurrentPlan)}
+						#{if (plan.freeSlots > 0)}						
+							<li><span class="text-success"><strong>Free Slots:</strong> ${plan.freeSlots}</span></li>
+						#{/if}
 					#{/if}
 					#{else}
-					<span class="error"><strong>Sorry, no slots are available.</strong></span><br />
-					<span class="error">Please check back later.</span>
+					<li style="visibility:hidden;">&nbsp;</li>
 					#{/else}
-				#{/if}
-				#{else}
-					<span class="success">Active on node: </span>
-					<strong>${currentUser.node?.name}</strong><br /><span>&nbsp;</span>
-				#{/else}
-			</div>
-			<div class="clearfix"></div>
+				</ul>
 			</p>
 			<div class="form-actions">
 				<div class="pull-left" style="font-size:200%;">
-					<strong>$${plan.monthlyCost}</strong> / mo
-				</div>
+					<strong>$${plan.monthlyCost}</strong> / mo<br />
+				</div>			
 				<div class="pull-right">
-					#{if (plan.totalFreeSlots > 0)}
+					#{if (plan.freeSlots > 0)}
 						#{if (isCurrentPlan)}
 							<span class="btn btn-success">Current Plan</span>
 						#{/if}
@@ -57,7 +49,7 @@
 						#{/else}
 					#{/if}
 					#{else}
-						<span class="btn btn-error">Sold out</span>
+						<span class="btn btn-danger">Sold out</span>
 					#{/else}
 				</div>
 			</div>			

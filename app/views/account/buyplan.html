@@ -1,6 +1,6 @@
 #{extends "account/index.html" /}
 <p>Are you sure you want to switch to the '${newPlan.name}' plan?</p>
-<h2>This will cost you $${newPlan.monthlyCost} per month.</h2><br />
+<h3>This will cost you $${newPlan.monthlyCost} per month.</h3>
 #{if (oldPlan.monthlyCost == 0)}
 	<p>Your current plan isn't costing you anything, so this change will take effect immediately, and your billing date will be from today.</p>
 #{/if}
@@ -12,7 +12,7 @@
 #{/else}
 <div class="form-actions">
 	<a id="buy" class="btn btn-primary" href="@{Account.invoicePlan(newPlan.id)}">Buy Plan</a>
-	<a class="btn btn-danger pull-right" href="@{Account.plans()}">Cancel</a>
+	<a class="btn" href="@{Account.plans()}">Cancel</a>
 </div>
 <script type="text/javascript">
 	(function($) {

@@ -182,7 +182,11 @@ public class NodeBackend implements ITorrentBackend {
 	}
 
 	public Map<String, List<ITracker>> getTorrentTrackers(List<String> hashes) {
-		
+		WSRequest req = node.getWebService("/torrents/trackers", hashes);
+		JsonObject files = getResponseBodyOrError(req.get()).getAsJsonObject().getAsJsonObject("trackers");
+		java.lang.reflect.Type listType = new TypeToken<HashMap<String, ArrayList<NodeTracker>>>() {}.getType();
+		Map<String, List<ITracker>> ret = Util.getGson().fromJson(files, listType);
+		return ret;	
 	}
 
 	public List<IFile> getTorrentFiles(String hash) {
@@ -190,7 +194,11 @@ public class NodeBackend implements ITorrentBackend {
 	}
 
 	public Map<String, List<IFile>> getTorrentFiles(List<String> hashes) {
-		
+		WSRequest req = node.getWebService("/torrents/files", hashes);
+		JsonObject files = getResponseBodyOrError(req.get()).getAsJsonObject().getAsJsonObject("files");
+		java.lang.reflect.Type listType = new TypeToken<HashMap<String, ArrayList<NodeFile>>>() {}.getType();
+		Map<String, List<IFile>> ret = Util.getGson().fromJson(files, listType);
+		return ret;		
 	}
 
 	public void modifyTorrentFiles(String hash, List<IFile> files) {

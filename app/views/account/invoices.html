@@ -5,9 +5,9 @@
 
 <h3>Unpaid Invoices</h3>
 #{if unpaid_invoices.size > 0}
-<table class="table table-bordered">
+<table class="table table-condensed">
 	<tr>
-		<th>Invoice #</th>
+		<th style="width:5%">#</th>
 		<th>Create Date</th>
 		<th>Total Amount</th>
 		<th>Payment Date</th>
@@ -15,11 +15,11 @@
 	</tr>
 	#{list items:unpaid_invoices, as:"invoice"}
 	<tr>
-		<td><a href="@{Account.invoiceDetails(invoice.id)}">${invoice.id}</a></td>
-		<td>${invoice.invoiceDateUtc}</td>
+		<td>${invoice.id}</td>
+		<td>${invoice.invoiceDate}</td>
 		<td>$${invoice.getTotalAmount()}</td>
 		<td>#{if (invoice.hasBeenPaid())}
-				${invoice.paymentDateUtc}			
+				${invoice.paymentDate}			
 			#{/if}
 			#{else}
 				<span class="alert-error">Not paid yet!</span>
@@ -29,7 +29,7 @@
 			#{if (!invoice.hasBeenPaid())}
 				#{pay-invoice invoice /}
 			#{/if}
-			<a class="btn" href="@{Account.invoiceDetails(invoice.id)}">Details</a>
+			<a class="btn btn-small" href="@{Account.invoiceDetails(invoice.id)}">Details</a>
 		</td>
 	</tr>
 	#{/list}
@@ -42,9 +42,9 @@
 
 <h3>Paid Invoices</h3>
 #{if paid_invoices.size > 0}
-<table class="table table-bordered">
+<table class="table table-condensed">
 	<tr>
-		<th>Invoice #</th>
+		<th style="width: 5%">#</th>
 		<th>Create Date</th>
 		<th>Total Amount</th>
 		<th>Payment Date</th>
@@ -52,11 +52,11 @@
 	</tr>
 	#{list items:paid_invoices, as:"invoice"}
 	<tr>
-		<td><a href="@{Account.invoiceDetails(invoice.id)}">${invoice.id}</a></td>
-		<td>${invoice.invoiceDateUtc}</td>
+		<td>${invoice.id}</td>
+		<td>${invoice.invoiceDate}</td>
 		<td>$${invoice.getTotalAmount()}</td>
 		<td>#{if (invoice.hasBeenPaid())}
-				${invoice.paymentDateUtc}			
+				${invoice.paymentDate}			
 			#{/if}
 			#{else}
 				<span class="alert-error">Not paid yet!</span>
@@ -66,7 +66,7 @@
 			#{if (!invoice.hasBeenPaid())}
 				#{pay-invoice invoice /}
 			#{/if}
-			<a class="btn" href="@{Account.invoiceDetails(invoice.id)}">Details</a>
+			<a class="btn btn-small" href="@{Account.invoiceDetails(invoice.id)}">Details</a>
 		</td>
 	</tr>
 	#{/list}
@@ -75,3 +75,8 @@
 #{else}
 	<p>No invoices for this account.</p>
 #{/else}
+<style type="text/css">
+	.table td {
+		vertical-align: middle !important;
+	}
+</style>

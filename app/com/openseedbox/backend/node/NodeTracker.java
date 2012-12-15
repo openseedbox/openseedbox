@@ -9,6 +9,8 @@ public class NodeTracker implements ITracker {
 	private int leecherCount;
 	private int seederCount;
 	private int downloadCount;
+	private String lastAnnounceResult;
+	private boolean lastAnnounceSuccessful;
 
 	public String getHost() {
 		return host;
@@ -48,6 +50,22 @@ public class NodeTracker implements ITracker {
 
 	public void setDownloadCount(int downloadCount) {
 		this.downloadCount = downloadCount;
+	}
+
+	public String getLastAnnounceResult() {
+		return lastAnnounceResult;
+	}
+
+	public void setLastAnnounceResult(String lastAnnounceResult) {
+		this.lastAnnounceResult = lastAnnounceResult;
+	}
+
+	public boolean isLastAnnounceSuccessful() {
+		return lastAnnounceSuccessful;
+	}
+
+	public void setLastAnnounceSuccessful(boolean lastAnnounceSuccessful) {
+		this.lastAnnounceSuccessful = lastAnnounceSuccessful;
 	}
 	
 }

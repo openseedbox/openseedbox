@@ -7,51 +7,78 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 import play.Play;
-import play.db.jpa.Model;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
 import play.libs.WS.WSRequest;
 import play.mvc.Router;
+import siena.Column;
+import siena.DateTime;
+import siena.Table;
 
-@Table(name="invoice")
-public class Invoice extends Model {
+@Table("invoice")
+public class Invoice extends ModelBase {
 	
-	@Column(name="account_id")
+	@Column("user_id")
 	private User user;
+		
+	@DateTime
+	@Column("invoice_date")
+	private Date invoiceDate;
 	
-	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name="invoice_date_utc")
-	private Date invoiceDateUtc;
+	@DateTime
+	@Column("payment_date")
+	private Date paymentDate;
 	
-	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name="payment_date_utc")
-	private Date paymentDateUtc;
-	
-	@Column(name="paypal_token")
+	@Column("paypal_token")
 	private String paypalToken;
 	
-	@OneToMany
-	private List<InvoiceLine> invoiceLines;
+	public static Invoice getByPayPalToken(String token) {
+		return Invoice.all().filter("paypalToken", token).get();
+	}
+	
+	public static Invoice createInvoice(User u, Plan p) {
+		Invoice i = new Invoice();		
+		i.setUser(u);
+		i.setInvoiceDate(new Date());
+		i.insert();
+		
+		InvoiceLine line = new InvoiceLine();
+		line.setName(p.getInvoiceLineName());
+		line.setDescription(p.getInvoiceLineDescription());
+		line.setQuantity(1);
+		line.setPrice(p.getMonthlyCost());
+		line.setParentInvoice(i);
+		line.insert();
+		
+		return i;
+	}
+	
+	public static List<Invoice> getUnpaidForUser(User u) {
+		return Invoice.all()
+				.filter("user", u)
+				.filter("paymentDate", null).fetch();		
+	}
+	
+	public static List<Invoice> getPaidForUser(User u) {
+		return Invoice.all()
+				.filter("user", u)
+				.filter("paymentDate !=", null)
+				.order("-paymentDate").fetch();
+	}
 	
 	public boolean hasBeenPaid() {
-		return paymentDateUtc != null;
+		return paymentDate != null;
 	}
 	
 	public List<InvoiceLine> getInvoiceLines() {
-		return invoiceLines;
+		return InvoiceLine.all().filter("parentInvoice", this).fetch();
 	}
 	
 	public BigDecimal getTotalAmount() {
 		BigDecimal total = BigDecimal.ZERO;
-		for (InvoiceLine line : invoiceLines) {
-//			total = total.add(line.getPrice());
+		for (InvoiceLine line : getInvoiceLines()) {
+			total = total.add(line.getPrice());
 		}
 		return total;
 	}
@@ -69,7 +96,7 @@ public class Invoice extends Model {
 		req.setParameter("CANCELURL", Router.reverse("PaymentController.paymentCancel").secure().toString());
 		req.setParameter("NOSHIPPING", "1");
 		req.setParameter("REQNOSHIPPING", "0");		
-//		req.setParameter("EMAIL", this.getAccount().getPrimaryUser().getEmailAddress());
+		req.setParameter("EMAIL", getUser().getEmailAddress());
 		req.setParameter("BRANDNAME", "OpenSeedbox");
 		req.setParameter("PAYMENTREQUEST_0_INVNUM", this.id);
 		req.setParameter("PAYMENTREQUEST_0_AMT", Util.formatMoney(this.getTotalAmount()));
@@ -93,31 +120,45 @@ public class Invoice extends Model {
 		if (ack != null && ack.contains("Success")) {
 			String contextUrl = c.getProperty("paypal.api.contexturl");
 			this.paypalToken = token;
-			//this.save();
+			this.save();
 			return String.format("%s?token=%s", contextUrl, token);
 		}
 		throw new MessageException("ACK: " + ack + " Bad PayPal response: " + res.getString());
 	}
 	
-	public static Invoice getByPayPalToken(String token) {
-		return Invoice.find("paypalToken = ?", token).first();
+	/* Getters and Setters */
+
+	public User getUser() {
+		return User.findById(user.id);
+	}
+
+	public void setUser(User user) {
+		this.user = user;
+	}
+
+	public Date getInvoiceDate() {
+		return invoiceDate;
+	}
+
+	public void setInvoiceDate(Date invoiceDate) {
+		this.invoiceDate = invoiceDate;
+	}
+
+	public Date getPaymentDate() {
+		return paymentDate;
+	}
+
+	public void setPaymentDate(Date paymentDate) {
+		this.paymentDate = paymentDate;
+	}
+
+	public String getPaypalToken() {
+		return paypalToken;
+	}
+
+	public void setPaypalToken(String paypalToken) {
+		this.paypalToken = paypalToken;
 	}
 	
-	public static Invoice createInvoice(/*Account a, */Plan p) {
-		Invoice i = new Invoice();
-		//i.account = a;
-		i.invoiceDateUtc = new Date();
-		//i.save();
-		
-		InvoiceLine line = new InvoiceLine();
-		line.setName(p.getInvoiceLineName());
-		line.setDescription(p.getInvoiceLineDescription());
-		line.setQuantity(1);
-		line.setPrice(p.getMonthlyCost());
-		line.setParentInvoice(i);
-		//line.save();
-		
-		return i;
-	}
 	
 }

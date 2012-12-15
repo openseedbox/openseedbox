@@ -1,8 +1,8 @@
 package models;
 
-import com.openseedbox.backend.ITorrent;
 import com.openseedbox.code.Util;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -10,6 +10,7 @@ import org.apache.commons.lang.StringUtils;
 import play.Play;
 import play.data.validation.Email;
 import play.data.validation.Max;
+import play.data.validation.Required;
 import siena.Column;
 import siena.Table;
 import siena.Unique;
@@ -18,14 +19,13 @@ import siena.embed.Embedded;
 @Table("user")
 public class User extends ModelBase {
 	
-	@Email @Column("email_address")
+	@Email @Required @Column("email_address")
 	@Unique("email_address_unique") private String emailAddress;	
 	@Column("open_id") private String openId;	
 	@Column("is_admin") private boolean isAdmin;	
 	@Column("avatar_url") private String avatarUrl;	
-	@Column("display_name") private String displayName;	
-	@Column("last_access") private Date lastAccess;			
-	@Column("time_zone") private String timeZone;	
+	@Required @Column("display_name") private String displayName;	
+	@Column("last_access") private Date lastAccess;				
 	@Max(32) @Column("api_key") private String apiKey;
 	@Column("plan_id") private Plan plan;
 	@Embedded private List<String> groups;
@@ -48,7 +48,16 @@ public class User extends ModelBase {
 	}
 	
 	public List<UserTorrent> getTorrents() {
-		List<UserTorrent> ut = UserTorrent.getByUser(this);
+		return getTorrentsInGroup("All");
+	}
+	
+	public List<UserTorrent> getTorrentsInGroup(String group) {
+		List<UserTorrent> ut;
+		if (group.equals("All")) {
+			ut = UserTorrent.getByUser(this);
+		} else {
+			ut = UserTorrent.getByUserAndGroup(this, group);
+		}
 		if (ut.isEmpty()) {
 			return ut;
 		}
@@ -66,6 +75,18 @@ public class User extends ModelBase {
 		}
 		return ut;
 	}
+	
+	public boolean hasPlan() {
+		return plan != null;
+	}
+	
+	public List<Invoice> getUnpaidInvoices() {		
+		return Invoice.getUnpaidForUser(this);
+	}
+	
+	public List<Invoice> getPaidInvoices() {		
+		return Invoice.getPaidForUser(this);
+	}	
 
 	/* Getters and Setters */
 	public String getDisplayName() {
@@ -116,14 +137,6 @@ public class User extends ModelBase {
 		this.lastAccess = lastAccess;
 	}
 
-	public String getTimeZone() {
-		return timeZone;
-	}
-
-	public void setTimeZone(String timeZone) {
-		this.timeZone = timeZone;
-	}
-
 	public String getApiKey() {
 		return apiKey;
 	}
@@ -143,16 +156,17 @@ public class User extends ModelBase {
 		this.plan = plan;
 	}
 
-	public List<String> getGroups() {
-		return groups;
+	public List<String> getGroups() {		
+		if (groups != null) {
+			return groups;			
+		}
+		return Arrays.asList(new String[] { "All" });
 	}
 
 	public void setGroups(List<String> groups) {
 		this.groups = groups;
 	}
 	
-	
-
 	/*
 	private void calculateUserStats(List<Torrent> torrents) throws MessageException {
 		long totalSize = 0;

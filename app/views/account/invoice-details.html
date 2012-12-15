@@ -3,18 +3,16 @@
 	<script type="text/javascript" src="https://www.paypalobjects.com/js/external/dg.js"></script>
 #{/set}
 <h2>Details for invoice #${invoice.id}</h2>
-<br />
-<h4>Payable By: ${currentUser.emailAddress}</h4>
-<br />
+<h4>Payable By: ${invoice.user.emailAddress}</h4>
 <h3>Items:</h3>
-<table class="table table-bordered table-condensed">
+<table class="table table-condensed">
 	<tr>
 		<th>Item #</th>
 		<th>Name</th>
 		<th>Description</th>
 		<th>Cost</th>
 	</tr>
-	#{list items:invoice.getItems(), as:"item"}
+	#{list items:invoice.invoiceLines, as:"item"}
 	<tr>
 		<td>${item_index}</td>
 		<td>${item.name}</td>

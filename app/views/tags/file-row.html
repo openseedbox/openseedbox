@@ -1,60 +1,33 @@
-%{
-def file = _file
-def finished = false
-def download_link = ""
-if (_type != "info" && file.file) {
-	finished = file.file.finishedDownloading
-	download_link = file.getDownloadLink(_user)
-}
-}%
-<tr data-level="${file.level}">
-	<td #{if (file.level > 0)}style="padding-left: ${file.level * 20}px"#{/if}>
-		#{if (file.children.size() > 0)}<i class="icon-folder-open"></i>#{/if}
-		#{else}<i class="icon-file"></i>#{/else}
-		#{if (_type == "info")}${file.name}#{/if}
+%{ def Util = com.openseedbox.code.Util }%
+<tr>
+	<td #{if (_file.level > 0)}style="padding-left: ${_file.level * 20}px"#{/if}>
+		#{if (_file.children.size() > 0)}
+			<i class="icon-folder-open"></i>
+		#{/if}
 		#{else}
-			#{if (finished && download_link)}
-				<a target="_blank" href="${download_link}">${file.name}</a>
-			#{/if}
-			#{else}
-				${file.name}
-			#{/else}
+			<i class="icon-file"></i>
 		#{/else}
+		#{if _file.file && _file.file.percentComplete == 1}
+			<a href="${_file.file.downloadLink}">
+		#{/if}
+		${_file.name}
+		#{if _file.file && _file.file.percentComplete == 1}
+			</a>
+		#{/if}
+	</td>
+	<td>		
+		#{if _file.file}
+			${Util.getBestRate(_file.file.fileSizeBytes)}	
+		#{/if}
 	</td>
 	<td>
-	#{if (_type == "info")}
-		#{if (file.file)}
-		<input type="checkbox" class="info-file" data-id="${file.file.id}" #{if (file.file.wanted)}checked="checked"#{/if} />
+		#{if _file.file}
+			${String.format("%.2f", _file.file.percentComplete * 100)}%
 		#{/if}
-		#{else}
-		<input type="checkbox" class="info-select-multiple" #{if (file.anyChildWanted)}checked="checked"#{/if} />
-		#{/else}
-	#{/if}
-	#{else}
-		<span>${file.getNiceTotalSize()}</span>
-	#{/else}
 	</td>
-	<td style="text-align: center;">
-	#{if (_type == "info")}
-		#{if (file.file)}
-		<select class="torrent-priority" data-id="${file.file.id}" style="width:100%">
-			<option value="-1" #{if (file.file.priority == -1)}selected="selected"#{/if}>Low</option>
-			<option value="0" #{if (file.file.priority == 0)}selected="selected"#{/if}>Normal</option>
-			<option value="1" #{if (file.file.priority == 1)}selected="selected"#{/if}>High</option>
-		</select>
-		#{/if}
-	#{/if}
-	#{else}
-		#{if (file.file)}
-			${file.file.percentComplete}%
-		#{/if}
-	#{/else}
-	</td>
-</tr>	
-%{
-if (file.children.size() > 0) {
-	for (child in file.children) {
-		}%#{file-row file:child, type:_type, user:_user /}%{		
-	}
-}
-}%
+</tr>
+#{if (_file.children.size > 0)}
+	#{list items:_file.children, as:"child"}
+		#{file-row file:child /}
+	#{/list}
+#{/if}
