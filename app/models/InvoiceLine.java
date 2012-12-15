@@ -1,37 +1,31 @@
 package models;
 
 import java.math.BigDecimal;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import play.data.validation.Max;
-import play.db.jpa.Model;
+import siena.Column;
+import siena.Table;
 
-@Table(name="invoice_line")
-public class InvoiceLine extends Model {
+@Table("invoice_line")
+public class InvoiceLine extends ModelBase {
 	
-	@ManyToOne
-	@JoinColumn(name="invoice_id")
+	@Column("invoice_id")
 	private Invoice parentInvoice;
 	
-	@Column(name="name")
+	@Column("name")
 	private String name;
 	
-	@Column(name="description")
+	@Column("description")
 	private String description;
 	
-	@Column(name="price")
+	@Column("price")
 	private BigDecimal price;
 	
-	@Column(name="quantity")
+	@Column("quantity")
 	private int quantity;
 	
 
 	/* Getters and Setters */
 	public Invoice getParentInvoice() {
-		return parentInvoice;
+		return Invoice.findById(parentInvoice.id);
 	}
 
 	public void setParentInvoice(Invoice parentInvoice) {

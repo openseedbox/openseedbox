@@ -10,6 +10,7 @@ import com.openseedbox.code.Util;
 import com.openseedbox.jobs.GenericJob;
 import com.openseedbox.jobs.GenericJobResult;
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import models.Node;
 import models.Torrent;
@@ -17,6 +18,7 @@ import models.User;
 import models.UserTorrent;
 import org.apache.commons.lang.StringUtils;
 import play.Logger;
+import play.data.binding.As;
 import play.libs.F.Promise;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
@@ -60,18 +62,25 @@ public class Client extends Base {
 		}	*/	
 	}
 	
-	public static void index() {		
-		render("client/index.html");
+	public static void index(String group) {		
+		if (group == null) {
+			group = "All";
+		}
+		renderArgs.put("currentGroup", group);
+		List<UserTorrent> torrents = getCurrentUser().getTorrentsInGroup(group);
+		String torrentList = renderToString("client/torrent-list.html", Util.convertToMap(new Object[] { "torrents", torrents }));
+		List<String> groups = getCurrentUser().getGroups();
+		render("client/index.html", torrentList, groups, torrents);
 	}
 	
 	public static void update(String group) {
 		//this is intended to be invoked via ajax
-		List<UserTorrent> torrents = getCurrentUser().getTorrents();
+		List<UserTorrent> torrents = getCurrentUser().getTorrentsInGroup(group);
 		String data = renderToString("client/torrent-list.html", Util.convertToMap(new Object[] { "torrents", torrents }));
 		result(data);
 	}
 	
-	public static void addTorrent(final String urlOrMagnet, final File fileFromComputer) {		
+	public static void addTorrent(final String urlOrMagnet, final File fileFromComputer) throws IOException {			
 		if (StringUtils.isEmpty(urlOrMagnet) && fileFromComputer == null) {
 			setGeneralErrorMessage("Please enter a valid URL or magent link, or choose a valid file to upload.");
 		} else {					
@@ -102,30 +111,59 @@ public class Client extends Base {
 			}.now();					  
 			successOrError(p);
 		}		
-		index();
+		index(null);
 	}
 	
 	public static void torrentInfo(String hash) {		
 		//torrent info is seeders, peers, files, tracker stats
-		final Torrent fromDb = Torrent.getByHash(hash);
+		final UserTorrent fromDb = UserTorrent.getByUser(getCurrentUser(), hash);
+		if (fromDb == null) {
+			resultError("No such torrent for user: " + hash);
+		}
 		Promise<GenericJobResult> p = new GenericJob() {
 
 			@Override
 			public Object doGenericJob() {
 				//trigger the caching of these objects, inside a job because the WS
 				//calls could take ages
-				fromDb.getPeers();
-				fromDb.getTrackers();
-				fromDb.getFiles();
+				fromDb.getTorrent().getPeers();
+				fromDb.getTorrent().getTrackers();
+				fromDb.getTorrent().getFiles();
 				return fromDb;
 			}
 			
 		}.now();
-		ITorrent torrent = (ITorrent) successOrError(p);
+		UserTorrent torrent = (UserTorrent) successOrError(p);
 		renderTemplate("client/torrent-info.html", torrent);
-	}		
+	}	
 	
-	public static void action(String what, String hash, List<String> hashes) {
+	public static void addGroup(String group) {
+		if (!StringUtils.isEmpty(group)) {
+			User user = getCurrentUser();
+			List<String> groups = user.getGroups();
+			if (group.length() > 12) {
+				group = group.substring(0, 12);
+			}
+			groups.add(group);
+			user.setGroups(groups);
+			user.save();
+		} else {
+			setGeneralErrorMessage("Please enter a group name.");
+		}
+		index(null);
+	}
+	
+	public static void removeGroup(String group) {
+		if (!StringUtils.isEmpty(group)) {
+			User user = getCurrentUser();
+			user.getGroups().remove(group);
+			user.save();
+			UserTorrent.blankOutGroup(user, group);
+		}
+		index(null);
+	}
+	
+	public static void action(String what, String hash, @As(",") List<String> hashes) {
 		if (!StringUtils.isEmpty(what)) {
 			if (what.equals("start")) {
 				doTorrentAction(hash, hashes, TorrentAction.START);
@@ -137,7 +175,7 @@ public class Client extends Base {
 		} else {
 			setGeneralErrorMessage("Please specify an 'action'");
 		}
-		index();
+		index(null);
 	}
 	
 	private enum TorrentAction { START, STOP, REMOVE }
@@ -149,8 +187,7 @@ public class Client extends Base {
 				if (!StringUtils.isEmpty(hash)) {
 					UserTorrent ut = UserTorrent.getByUser(user, hash);
 					if (ut == null) {
-						setGeneralErrorMessage("User has no such torrent with hash: " + hash);
-						return null;
+						throw new MessageException("User has no such torrent with hash: " + hash);						
 					}
 					ITorrentBackend backend = ut.getTorrent().getNode().getNodeBackend();			
 					switch(action) {
@@ -172,18 +209,20 @@ public class Client extends Base {
 						ITorrentBackend backend = ut.getTorrent().getNode().getNodeBackend();
 						switch(action) {
 							case START:
-								backend.startTorrent(hashes);
+								backend.startTorrent(ut.getTorrentHash());
 								break;
 							case STOP:
-								backend.stopTorrent(hashes);
+								backend.stopTorrent(ut.getTorrentHash());
 								break;
 							case REMOVE:
-								backend.removeTorrent(hashes);
-								UserTorrent.batch().delete(utList);
-								removeTorrentsCompletelyIfRequired(hashes);
+								backend.removeTorrent(ut.getTorrentHash());								
 								break;
 						}	
-					}			
+					}
+					if (action == TorrentAction.REMOVE) {
+						UserTorrent.batch().delete(utList);
+						removeTorrentsCompletelyIfRequired(hashes);
+					}
 				} else {
 					setGeneralErrorMessage("Please specify a 'hash' or 'hashes'");
 				}		
@@ -199,21 +238,15 @@ public class Client extends Base {
 		removeTorrentsCompletelyIfRequired(l);
 	}
 	
-	private static void removeTorrentsCompletelyIfRequired(final List<String> hashList) {
-		Promise<GenericJobResult> p = new GenericJob() {
-			@Override
-			public Object doGenericJob() {
-				for(String hash : hashList) {
-					if (UserTorrent.getUsersWithTorrentCount(hash) == 0) {
-						Torrent to = Torrent.getByHash(hash);
-						to.getNode().getNodeBackend().removeTorrent(hash);
-						to.delete();
-					}
-				}
-				return null;
-			}			
-		}.now();
-		successOrError(p);
+	private static void removeTorrentsCompletelyIfRequired(List<String> hashList) {
+		//called within a job, and you cant have nested jobs or await() will never work
+		for(String hash : hashList) {
+			if (UserTorrent.getUsersWithTorrentCount(hash) == 0) {
+				Torrent to = Torrent.getByHash(hash);
+				to.getNode().getNodeBackend().removeTorrent(hash);
+				to.delete();
+			}
+		}
 	}	
 	
 	/*
@@ -366,6 +399,7 @@ public class Client extends Base {
 	}
 	
 	protected static Object successOrError(Promise<GenericJobResult> p) {
+		if (p == null) { throw new IllegalArgumentException("You cant give me a null promise!"); }
 		GenericJobResult res = await(p);
 		if (res.hasError()) {
 			if (res.getError() instanceof MessageException) {

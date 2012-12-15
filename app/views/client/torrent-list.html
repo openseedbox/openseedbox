@@ -10,7 +10,16 @@
 				<tr>
 					<td colspan="4">
 						<h5 class="torrent-title pull-left">
-							${item.torrent.name} <small>- ${item.niceStatus}#{if item.torrent.percentComplete < 1}, ${(int) item.torrent.percentComplete * 100}%#{/if}
+							${item.torrent.name} <small>- ${item.niceStatus},
+								#{if item.torrent.metadataDownloading}
+									#{if item.torrent.paused}
+										Metadata
+									#{/if}
+									${(int) item.torrent.metadataPercentComplete * 100}%
+								#{/if}
+								#{elseif item.torrent.percentComplete < 1}
+									${(int) item.torrent.percentComplete * 100}%
+								#{/elseif}
 							(${Util.getBestRate(item.torrent.totalSizeBytes)})
 							</small>
 						</h5>
@@ -23,16 +32,16 @@
 				</tr>
 				<tr>
 					<td style="width:5%;"><input class="torrent-checkbox" data-torrent-hash="${item.torrent.torrentHash}" type="checkbox" /></td>
-					<td style="width:80%;">
-						#{if !item.torrent.running}
+					<td style="width:80%;">		
+						#{if item.torrent.metadataDownloading}
+						<div class="progress torrent-progress #{if item.torrent.running}progress-striped#{/if} active">
+							<div class="bar bar-danger" style="width:${item.torrent.metadataPercentComplete * 100}%"></div>
+						</div>						
+						#{/if}
+						#{elseif item.torrent.paused}
 						<div class="progress torrent-progress active">
 							<div class="bar bar-warning" style="width:${item.torrent.percentComplete * 100}%"></div>
 						</div>								
-						#{/if}
-						#{elseif item.torrent.metadataDownloading}
-						<div class="progress torrent-progress progress-striped active">
-							<div class="bar bar-danger" style="width:${item.torrent.metadataPercentComplete * 100}%"></div>
-						</div>									
 						#{/elseif}
 						#{elseif item.torrent.downloading}
 						<div class="progress torrent-progress #{if item.torrent.downloadSpeedBytes > 0}progress-striped#{/if} active">
@@ -83,95 +92,5 @@
 </table>
 #{/if}
 #{else}
-	<p>No torrents found.</p>
+	<p>No torrents found. Add a torrent using the button on the right.</p>
 #{/else}
-
-*{
-#{if (torrents.size() == 0)}
-<p>No torrents in '${group}' group.
-#{/if}
-#{else}
-	<table class="table table-bordered table-condensed">
-	#{list items:torrents, as:'torrent'}
-	<tr id="t_${torrent.hashString}" class="torrent">
-		<td style="width:10px;vertical-align:middle;">
-			<input type="checkbox" class="torrent-checkbox" data-torrent-hash="${torrent.hashString}" />
-		</td>
-		<td>
-			<h3 class="pull-left torrent-name">${torrent.name}</h3>
-			<div class="pull-right btn-group torrent-action-buttons">
-				<a href="#" class="btn torrent-info-button" data-torrent-hash="${torrent.hashString}"><i class="icon-edit"></i>Info</a>
-				#{if (torrent.running) }
-					<a href="#" class="btn torrent-pause-button" data-torrent-hash="${torrent.hashString}"><i class="icon-pause"></i>Pause</a>
-				#{/if}
-				#{else}
-					<a href="#" class="btn torrent-resume-button" data-torrent-hash="${torrent.hashString}"><i class="icon-play"></i>Resume</a>
-				#{/else}
-				<a href="#" class="btn torrent-remove-button" data-torrent-hash="${torrent.hashString}"
-				   data-torrent-name="${torrent.name}"><i class="icon-trash"></i>Remove</a>
-			</div>
-			<div class="clearfix"></div>
-			<div class="pull-left">
-				<h5 class="torrent-status-string">
-					${torrent.statusString}
-					#{if (torrent.subStatusString != "")}
-						(${torrent.subStatusString})
-					#{/if}
-					#{if (torrent.statusString == "Downloading")}
-					from ${torrent.peersDownloadingFromCount} of ${torrent.peerCount} peers
-					#{/if}
-				</h5>
-			</div>
-			<div class="pull-right">
-				Down: ${torrent.downloadAmount} (${torrent.downloadRate}/s),
-				Up: ${torrent.uploadAmount} (${torrent.uploadRate}/s)
-			</div>
-			<div class="clearfix"></div>
-			#{if (torrent.metadataDownloading)}
-			<div class="progress progress-danger torrent-progress-bar">
-				<div class="bar" style="width: ${torrent.metadataPercentComplete}%;">
-					<div class="pull-right">${torrent.metadataPercentComplete}%</div>
-				</div>
-			</div>
-			#{/if}
-			#{else}
-			%{
-				def status_class = "progress-info"
-				if (torrent.statusString == "Seeding") {
-					status_class = "progress-success"
-				} else if (torrent.statusString == "Paused") {
-					status_class = "progress-warning";
-				}
-			}%
-			<div class="progress torrent-progress-bar ${status_class}">
-				<div class="bar" style="width: ${torrent.percentDone}%;">
-					<div class="pull-right">${torrent.percentDone}%</div>
-				</div>
-			</div>
-			#{/else}
-			<div class="pull-left">
-				<h5 style="line-height:32px;">Total size: ${torrent.totalSize}<span style="visibility:hidden;">Spacer</span></h5>
-			</div>
-			<div class="btn-group pull-right">
-				#{list items:torrent.groups, as:'group'}
-				<div class="btn torrent-group">
-					<span>${group.name}</span>
-					<a href="#" class="torrent-remove-group" data-torrent-hash="${torrent.hashString}">&times;</a>
-				</div>
-				#{/list}
-				<a class="btn pull-right torrent-add-group" data-original-title="Click to add group" data-torrent-hash="${torrent.hashString}" href="#">+</a>				
-			</div>
-			<div class="clearfix"></div>
-		</td>
-	</tr>
-	#{/list}
-	</table>
-	<script type="text/javascript">
-		(function($) {
-			$(document).ready(function() {
-				$(".torrent-add-group").tooltip();
-			});
-		})(jQuery);
-	</script>
-#{/else}
-}*

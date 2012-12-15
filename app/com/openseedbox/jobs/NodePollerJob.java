@@ -13,11 +13,9 @@ import play.jobs.Job;
 public class NodePollerJob extends Job {
 
 	@Override
-	public void doJob() throws Exception {
-		Logger.info("Polling nodes...");
+	public void doJob() throws Exception {		
 		List<Node> nodes = Node.all().fetch();
-		for (Node n : nodes) {
-			Logger.info("Polling node: %s", n.getName());
+		for (Node n : nodes) {			
 			List<ITorrent> torrents = n.getNodeBackend().listTorrents();
 			List<Torrent> fromDb = Torrent.getByHash(getHashStrings(torrents));
 			for (Torrent db : fromDb) {

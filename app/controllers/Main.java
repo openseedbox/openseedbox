@@ -7,8 +7,8 @@ import play.libs.Mail;
 
 public class Main extends Base {
 
-	public static void index() throws MessageException {
-		Client.index();
+	public static void index() {
+		Client.index(null);
 	}
 	
 	public static void testEmail() {

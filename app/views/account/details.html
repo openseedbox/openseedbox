@@ -4,12 +4,13 @@
 #{/if}
 <h3>Account Details</h3>
 <p>
-<form class="form-horizontal" method="post" action="@{Accounts.details()}">
-	#{form.hidden name:"user.id", value:user?.id /}
-	#{form.text name:"user.emailAddress", value:user?.emailAddress, label:"Email Address:" /}
-	#{form.text name:"user.avatarUrl", value:user?.avatarUrl, label:"Avatar URL" /}
-	#{form.text name:"user.displayName", value:user?.displayName, label:"Display Name" /}
-	#{form.dropdown name:"user.timeZone", value:user?.timeZone, label:"Time Zone", options:timeZones /}
-	#{form.actions buttons:["Update","Cancel"] /}
+<form class="form-horizontal" method="post" action="@{Account.updateDetails}">
+	#{form.hidden name:"user.id", value:currentUser.id /}
+	#{form.text name:"user.emailAddress", value:currentUser.emailAddress, label:"Email Address:" /}
+	#{form.text name:"user.avatarUrl", value:currentUser.avatarUrl, label:"Avatar URL" /}
+	#{form.text name:"user.displayName", value:currentUser.displayName, label:"Display Name" /}	
+	<div class="form-actions">
+		<input class="btn btn-primary" value="Update Account Details" type="submit"/>
+	</div>
 </form>
 </p>

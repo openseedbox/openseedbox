@@ -1,33 +1,45 @@
 #{extends "main.html" /}
+#{set "moreScripts"}
+	<script type="text/javascript" src="#{asset.url 'javascripts/ajax-typeahead.min.js' /}"></script>
+#{/set}
 #{set title:"Torrents" /}
 <div class="row">
 	<div class="span2">
 		<ul class="nav nav-pills nav-stacked nav-list">
-			<li class="active"><a href="#">All</a></li>
-			<li class="group">
-				<a href="#">Music <i class="icon-minus pull-right hide" rel="tooltip" title="test"></i></a>
-			</li>
-			<li><a href="#">TV Shows</a></li>
-			<li><a href="#">${"Really Fricken Long Group Name Lalala".substring(0,15)}</a></li>
+			#{list items:groups, as:"group"}
+				<li class="group #{if currentGroup == group}active#{/if}">
+					<a href="@{Client.index(group)}">
+						${group.length() > 15 ? group.substring(0, 15) : group}
+						#{if group != "All"}
+							<i class="icon-minus pull-right hide remove-group" data-group-name="${group}" rel="tooltip" title="Remove"></i>
+						#{/if}
+					</a>
+				</li>
+			#{/list}
 			<li class="divider"></li>
-			<li><a href="#"><i class="icon-plus"></i> Add Group</a></li>
+			<li><a id="add-group-button" href="#add-group-dialog" data-toggle="modal"><i class="icon-plus"></i> Add Group</a></li>
 		</ul>
 	</div>
 	<div class="span10">	
-		<input type="checkbox" style="margin-right: 25px; margin-left: 10px; margin-top: 8px;" class="pull-left"/>
-		<div class="btn-group pull-left">
-			<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">With Selected <span class="caret"></span></a>
-			<ul class="dropdown-menu">
-				<li><a href="#">Start</a></li>
-				<li><a href="#">Pause</a></li>
-				<li><a href="#">Remove</a></li>				
-			</ul>
-		</div>		
+		#{if torrents.size > 0}
+			<input id="select-all" type="checkbox" style="margin-right: 25px; margin-left: 10px; margin-top: 8px;" class="pull-left"/>
+			<form id="with-selected-form" class="no-margin" action="@{Client.action}" method="post">
+				<input type="hidden" name="what" value="" />
+				<input type="hidden" name="hashes" value="" />
+			</form>
+			<div class="btn-group pull-left">
+				<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">With Selected <span class="caret"></span></a>
+				<ul id="with-selected-dropdown" class="dropdown-menu">
+					<li><a href="#" data-what="start">Start</a></li>
+					<li><a href="#" data-what="stop">Pause</a></li>
+					<li><a href="#" data-what="remove">Remove</a></li>				
+				</ul>
+			</div>
+			#{/if}
 		<a class="btn btn-success pull-right" data-toggle="modal" href="#add-torrent-dialog"><i class="icon-plus-sign"></i>Add Torrent</a>
 		<div class="clearfix" style="margin-bottom: 5px;"></div>
 		<div id="torrent-list">
-			*{AJAX call to show torrent list populates this }*
-			<h5><img src="#{asset.ajax /}" /> <small>Loading your torrents...</small></h5>
+			${torrentList.raw()}
 		</div>
 	</div>
 </div>
@@ -68,6 +80,21 @@
 			<a href="#" class="btn" data-dismiss="modal">Close</a>
 		</div>
 	</form>
+</div>
+<div class="modal hide" id="add-group-dialog">
+	<form action="@{Client.addGroup}" method="post" class="no-margin form-horizontal" style="margin:0px;">
+		<div class="modal-header">
+			<a class="close" data-dismiss="modal">&times;</a>
+			<h3>Add Group</h3>
+		</div>	
+		<div class="modal-body">
+			#{form.text label:"Group Name", name:"group" /}
+		</div>
+		<div class="modal-footer">
+			<input class="btn btn-primary" type="submit" value="Add Group" />
+			<a href="#" class="btn" data-dismiss="modal">Close</a>
+		</div>
+	</form>
 </div>	
 <style type="text/css">
 .no-table tr, .no-table td {
@@ -87,47 +114,34 @@ a.download-link, a.download-link:hover {
 form.no-margin {
 	margin: 0px;
 }
+
+.icon-loader {
+	background:url("#{asset.ajax /}")
+}
 </style>
-<script type="text/javascript">
-$(document).ready(function() {
-	$(".group").mouseover(function() {
-		$(".group .icon-minus").show();
-	}).mouseout(function() {
-		$(".group .icon-minus").hide();
-	});
-		
-	$("i[rel=tooltip]").tooltip({
-		"title" : "Hey Ya!"
-	});
-});
-</script>
 <script type="text/javascript">
 (function($) {
 	
 	window.refresh_disabled = false;
 	
-	//setup ajax to show global loader on every request
-	$.ajaxSetup({
-		beforeSend : function() {
-			//$("#global-loader").show();
-		},
-		complete : function() {
-			//$("#global-loader").hide();
-		}
-	});
-	
 	$(document).ajaxSuccess(function(evt, xhr) {
-		var data = $.parseJSON(xhr.responseText);
-		if (data.error) {
-			$.flashError(data.error);
+		try {
+			var data = $.parseJSON(xhr.responseText);
+			if (data.error) {
+				$.flashError(data.error);
+			}
+		} catch (e) {
+			//ignore, probably wasnt JSON that was returned
 		}
 	});
 	
 	$(document).ready(function() {
 		var already_refreshing = false;
-		var activeGroup = "All";
+		var activeGroup = "${currentGroup}";
 		var activeAjaxRequest;
+		var first_time = true;
 		var refresh = function(force) {
+			if (first_time) { first_time = false; return; }
 			if (already_refreshing && !force) {return;} //wait for previous refresh to finish before starting a new one, unless force is set
 			if (window.refresh_disabled) {return;} //refresh gets disabled when window loses focus to take load off server
 			already_refreshing = true;
@@ -153,12 +167,11 @@ $(document).ready(function() {
 					var my_hash = $(this).data("torrent-hash");
 					if ($.inArray(my_hash, checked_hashes) != -1) {
 						$(this).attr("checked", "checked");
-					}
+					}					
 				});
 				already_refreshing = false;
 			});
-		};
-		refresh(); //load initial data
+		};		
 		setInterval(refresh, 10000); //db is only populated every 10 seconds so refreshing faster than this just causes undue load
 		
 		$(window).on("focus", function() {
@@ -166,100 +179,95 @@ $(document).ready(function() {
 			refresh(); //refresh immediately as soon as window gains focus
 		}).on("blur", function() {
 			window.refresh_disabled = true;
-		});		
+		});				
 		
-		//NORMAL EVENT HANDLERS
-		var do_action = function(action, callback) {
-			if (checked_hashes.length > 0) {
-				if (action == "removeTorrents") {
-					if (!confirm("Are you sure you want to remove the " + checked_hashes.length + " selected torrents?")) { return; }
+		//NORMAL EVENT HANDLERS		
+		$(".group").mouseover(function() {
+			$(this).find(".icon-minus").show();
+		}).mouseout(function() {
+			$(this).find(".icon-minus").hide();
+		});
+
+		$("i.remove-group").click(function() {
+			var groupName = $(this).data("group-name");
+			if (confirm("Are you sure you want to remove the group '" + groupName + "'?")) {
+				document.location.href="@{Client.removeGroup}?group=" + groupName;
+			}
+			return false;
+		});
+
+		$("#select-all").click(function() {
+			if ($(this).is(":checked")) {
+				$(".torrent-checkbox").attr("checked", "checked");
+			} else {
+				$(".torrent-checkbox").removeAttr("checked");
+			}
+			checked_hashes = [];
+			$(".torrent-checkbox").each(function() {
+				if ($(this).is(":checked")) {
+					checked_hashes.push($(this).data("torrent-hash"));
 				}
-				var group = "";
-				if (action == "addTorrentGroups") {
-					group = prompt("Please enter the name of the group to add these " + checked_hashes.length + " torrents to:");
-					if (!group) { return; }
+			});
+		});
+
+		$("#with-selected-dropdown a").click(function() {
+			var what = $(this).data("what");
+			var checked = checked_hashes;
+			if (checked.length > 0) {
+				if (confirm("Are you sure you want to " + what + " these " + checked_hashes.length + " torrents?")) {
+					$("#with-selected-form input[name=what]").val(what);
+					$("#with-selected-form input[name=hashes]").val(checked_hashes.join(","));			
+					$("#with-selected-form").submit();
+					return false;	
 				}
-				$("#group-actions-loader").show();
-				window.refresh_disabled = true;
-				$.post("/client/" + action + "?ext=json", {
-					"torrentHashes" : checked_hashes,
-					"group" : group
-				}, function(data) {
-					window.refresh_disabled = false;
-					$("#group-actions-loader").hide();
-					refresh();
-					if (callback && $.isFunction(callback)) {
-						callback();
-					}
-				});
 			}			
-		}
-		$("#group-actions a.group-actions-start").click(function() {
-			do_action("startTorrents");
 		});
-		$("#group-actions a.group-actions-pause").click(function() {
-			do_action("pauseTorrents");
+
+		$("#search").typeahead({
+			"ajax" : {
+				"url" : "@{Client.searchIsohunt}",
+				"displayField" : "label",
+				"preDispatch" : function(query) {
+					$("#search-loader").show();
+					return {
+						"query" : query
+					}
+				},
+				"preProcess" : function(data) {
+					$("#search-loader").hide();
+					return data;
+				}
+			},
+			"matcher" : function() { return true; },
+			"display" : "label",
+			"val" : "torrent_url",
+			"itemSelected" : function(item, val, text) {
+				$("#urlOrMagnet").val(val);
+			}
 		});
-		$("#group-actions a.group-actions-remove").click(function() {
-			do_action("removeTorrents");
+
+		$("#clear").click(function() {
+			$("#search").val("");
+			$("#urlOrMagnet").val("");
+			return false;
 		});
-		$("#group-actions a.group-actions-add-group").click(function() {
-			do_action("addTorrentGroups");
-		});		
 		
 		//LIVE EVENT HANDLERS
 		var checked_hashes = []; //for persisting checkboxes between requests 
 				
-		$("body")..on("click", "a.remove-torrent", function() {
+		$("body").on("click", "a.remove-torrent", function() {
 			var dialog = $("#remove-torrent-dialog");
 			var hash = $(this).data("torrent-hash");
 			var name = $(this).data("torrent-name");	
 			$(dialog).find("input[name=hash]").val(hash);
 			$(dialog).find(".torrent-name").html(name);			
 			$(dialog).modal("show");
-			window.refresh_disabled = true;			
-		}).on("click", "a.torrent-add-group", function() {
-			$("<input class='torrent-add-group' type='text' style='width:80px;' name='group' placeholder='Type name'/>")
-				.insertAfter(".container") //do it here so it can stick outside the container bounds 
-				.position({
-					"my" : "left",
-					"at" : "left",
-					"of" : this,
-					"offset" : "40 0"
-				})
-				.focus()
-				.data("torrent-hash", $(this).data("torrent-hash"));
-			window.refresh_disabled = true;
+			window.refresh_disabled = true;	
 			return false;
-		}).on("keypress", "input.torrent-add-group", function(evt) {
-			if (evt.keyCode == 13) {
-				var group_name = $(this).val();
-				var hash = $(this).data("torrent-hash");
-				if (group_name) {
-					$.post("/client/addTorrentGroup?ext=json", {
-						"torrentHash" : hash,
-						"group" : group_name
-					}, function() {
-						$("input.torrent-add-group").remove(); //for some reason, doing the self/this thing doesnt work
-						window.refresh_disabled = false;
-						refresh();
-					});
-				}
-			}
-		}).on("click", "a.torrent-remove-group", function() {
-			var hash = $(this).data("torrent-hash");
-			var self = this;
-			$.post("/client/removeTorrentGroup?ext=json", {
-				"torrentHash" : hash,
-				"group" : $(this).siblings("span:first").text()
-			}, function() {
-				$(self).parents("div.btn:first").fadeOut("slow");
-				refresh();
-			})
 		}).on("click", "a.show-torrent-info", function() {
 			var self = this;
 			$(self).loading();
-			$.post("/client/renderTorrentInfo", {
+			$.post("/client/torrentInfo", {
 				"hash" : $(this).data("torrent-hash")
 			}, function(data) {
 				$(self).loading();
@@ -267,7 +275,8 @@ $(document).ready(function() {
 				$("#torrent-info-modal").modal({
 					"backdrop" : false
 				});
-			})
+			});
+			return false;
 		}).on("click", ".torrent-checkbox", function() {
 			var hash = $(this).data("torrent-hash");
 			if ($(this).is(":checked")) {
@@ -302,52 +311,6 @@ $(document).ready(function() {
 			$("#flash-error-content").html(error);
 			$("#flash-error").show();
 		}
-	});
-	
-	$(document).ready(function() {
-		$(".remove-torrent")
-		$("#remove-torrent-button").click(function() {
-			var hash = $(this).data("torrent-hash");
-			$.post("/client/removeTorrent?ext=json", {
-				"torrentHash" : hash
-			}, function() {
-				$("#t_" + hash).fadeOut("slow", function() {
-					$(this).remove();
-				});
-				$("#remove-torrent-dialog").modal("hide");
-				window.refresh_disabled = false;
-			});
-			return false;
-		});
-
-		$("#search").typeahead({
-			"ajax" : {
-				"url" : "@{Client.searchIsohunt}",
-				"displayField" : "label",
-				"preDispatch" : function(query) {
-					$("#search-loader").show();
-					return {
-						"query" : query
-					}
-				},
-				"preProcess" : function(data) {
-					$("#search-loader").hide();
-					return data;
-				}
-			},
-			"matcher" : function() { return true; },
-			"display" : "label",
-			"val" : "torrent_url",
-			"itemSelected" : function(item, val, text) {
-				$("#urlOrMagnet").val(val);
-			}
-		});
-
-		$("#clear").click(function() {
-			$("#search").val("");
-			$("#urlOrMagnet").val("");
-			return false;
-		});
 	});
 })(jQuery);
 	</script>

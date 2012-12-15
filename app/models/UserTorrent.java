@@ -1,20 +1,26 @@
 package models;
 
-import com.openseedbox.backend.ITorrent;
+import com.openseedbox.backend.IFile;
+import com.openseedbox.code.Util;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import org.apache.commons.lang.StringUtils;
 import siena.Column;
 import siena.Table;
 
 @Table("torrent_group")
 public class UserTorrent extends ModelBase {
 
-	@Column("group_name") private String groupName;
-	@Column("user_id") private User user;
-	@Column("torrent_hash") private String torrentHash;
-	
+	@Column("group_name")
+	private String groupName;
+	@Column("user_id")
+	private User user;
+	@Column("torrent_hash")
+	private String torrentHash;
 	private transient Torrent torrent;
-	
-	public static int getAverageTorrentsPerUser() {		
+
+	public static int getAverageTorrentsPerUser() {
 		return -1;
 	}
 
@@ -22,6 +28,11 @@ public class UserTorrent extends ModelBase {
 		return UserTorrent.all().filter("user", u).fetch();
 	}
 	
+	public static List<UserTorrent> getByUserAndGroup(User u, String group) {
+		return UserTorrent.all()
+				  .filter("user", u).filter("groupName", group).fetch();
+	}
+
 	public static UserTorrent getByUser(User u, String hash) {
 		return UserTorrent.all().filter("user", u)
 				  .filter("torrentHash", hash).get();
@@ -31,12 +42,20 @@ public class UserTorrent extends ModelBase {
 		return UserTorrent.all().filter("user", u)
 				  .filter("torrentHash IN", hashes).fetch();
 	}
-	
+
 	public static int getUsersWithTorrentCount(String hash) {
 		return UserTorrent.all().filter("torrentHash", hash).count();
-	}			  
+	}
 	
-	public String getGroupName() {		
+	public static void blankOutGroup(User u, String group) {
+		List<UserTorrent> list = UserTorrent.getByUserAndGroup(u, group);
+		for (UserTorrent ut : list) {
+			ut.setGroupName(null);
+		}
+		UserTorrent.batch().update(list);
+	}
+
+	public String getGroupName() {
 		return groupName;
 	}
 
@@ -59,18 +78,18 @@ public class UserTorrent extends ModelBase {
 	public void setTorrentHash(String hashString) {
 		this.torrentHash = hashString;
 	}
-	
+
 	public void setTorrent(Torrent t) {
 		this.torrent = t;
 	}
-	
+
 	public Torrent getTorrent() {
 		if (this.torrent == null) {
 			this.torrent = Torrent.getByHash(this.getTorrentHash());
 		}
 		return torrent;
 	}
-	
+
 	public String getNiceStatus() {
 		switch (this.getTorrent().getStatus()) {
 			case DOWNLOADING:
@@ -86,6 +105,114 @@ public class UserTorrent extends ModelBase {
 		}
 		return null;
 	}
-	
-	
+
+	public List<TreeNode> getFilesAsTree() {
+		List<TreeNode> mapTree = new ArrayList<TreeNode>();
+		for (IFile f : getTorrent().getFiles()) {
+			String[] paths = f.getFullPath().split("/");
+			//Logger.info("paths: %s", paths.length);
+			List<TreeNode> parent = mapTree;
+			for (int x = 0; x < paths.length; x++) {
+				String path = paths[x];
+				TreeNode n = getTreeNode(parent, path);
+				TreeNode newTn;
+				if (n == null) {
+					newTn = new TreeNode();
+					newTn.name = path;
+					//only set the file on the final node so earlier nodes
+					//dont keep getting overwritten when multiple files match
+					if (paths.length - 1 == x) {
+						newTn.file = f;
+					}
+					newTn.level = x;
+					newTn.fullPath = getFullPath(paths, x);
+					parent.add(newTn);
+					//Logger.info("added:%s", newTn.name);
+				} else {
+					newTn = n;
+				}
+				Collections.sort(newTn.children);
+				parent = newTn.children;
+			}
+		}
+		return mapTree;
+	}
+
+	private TreeNode getTreeNode(List<TreeNode> t, String name) {
+		for (TreeNode tn : t) {
+			if (tn.name.equals(name)) {
+				return tn;
+			}
+		}
+		return null;
+	}
+
+	private String getFullPath(String[] path, int level) {
+		return StringUtils.join(path, "/", 0, level + 1);
+	}
+
+	public class TreeNode implements Comparable {
+
+		public String name = "";
+		public IFile file = null;
+		public List<TreeNode> children = new ArrayList<TreeNode>();
+		public int level = 0;
+		public String fullPath = "";
+
+		@Override
+		public String toString() {
+			return String.format("TreeNode, name: %s, children:%s", name, children.size());
+		}
+
+		@Override
+		public int compareTo(Object t) {
+			if (t instanceof TreeNode) {
+				TreeNode tn = (TreeNode) t;
+				return this.name.compareTo(tn.name);
+			}
+			return -1;
+		}
+
+		public boolean isAnyChildWanted() {
+			boolean wanted = false;
+			for (TreeNode tn : this.children) {
+				if (tn.file != null && tn.file.isWanted()) {
+					wanted = true;
+					break;
+				}
+				wanted = tn.isAnyChildWanted();
+				if (wanted) {
+					break;
+				}
+			}
+			return wanted;
+		}
+
+		public boolean isAnyChildIncomplete() {
+			boolean complete = false;
+			for (TreeNode tn : this.children) {
+				if (tn.file != null && !tn.file.isCompleted()) {
+					complete = true;
+					break;
+				}
+				complete = tn.isAnyChildIncomplete();
+				if (complete) {
+					break;
+				}
+			}
+			return complete;
+		}
+
+		public long getTotalSize() {
+			long total = 0l;
+			if (this.file != null) {
+				total += this.file.getFileSizeBytes();
+			} else {
+				for (TreeNode child : this.children) {
+					total += child.getTotalSize();
+				}
+			}
+			return total;
+		}
+	}
 }

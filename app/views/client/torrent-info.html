@@ -1,7 +1,8 @@
+%{ def Util = com.openseedbox.code.Util }%
 <div class="modal fade" id="torrent-info-modal">
 	<div class="modal-header">
 		<a class="close" data-dismiss="modal">&times;</a>
-		<h3>Info: ${torrent.name}</h3>
+		<h3>${torrent.torrent.name}</h3>
 	</div>
 	<div class="modal-body">
 		<ul class="nav nav-tabs">
@@ -11,20 +12,25 @@
 		</ul>
 		<div class="tab-content">
 			<div class="tab-pane active" id="torrent-files">
-				<table id="info-files-table" class="table table-bordered table-condensed table-striped">
-					<tr>
-						<th>Name</th>
-						<th>Included</th>
-						<th>Priority</th>
-					</tr>
-				#{list items:torrent.filesAsTree, as:"file"}
-					#{file-row file:file, type:"info" /}
-				#{/list}
-				</table>
+				#{if torrent.torrent.metadataDownloading}
+					<p>Files will be listed when metadata finishes downloading.</p>
+				#{/if}
+				#{else}
+					<table id="info-files-table" class="table table-condensed table-striped">
+						<tr>
+							<th style="width:70%">Name</th>
+							<th style="width:15%">Size</th>
+							<th style="width:15%">Done</th>						
+						</tr>
+					#{list items:torrent.filesAsTree, as:"file"}
+						#{file-row file:file, type:"info" /}
+					#{/list}
+					</table>
+				#{/else}
 			</div>
 			<div class="tab-pane" id="torrent-trackers">
-				#{if (torrent.trackers.size > 0)}
-				<table class="table table-bordered table-condensed table-striped">
+				#{if (torrent.torrent.trackers.size > 0)}
+				<table class="table table-condensed table-striped">
 					<tr>
 						<th>Host</th>
 						<th>Status</th>
@@ -32,20 +38,20 @@
 						<th>Leeches</th>
 						<th>Downloads</th>
 					</tr>
-					#{list items:torrent.trackers, as:"tracker"}
+					#{list items:torrent.torrent.trackers, as:"tracker"}
 					<tr>
-						<th>${tracker.host}</th>
-						<th>
-							#{if (tracker.lastAnnounceResult == "Success")}
-								<span class="success">${tracker.lastAnnounceResult}</span>
+						<td>${tracker.host}</td>
+						<td>
+							#{if (tracker.lastAnnounceSuccessful)}
+								<span class="text-success">${tracker.lastAnnounceResult}</span>
 							#{/if}
 							#{else}
-								<span class="error">${tracker.lastAnnounceResult}</span>
+								<span class="text-error">${tracker.lastAnnounceResult}</span>
 							#{/else}
-						</th>
-						<th>${tracker.seederCount}</th>
-						<th>${tracker.leecherCount}</th>
-						<th>${tracker.downloadCount}</th>
+						</td>
+						<td>${tracker.seederCount}</td>
+						<td>${tracker.leecherCount}</td>
+						<td>${tracker.downloadCount}</td>
 					</tr>
 					#{/list}
 				</table>
@@ -55,8 +61,8 @@
 				#{/else}
 			</div>
 			<div class="tab-pane" id="torrent-peers">
-				#{if (torrent.peers.size > 0)}
-				<table class="table table-bordered table-condensed table-striped">
+				#{if (torrent.torrent.peers.size > 0)}
+				<table class="table table-condensed table-striped">
 					<tr>
 						<th>Address</th>
 						<th>Client</th>
@@ -64,16 +70,16 @@
 						<th>Down (kb/s)</th>
 						<th>Up (kb/s)</th>
 					</tr>				
-					#{list items:torrent.peers, as:"peer"}
+					#{list items:torrent.torrent.peers, as:"peer"}
 					<tr>
-						<td>${peer.address}</td>
+						<td>${peer.ipAddress}</td>
 						<td>${peer.clientName}</td>
 						<td>
-							#{if peer.isEncrypted}<span class="success">yes</span>#{/if}
-							#{else}<span class="error">no</span>#{/else}
+							#{if peer.encryptionEnabled}<span class="text-success">yes</span>#{/if}
+							#{else}<span class="text-error">no</span>#{/else}
 						</td>
-						<td>${peer.downloadSpeed}</td>
-						<td>${peer.uploadSpeed}</td>
+						<td>${Util.getBestRate(peer.downloadRateBytes)}/s</td>
+						<td>${Util.getBestRate(peer.uploadRateBytes)}/s</td>
 					</tr>
 					#{/list}
 				</table>
@@ -85,79 +91,20 @@
 		</div>
 	</div>
 	<div class="modal-footer">
-		<a class="btn btn-primary" href="#" data-torrent-hash="${torrent.hashString}" id="torrent-files-apply">Apply</a>
-		<a class="btn" href="#" data-dismiss="modal">Close</a>
-		<img class="ajax-loader" src="/public/images/ajax-loader.gif" />
+		<a class="btn" href="#" data-dismiss="modal">Close</a>		
 	</div>
 </div>
 <style type="text/css">
 	#info-files-table td {
 		vertical-align: middle;
 	}
-	#info-files-table td:nth-child(2) {
-		text-align: center;
-	}
-	#info-files-table select {
-		margin: 0px;
-	}
 </style>
 <script type="text/javascript">
-	(function($) {
-		$(document).ready(function() {
-			$("#info-files-table").on("change", "input[type=checkbox].info-select-multiple", function() {
-				var this_level = $(this).parents("tr:first").data("level");
-				var checked = $(this).is(":checked");
-				$("#info-files-table tr").each(function() {
-					if ($(this).data("level") > this_level) {
-						$(this).find("input[type=checkbox]").attr("checked", checked);
-					}
-				})
-			})
-			$("#torrent-info-modal").on("hidden", function() {
-				$(this).remove();
-			});
-			$("#torrent-files-apply").click(function() {
-				var loader = $(this).siblings(".ajax-loader").show();
-				var ids = [];
-				var all_ids = []; //needed to set files-unwanted
-				var high_ids = [];
-				var normal_ids = [];
-				var low_ids = [];
-				var hash = $(this).data("torrent-hash");
-				$("#info-files-table input[type=checkbox].info-file").each(function() {
-					var id = $(this).data("id");
-					if ($(this).is(":checked")) {
-						ids.push(id);
-					}
-					all_ids.push(id);
-				});
-				$("#info-files-table select").each(function() {
-					var val = $(this).val();
-					var id = $(this).data("id");
-					if (val == "-1") {
-						low_ids.push(id);
-					} else if (val == "0") {
-						normal_ids.push(id);
-					} else if (val == "1") {
-						high_ids.push(id);
-					}
-				});
-				$.post("/client/setIncludedTorrentFiles?ext=json", {
-					"torrentHash" : hash,
-					"fw" : ids,
-					"fa" : all_ids,
-					"ph" : high_ids,
-					"pn" : normal_ids,
-					"pl" : low_ids
-				}, function(data) {
-					if (data.success) {
-						$(loader).hide();
-						$("#torrent-info-modal").modal("hide");
-					} else {
-						alert(data.error);
-					}
-				})
-			});
-		});
-	})(jQuery);
+(function($) {
+	$(document).ready(function() {
+		$("#torrent-info-modal").on("hidden", function() {
+			$(this).remove();
+		});	
+	});
+})(jQuery);
 </script>
