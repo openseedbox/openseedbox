@@ -1,12 +1,6 @@
 #{extends "main.html" /}
 #{set title: "Account Settings" /}
 
-#{if !currentUser.hasPlan()}
-<div class="alert alert-error">
-	<h4 class="alert-heading">You are not on a plan!</h4>
-	You need to <a href="@{Account.plans}">choose a plan</a> before you can start downloading torrents.
-</div>
-#{/if}
 #{if !currentUser.emailAddress}
 <div class="alert alert-warning">
 	<h4 class="alert-heading">You have not set your email address!</h4>

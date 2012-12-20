@@ -198,6 +198,14 @@ public class NodeBackend implements ITorrentBackend {
 		JsonObject files = getResponseBodyOrError(req.get()).getAsJsonObject().getAsJsonObject("files");
 		java.lang.reflect.Type listType = new TypeToken<HashMap<String, ArrayList<NodeFile>>>() {}.getType();
 		Map<String, List<IFile>> ret = Util.getGson().fromJson(files, listType);
+		for (String hash : ret.keySet()) {
+			List<IFile> li = ret.get(hash);
+			for (IFile f : li) {
+				NodeFile nf = (NodeFile) f;
+				nf.setNode(this.node);
+				nf.setTorrentHash(hash);
+			}
+		}
 		return ret;		
 	}
 
@@ -233,6 +241,9 @@ public class NodeBackend implements ITorrentBackend {
 	private List<ITorrent> parseToList(JsonArray list) {
 		java.lang.reflect.Type listType = new TypeToken<ArrayList<NodeTorrent>>() {}.getType();
 		List<NodeTorrent> ret = Util.getGson().fromJson(list, listType);
+		for (NodeTorrent nt : ret) {
+			nt.setNode(this.node);
+		}
 		return new ArrayList<ITorrent>(ret);			
 	}
 

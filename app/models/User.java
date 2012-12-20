@@ -3,6 +3,7 @@ package models;
 import com.openseedbox.code.Util;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -158,6 +159,11 @@ public class User extends ModelBase {
 
 	public List<String> getGroups() {		
 		if (groups != null) {
+			if (!groups.contains("All")) {
+				Collections.reverse(groups);
+				groups.add("All");
+				Collections.reverse(groups);
+			}
 			return groups;			
 		}
 		return Arrays.asList(new String[] { "All" });

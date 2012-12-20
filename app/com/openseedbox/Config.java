@@ -12,4 +12,12 @@ public class Config {
 		return Play.configuration.getProperty("openseedbox.node.access", "https").trim();
 	}
 	
+	public static String getErrorEmailAddress() {
+		return Play.configuration.getProperty("errors.mailto", "erin.dru@gmail.com");
+	}
+	
+	public static String getErrorFromEmailAddress() {
+		return Play.configuration.getProperty("errors.mailfrom", "errors@openseedbox.com");
+	}	
+	
 }

@@ -1,10 +1,15 @@
 #{extends "account/index.html" /}
 
+#{if currentUser.plan}
 <div class="alert alert-warning">
 	<h3>Warning</h3>
 	<p>If you change a plan halfway through your billing cycle, you will be charged full price for the new plan
 		<strong>but your billing cycle will be reset</strong>. No refund will be issued for a partial month.</p>
 </div>
+#{/if}
+#{else}
+	<h2>Choose one of our plans below to get started!</h2>
+#{/else}
 
 %{ def count = 0 }%
 #{list items:plans, as:"plan"}

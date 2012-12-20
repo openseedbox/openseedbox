@@ -1,13 +1,22 @@
 #{extends "main.html" /}
 #{set "moreScripts"}
 	<script type="text/javascript" src="#{asset.url 'javascripts/ajax-typeahead.min.js' /}"></script>
+	<script type="text/javascript" src="#{asset.url 'javascripts/jquery-ui-1.9.2.custom.min.js' /}"></script>
+#{/set}
+#{set "moreStyles"}
+	<link rel="stylesheet" type="text/css" href="#{asset.url 'stylesheets/jquery-ui-1.9.2.custom.min.css' /}" />
 #{/set}
 #{set title:"Torrents" /}
+<div class="row">
+	<div class="span10 offset2">
+		<h3>${currentGroup} torrents</h3>
+	</div>
+</div>
 <div class="row">
 	<div class="span2">
 		<ul class="nav nav-pills nav-stacked nav-list">
 			#{list items:groups, as:"group"}
-				<li class="group #{if currentGroup == group}active#{/if}">
+				<li class="group #{if currentGroup == group}active#{/if}" data-group-name="${group}">
 					<a href="@{Client.index(group)}">
 						${group.length() > 15 ? group.substring(0, 15) : group}
 						#{if group != "All"}
@@ -20,7 +29,7 @@
 			<li><a id="add-group-button" href="#add-group-dialog" data-toggle="modal"><i class="icon-plus"></i> Add Group</a></li>
 		</ul>
 	</div>
-	<div class="span10">	
+	<div class="span10">			
 		#{if torrents.size > 0}
 			<input id="select-all" type="checkbox" style="margin-right: 25px; margin-left: 10px; margin-top: 8px;" class="pull-left"/>
 			<form id="with-selected-form" class="no-margin" action="@{Client.action}" method="post">
@@ -32,7 +41,9 @@
 				<ul id="with-selected-dropdown" class="dropdown-menu">
 					<li><a href="#" data-what="start">Start</a></li>
 					<li><a href="#" data-what="stop">Pause</a></li>
-					<li><a href="#" data-what="remove">Remove</a></li>				
+					<li><a href="#" data-what="remove">Remove</a></li>
+					<li><a id="add-to-group-button" href="#">Add to Group</a></li>
+					<li><a id="remove-from-group-button" href="#">Remove from Group</a></li>
 				</ul>
 			</div>
 			#{/if}
@@ -64,7 +75,7 @@
 	</form>
 </div>
 <div class="modal hide" id="remove-torrent-dialog">
-	<form action="@{Client.action}" method="post" class="no-margin" style="margin:0px;">
+	<form action="@{Client.action}" method="post" class="no-margin">
 		<input name="hash" value="" type="hidden" />
 		<input name="hashes" value="" type="hidden" />
 		<input name="what" value="remove" type="hidden" />
@@ -82,7 +93,7 @@
 	</form>
 </div>
 <div class="modal hide" id="add-group-dialog">
-	<form action="@{Client.addGroup}" method="post" class="no-margin form-horizontal" style="margin:0px;">
+	<form action="@{Client.addGroup}" method="post" class="no-margin form-horizontal">
 		<div class="modal-header">
 			<a class="close" data-dismiss="modal">&times;</a>
 			<h3>Add Group</h3>
@@ -95,12 +106,29 @@
 			<a href="#" class="btn" data-dismiss="modal">Close</a>
 		</div>
 	</form>
-</div>	
+</div>
+<div class="modal hide" id="add-to-group-dialog">
+	<form action="@{Client.addToGroup}" method="post" class="no-margin form-horizontal">
+		<input type="hidden" name="hashes" value="" />		
+		<div class="modal-header">
+			<a class="close" data-dismiss="modal">&times;</a>
+			<h3>Add Torrents To Group</h3>
+		</div>	
+		<div class="modal-body">
+			<p>Add <span class="torrent-count"></span> torrents to the following group:</p>
+			#{form.dropdown label:"Group", name:"group", options:groups.minus("All") /}
+		</div>
+		<div class="modal-footer">
+			<input class="btn btn-primary" type="submit" value="Add to Group" />
+			<a href="#" class="btn" data-dismiss="modal">Close</a>
+		</div>
+	</form>
+</div>
 <style type="text/css">
 .no-table tr, .no-table td {
 	border: 0 none;
 }
-.torrent-progress {
+.torrent-progress, .torrent-speed {
 	margin-bottom: 0px;
 }
 .torrent-speed h5 {
@@ -117,6 +145,10 @@ form.no-margin {
 
 .icon-loader {
 	background:url("#{asset.ajax /}")
+}
+
+.torrent-title {
+	margin-bottom: 0px;
 }
 </style>
 <script type="text/javascript">
@@ -172,7 +204,7 @@ form.no-margin {
 				already_refreshing = false;
 			});
 		};		
-		setInterval(refresh, 10000); //db is only populated every 10 seconds so refreshing faster than this just causes undue load
+		//setInterval(refresh, 10000); //db is only populated every 10 seconds so refreshing faster than this just causes undue load
 		
 		$(window).on("focus", function() {
 			window.refresh_disabled = false;
@@ -210,10 +242,9 @@ form.no-margin {
 			});
 		});
 
-		$("#with-selected-dropdown a").click(function() {
-			var what = $(this).data("what");
-			var checked = checked_hashes;
-			if (checked.length > 0) {
+		$("#with-selected-dropdown a[data-what]").click(function() {
+			var what = $(this).data("what");			
+			if (checked_hashes.length > 0) {
 				if (confirm("Are you sure you want to " + what + " these " + checked_hashes.length + " torrents?")) {
 					$("#with-selected-form input[name=what]").val(what);
 					$("#with-selected-form input[name=hashes]").val(checked_hashes.join(","));			
@@ -221,6 +252,22 @@ form.no-margin {
 					return false;	
 				}
 			}			
+		});
+		
+		$("#add-to-group-button").click(function() {						
+			if (checked_hashes.length > 0) {
+				$("#add-to-group-dialog input[name=hashes]").val(checked_hashes.join(","));
+				$("#add-to-group-dialog .torrent-count").html("<strong>" + checked_hashes.length + "</strong>");
+				$("#add-to-group-dialog").modal("show");
+			}
+		});
+		
+		$("#remove-from-group-button").click(function() {
+			if (checked_hashes.length > 0) {
+				if (confirm("Are you sure you want to remove these " + checked_hashes.length + " torrents from this group?")) {
+					document.location.href = "@{Client.removeFromGroup(currentGroup)}";
+				}
+			}
 		});
 
 		$("#search").typeahead({
@@ -250,6 +297,19 @@ form.no-margin {
 			$("#search").val("");
 			$("#urlOrMagnet").val("");
 			return false;
+		});
+		
+		$(".download-button").click(function() {
+			var hash = $(this).data("hash");
+			var self = this;
+			$.get("@{Client.downloadButton}", { "hash" : hash }, function(data) {
+				$(self).popover({
+					"placement" : "bottom",
+					"title" : "Files",
+					"html" : true,
+					"content" : data
+				}).popover("show");
+			});
 		});
 		
 		//LIVE EVENT HANDLERS

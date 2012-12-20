@@ -61,6 +61,11 @@ public class Plan extends ModelBase {
 	public int getMaxDiskspaceGb() {
 		return maxDiskspaceGb;
 	}
+	
+	public long getMaxDiskspaceBytes() {
+		long ret = getMaxDiskspaceGb();
+		return ret * (1024L * 1024L * 1024L);
+	}
 
 	public void setMaxDiskspaceGb(int maxDiskspaceGb) {
 		this.maxDiskspaceGb = maxDiskspaceGb;

@@ -5,6 +5,7 @@ import com.openseedbox.backend.IPeer;
 import com.openseedbox.backend.ITorrent;
 import com.openseedbox.backend.ITracker;
 import com.openseedbox.backend.TorrentState;
+import com.openseedbox.code.Util;
 import java.util.List;
 import models.Node;
 import org.apache.commons.lang.StringUtils;
@@ -25,13 +26,18 @@ public class NodeTorrent implements ITorrent {
 	private long uploadedBytes;
 	private TorrentState state;
 	private Node node;
+	private String zipDownloadLink;
 	
 	public NodeTorrent(Node n) {
 		node = n;
 	}
+	
+	public void setNode(Node n) {
+		node = n;
+	}
 
 	public String getName() {
-		return name;
+		return Util.URLDecode(name);
 	}
 
 	public boolean isRunning() {
@@ -159,6 +165,9 @@ public class NodeTorrent implements ITorrent {
 	}
 
 	public boolean isSeeding() {
+		if (isComplete() && getUploadSpeedBytes() > 0) {
+			return true;
+		}
 		return getStatus() == TorrentState.SEEDING;
 	}
 
@@ -169,5 +178,17 @@ public class NodeTorrent implements ITorrent {
 	public boolean isPaused() {
 		return getStatus() == TorrentState.PAUSED;
 	}
+
+	public boolean isComplete() {
+		return getPercentComplete() == 1.0;
+	}
+
+	public String getZipDownloadLink() {
+		return String.format("%s%s",
+				 node.getNodeUrl(), zipDownloadLink);
+	}	
 	
+	public void setZipDownloadLink(String link) {
+		this.zipDownloadLink = link;
+	}
 }
