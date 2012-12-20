@@ -1,6 +1,8 @@
 package controllers;
 
 import com.openseedbox.code.MessageException;
+import models.Node;
+import notifiers.Mails;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.SimpleEmail;
 import play.libs.Mail;
@@ -24,6 +26,14 @@ public class Main extends Base {
 		}
 		result("Yay!");
 	}
+	
+	public static void testNodeDown() {
+		Mails.nodeDown(Node.getBestForNewTorrent(), null);
+	}
+	
+	public static void testNodeBackUp() {
+		Mails.nodeBackUp(Node.getBestForNewTorrent());
+	}	
 	
 	public static void triggerError() throws Exception {
 		throw new Exception("Test error!");

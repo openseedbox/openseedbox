@@ -23,6 +23,7 @@ public class Torrent extends ModelBase implements ITorrent {
 	@Column("downloaded_bytes") private long downloadedBytes;
 	@Column("uploaded_bytes") private long uploadedBytes;	
 	@Column("total_size_bytes") private long totalSizeBytes;
+	@Column("zip_download_link") private String zipDownloadLink;
 	private String error;
 	private TorrentState state;
 	@Column("create_date")
@@ -60,7 +61,8 @@ public class Torrent extends ModelBase implements ITorrent {
 		this.setUploadedBytes(t.getUploadedBytes());
 		this.setTotalSizeBytes(t.getTotalSizeBytes());		
 		this.setErrorMessage(t.getErrorMessage());
-		this.setStatus(t.getStatus());		
+		this.setStatus(t.getStatus());	
+		this.setZipDownloadLink(t.getZipDownloadLink());
 	}
 	
 	private transient List<IPeer> _peers;
@@ -206,6 +208,18 @@ public class Torrent extends ModelBase implements ITorrent {
 
 	public boolean isPaused() {
 		return getStatus() == TorrentState.PAUSED;
+	}
+
+	public boolean isComplete() {
+		return getPercentComplete() == 1.0;
+	}
+
+	public String getZipDownloadLink() {
+		return this.zipDownloadLink;
+	}
+
+	public void setZipDownloadLink(String zipDownloadLink) {
+		this.zipDownloadLink = zipDownloadLink;
 	}
 
 }

@@ -36,7 +36,7 @@ public class UserTorrent extends ModelBase {
 	public static UserTorrent getByUser(User u, String hash) {
 		return UserTorrent.all().filter("user", u)
 				  .filter("torrentHash", hash).get();
-	}
+	}		
 
 	public static List<UserTorrent> getByUser(User u, List<String> hashes) {
 		return UserTorrent.all().filter("user", u)

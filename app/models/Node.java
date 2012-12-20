@@ -7,6 +7,7 @@ import com.openseedbox.backend.ITorrentBackend;
 import com.openseedbox.backend.NodeStatus;
 import com.openseedbox.backend.node.NodeBackend;
 import com.openseedbox.code.MessageException;
+import com.openseedbox.code.Util;
 import java.net.InetAddress;
 import java.util.List;
 import play.data.validation.CheckWith;
@@ -28,6 +29,8 @@ public class Node extends ModelBase {
 	@Required @CheckWith(IsWholeNumber.class) private String port;
 	
 	@Required @Column("api_key") private String apiKey;
+	
+	private boolean down;	
 		
 	private boolean active;
 	
@@ -36,11 +39,15 @@ public class Node extends ModelBase {
 		return Node.all().limit(1).get();
 	}
 	
+	public static List<Node> getActiveNodes() {
+		return Node.all().filter("active", true).fetch();
+	}
+	
 	public INodeStatus getNodeStatus() {
 		try {
 			HttpResponse res = getWebService("/status").get();
 			if (res.success()) {			
-				INodeStatus status = new Gson().fromJson(res.getJson().getAsJsonObject().get("data"), NodeStatus.class);
+				INodeStatus status = Util.getGson().fromJson(res.getJson().getAsJsonObject().get("data"), NodeStatus.class);
 				return status;
 			}	
 		} catch (Exception ex) {
@@ -56,7 +63,98 @@ public class Node extends ModelBase {
 		return new NodeBackend(this);
 	}
 	
+	public boolean isReachable() {
+		try {
+			return InetAddress.getByName(this.ipAddress).isReachable(10000);
+		} catch (Exception ex) {
+			return false;
+		}
+	}	
+	
+	public WSRequest getWebService(String action) {		
+		if (!action.startsWith("/")) {
+			action = "/" + action;
+		}
+		String url = getNodeUrl() + action;
+		return WS.url(url)
+				  .setParameter("ext", "json")
+				  .setParameter("api_key", this.apiKey);
+	}
+	
+	public WSRequest getWebService(String action, String hash) {		
+		WSRequest req = getWebService(action);
+		req.setParameter("hash", hash);
+		return req;
+	}
+	
+	public WSRequest getWebService(String action, List<String> hashes) {		
+		WSRequest req = getWebService(action);
+		req.setParameter("hashes", hashes);
+		return req;
+	}	
+	
+	public String getNodeUrl() {
+		return String.format("%s://%s:%s", Config.getNodeAccessType(), this.ipAddress, this.port);
+	}
+	
+	/* Getters and Setters */
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getIpAddress() {
+		return ipAddress;
+	}
+
+	public void setIpAddress(String ipAddress) {
+		this.ipAddress = ipAddress;
+	}
+
+	public boolean isActive() {
+		return active;
+	}
+
+	public void setActive(boolean active) {
+		this.active = active;
+	}
+
+	public String getPort() {
+		return port;
+	}
+
+	public void setPort(String port) {
+		this.port = port;
+	}
+
+	public String getApiKey() {
+		return apiKey;
+	}
+
+	public void setApiKey(String apiKey) {
+		this.apiKey = apiKey;
+	}	
+	
+	public boolean isDown() {
+		return down;
+	}
+
+	public void setDown(boolean down) {
+		this.down = down;
+	}	
+	
+	/* End Getters and Setters */
+	
 	/*
+	public interface ISshOutputReporter {
+		public void onOutputLine(String line);
+	}*/
+
+		/*
 	public void writeFileToNode(String data, String destinationLocation)
 			throws JSchException, IOException, SftpException {
 		writeFileToNode(data, destinationLocation, 0644);
@@ -176,84 +274,5 @@ public class Node extends ModelBase {
 		session.setPassword(this.password);
 		session.connect();
 		return session;
-	}*/
-	
-	private boolean isReachable() {
-		try {
-			return InetAddress.getByName(this.ipAddress).isReachable(10000);
-		} catch (Exception ex) {
-			return false;
-		}
-	}	
-	
-	public WSRequest getWebService(String action) {		
-		if (!action.startsWith("/")) {
-			action = "/" + action;
-		}
-		return WS.url("%s://%s:%s%s", Config.getNodeAccessType(), this.ipAddress, this.port, action)
-				  .setParameter("ext", "json")
-				  .setParameter("api_key", this.apiKey);
-	}
-	
-	public WSRequest getWebService(String action, String hash) {		
-		WSRequest req = getWebService(action);
-		req.setParameter("hash", hash);
-		return req;
-	}
-	
-	public WSRequest getWebService(String action, List<String> hashes) {		
-		WSRequest req = getWebService(action);
-		req.setParameter("hashes", hashes);
-		return req;
-	}	
-	
-	/* Getters and Setters */
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getIpAddress() {
-		return ipAddress;
-	}
-
-	public void setIpAddress(String ipAddress) {
-		this.ipAddress = ipAddress;
-	}
-
-	public boolean isActive() {
-		return active;
-	}
-
-	public void setActive(boolean active) {
-		this.active = active;
-	}
-
-	public String getPort() {
-		return port;
-	}
-
-	public void setPort(String port) {
-		this.port = port;
-	}
-
-	public String getApiKey() {
-		return apiKey;
-	}
-
-	public void setApiKey(String apiKey) {
-		this.apiKey = apiKey;
-	}	
-	
-	/* End Getters and Setters */
-	
-	/*
-	public interface ISshOutputReporter {
-		public void onOutputLine(String line);
-	}*/
-
+	}*/	
 }

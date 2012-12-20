@@ -1,0 +1,14 @@
+#{extends "Mails/main.html" /}
+<h2>Node '${node.name}' is ${status}!</h2>
+<ul>
+	<li>IP Address: ${node.ipAddress}</li>
+	<li>Port: ${node.port}</li>
+	<li>API Key: ${node.apiKey}</li>
+</ul>
+<a href="${node.nodeUrl}">Go to Node</a> | 
+<a href="${node.nodeUrl}/status?api_key=${node.apiKey}">Status Page</a> |
+<a href="${node.nodeUrl}/backend/restart?api_key=${node.apiKey}">Restart Backend</a>
+#{if $stackTrace}
+<h3>Stack Trace</h3>
+<pre>${stackTrace}</pre>
+#{/if}

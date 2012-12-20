@@ -1,0 +1,5 @@
+<ul>
+	#{list items:torrent.torrent.files, as:"file"}
+	<li><a href="${file.downloadLink}">${file.name}</a></li>
+	#{/list}
+</ul>

@@ -26,17 +26,21 @@ import play.mvc.Before;
 
 public class Client extends Base {
 	
+	@Before(unless={"newUser"})
+	public static void checkPlan() {
+		User u = getCurrentUser();
+		//check that a plan has been purchased		
+		if (u.getPlan() == null) {
+			newUser();
+		}
+	}
+	
 	@Before(unless={"login","auth"})
 	public static void before() {	
 		User u = getCurrentUser();
 		if (u == null) {
 			Auth.login();
 		}
-		//check that a plan has been purchased
-		/*
-		if (u.getPrimaryAccount().getPlan() == null) {
-			Accounts.index();
-		}*/
 
 		//check that limits have not been exceeded. if they have, pause all the torrents and notify user
 		/*
@@ -74,6 +78,9 @@ public class Client extends Base {
 	}
 	
 	public static void update(String group) {
+		if (group == null) {
+			group = "All";
+		}		
 		//this is intended to be invoked via ajax
 		List<UserTorrent> torrents = getCurrentUser().getTorrentsInGroup(group);
 		String data = renderToString("client/torrent-list.html", Util.convertToMap(new Object[] { "torrents", torrents }));
@@ -94,8 +101,7 @@ public class Client extends Base {
 					ITorrent added = (fileFromComputer != null)
 							  ? backend.addTorrent(fileFromComputer)
 							  : backend.addTorrent(urlOrMagnet);
-					//put in database
-					
+					//put in database					
 					Torrent t = new Torrent();
 					t.setHashString(added.getTorrentHash());
 					t.setStatus(added.getStatus());
@@ -160,6 +166,20 @@ public class Client extends Base {
 			user.save();
 			UserTorrent.blankOutGroup(user, group);
 		}
+		index(null);
+	}
+	
+	public static void addToGroup(List<String> hashes, String group) {
+		List<UserTorrent> uts = UserTorrent.getByUser(getCurrentUser(), hashes);
+		for (UserTorrent ut : uts) {
+			ut.setGroupName(group);
+		}
+		UserTorrent.batch().update(uts);
+		index(group);
+	}
+	
+	public static void removeFromGroup(String group) {
+		UserTorrent.blankOutGroup(getCurrentUser(), group);
 		index(null);
 	}
 	
@@ -249,125 +269,6 @@ public class Client extends Base {
 		}
 	}	
 	
-	/*
-	public static void startTorrent(String torrentHash) {
-		handleTorrentControlRequest(torrentHash, TorrentAction.START);	
-	}
-	
-	public static void startTorrents(String[] torrentHashes) {
-		handleTorrentControlRequest(torrentHashes, TorrentAction.START);
-	}
-	
-	public static void pauseTorrent(String torrentHash) {
-		handleTorrentControlRequest(torrentHash, TorrentAction.STOP);			
-	}
-	
-	public static void pauseTorrents(String[] torrentHashes) {
-		handleTorrentControlRequest(torrentHashes, TorrentAction.STOP);			
-	}
-	
-	public static void removeTorrent(String torrentHash) {
-		handleTorrentControlRequest(torrentHash, TorrentAction.REMOVE);
-	}	
-	
-	public static void removeTorrents(String[] torrentHashes) {
-		handleTorrentControlRequest(torrentHashes, TorrentAction.REMOVE);
-	}	*/
-	/*
-	public static void addTorrentGroup(String torrentHash, String group) throws MessageException {
-		Torrent t = getActiveAccount().getPrimaryUser().getTorrent(torrentHash);
-		if (!StringUtils.isEmpty(group)) {
-			TorrentGroup temp = new TorrentGroup(group);
-			if (!t.groups.contains(temp)) {
-				t.groups.add(temp);
-			}
-			t.save();
-		}
-		result(true);
-	}
-	
-	public static void addTorrentGroups(String[] torrentHashes, String group) {
-		if (torrentHashes != null && torrentHashes.length > 0 && !StringUtils.isEmpty(group)) {
-			List<Torrent> all = Torrent.all()
-					.filter("user", getActiveAccount().getPrimaryUser())
-					.filter("hashString IN", Arrays.asList(torrentHashes)).fetch();
-			for(Torrent t : all) {
-				TorrentGroup temp = new TorrentGroup(group);
-				if (!t.groups.contains(temp)) {
-					t.groups.add(temp);
-				}
-				t.save();			
-			}
-		}
-		result(true);
-	}
-	
-	public static void removeTorrentGroup(String torrentHash, String group) throws MessageException {
-		Torrent t = getActiveAccount().getPrimaryUser().getTorrent(torrentHash);
-		if (!StringUtils.isEmpty(group)) {
-			t.groups.remove(new TorrentGroup(group));
-			t.save();
-		}
-		result(true);		
-	}	*/
-	
-//	public static void update(String group) {
-		/*
-		Account a = getActiveAccount();
-		
-		//use a job to prevent tying up server if backend transmission-daemon is being slow
-		Promise<GetTorrentsJobResult> job = new GetTorrentsJob(a, group).now();
-		GetTorrentsJobResult result = await(job);
-		if (result.hasError()) {
-			resultError(Util.getStackTrace(result.error));
-		}
-		List<Torrent> torrents = result.torrents;
-		
-		//torrent list - changes all the time depending on progress, speed etc
-		Map<String, Object> tlist_params = new HashMap<String, Object>();
-		tlist_params.put("torrents", torrents);
-		tlist_params.put("group", group);
-		String tlist = renderToString("client/torrent-list.html", tlist_params);
-		
-		//user stats - change whenever the torrent-list changes
-		Map<String, Object> us_params = new HashMap<String, Object>();
-		us_params.put("stats", a.getPrimaryUser().getUserStats());
-		String us = renderToString("tags/user-stats.html", us_params);
-
-		//tabs - included here because they may change as part of addGroup/removeGroup calls
-		Map<String, Object> ct_params = new HashMap<String, Object>();
-		ct_params.put("_groups", a.getPrimaryUser().getTorrentGroups());
-		ct_params.put("_active", group);
-		String ct = renderToString("tags/client-tabs.html", ct_params);	
-		
-		Map<String, Object> res = new HashMap<String, Object>();
-		res.put("torrent-list", tlist);
-		res.put("user-stats", us);
-		res.put("client-tabs", ct);
-		result(res);*/
-//	}
-	
-
-	
-	public static void setIncludedTorrentFiles(String torrentHash, String[] fw, String[] fa,
-			String[] ph, String[] pn, String[] pl) throws MessageException {/*
-		//fw = files wanted, fa = all files, ph = priority high, pn = priority normal, pl = priority low
-		Transmission t = getActiveAccount().getPrimaryUser().getTransmission();	
-		if (fw != null) {
-			t.setFilesWanted(torrentHash, Arrays.asList(fw), Arrays.asList(fa));
-		}
-		if (ph != null) {
-			t.setFilePriority(torrentHash, Arrays.asList(ph), "high");
-		}
-		if (pn != null) {
-			t.setFilePriority(torrentHash, Arrays.asList(pn), "normal");
-		}
-		if (pl != null) {
-			t.setFilePriority(torrentHash, Arrays.asList(pl), "low");
-		}
-		result(true);*/
-	}
-	
 	public static void searchIsohunt(String query) {
 		if (!StringUtils.isEmpty(query)) {
 			Promise<HttpResponse> promise = 
@@ -406,9 +307,34 @@ public class Client extends Base {
 				setGeneralErrorMessage(res.getError().getMessage());
 				return null;
 			}
+			if (res.getError().getMessage().contains("Connection refused")) {
+				setGeneralErrorMessage("Unable to connect to backend! The administrators have been notified.");
+				//TODO: send error email
+				return null;
+			}
 			Logger.info(res.getError(), "Error occured in job.");
 			throw new RuntimeException(res.getError());
 		}
 		return res.getResult();
-	}		
+	}
+	
+	public static void newUser() {
+		render("client/new-user.html");
+	}
+	
+	public static void downloadButton(String hash) {
+		final UserTorrent fromDb = UserTorrent.getByUser(getCurrentUser(), hash);
+		if (fromDb == null) {
+			resultError("No such torrent for user: " + hash);
+		}
+		Promise<GenericJobResult> p = new GenericJob() {
+			@Override
+			public Object doGenericJob() {
+				fromDb.getTorrent().getFiles();
+				return fromDb;
+			}			
+		}.now();
+		UserTorrent torrent = (UserTorrent) successOrError(p);		
+		render("client/download-button.html", torrent);
+	}
 }
