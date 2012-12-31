@@ -2,8 +2,8 @@ package com.openseedbox.jobs;
 
 import com.openseedbox.backend.INodeStatus;
 import java.util.List;
-import models.EmailError;
-import models.Node;
+import com.openseedbox.models.EmailError;
+import com.openseedbox.models.Node;
 import play.jobs.Every;
 import play.jobs.Job;
 

@@ -1,8 +1,4 @@
 #{extends "account/index.html" /}
-#{set "moreScripts"}
-	<script type="text/javascript" src="https://www.paypalobjects.com/js/external/dg.js"></script>
-#{/set}
-
 <h3>Unpaid Invoices</h3>
 #{if unpaid_invoices.size > 0}
 <table class="table table-condensed">
@@ -26,10 +22,10 @@
 			#{/else}
 		</td>
 		<td>
-			#{if (!invoice.hasBeenPaid())}
-				#{pay-invoice invoice /}
-			#{/if}
 			<a class="btn btn-small" href="@{Account.invoiceDetails(invoice.id)}">Details</a>
+			#{if (!invoice.hasBeenPaid())}
+				<a class="btn btn-small btn-success" href="@{Account.payInvoice(invoice.id)}">Pay</a>
+			#{/if}
 		</td>
 	</tr>
 	#{/list}
@@ -55,17 +51,8 @@
 		<td>${invoice.id}</td>
 		<td>${invoice.invoiceDate}</td>
 		<td>$${invoice.getTotalAmount()}</td>
-		<td>#{if (invoice.hasBeenPaid())}
-				${invoice.paymentDate}			
-			#{/if}
-			#{else}
-				<span class="alert-error">Not paid yet!</span>
-			#{/else}
-		</td>
+		<td>${invoice.paymentDate}</td>
 		<td>
-			#{if (!invoice.hasBeenPaid())}
-				#{pay-invoice invoice /}
-			#{/if}
 			<a class="btn btn-small" href="@{Account.invoiceDetails(invoice.id)}">Details</a>
 		</td>
 	</tr>
@@ -73,7 +60,7 @@
 </table>
 #{/if}
 #{else}
-	<p>No invoices for this account.</p>
+	<p>No paid invoices for this account.</p>
 #{/else}
 <style type="text/css">
 	.table td {

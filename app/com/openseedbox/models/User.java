@@ -1,4 +1,4 @@
-package models;
+package com.openseedbox.models;
 
 import com.openseedbox.code.Util;
 import java.util.ArrayList;
@@ -38,9 +38,12 @@ public class User extends ModelBase {
 		this.save();
 	}
 	
-	public long getUsedSpaceBytes() {		
-		//TODO: this properly
+	public long getUsedSpaceBytes() {	
+		List<UserTorrent> ut = getTorrents();
 		long sum = 0;
+		for (UserTorrent u : ut) {
+			sum += u.getTorrent().getTotalSizeBytes();
+		}
 		return sum;
 	}
 	
@@ -49,19 +52,23 @@ public class User extends ModelBase {
 	}
 	
 	public List<UserTorrent> getTorrents() {
-		return getTorrentsInGroup("All");
+		return getTorrentsInGroup(null);
 	}
 	
 	public List<UserTorrent> getTorrentsInGroup(String group) {
 		List<UserTorrent> ut;
-		if (group.equals("All")) {
+		if (group == null) {
 			ut = UserTorrent.getByUser(this);
+		} else if (group.equals("Ungrouped")) {
+			ut = UserTorrent.getByUserAndGroup(this, null);
 		} else {
 			ut = UserTorrent.getByUserAndGroup(this, group);
 		}
 		if (ut.isEmpty()) {
 			return ut;
 		}
+		
+		//Batch-load Torrents from the database to save a database call per torrent
 		List<String> hashes = new ArrayList<String>();
 		for (UserTorrent u : ut) {
 			hashes.add(u.getTorrentHash());
@@ -159,51 +166,21 @@ public class User extends ModelBase {
 
 	public List<String> getGroups() {		
 		if (groups != null) {
-			if (!groups.contains("All")) {
+			if (!groups.contains("Ungrouped")) {
 				Collections.reverse(groups);
-				groups.add("All");
+				groups.add("Ungrouped");
 				Collections.reverse(groups);
 			}
 			return groups;			
 		}
-		return Arrays.asList(new String[] { "All" });
+		return new ArrayList<String>(Arrays.asList("Ungrouped"));
 	}
 
 	public void setGroups(List<String> groups) {
 		this.groups = groups;
 	}
 	
-	/*
-	private void calculateUserStats(List<Torrent> torrents) throws MessageException {
-		long totalSize = 0;
-		long totalRateUpload = 0;
-		long totalRateDownload = 0;
-		for(Torrent to : torrents) {
-			totalSize += to.getTransmissionTorrent().totalSize;
-			totalRateUpload += to.getTransmissionTorrent().rateUpload;
-			totalRateDownload += to.getTransmissionTorrent().rateDownload;
-		}
-		UserStats us = new UserStats();
-		us.maxSpaceGb = String.format("%.2f", (double) getPlan().maxDiskspaceGb);
-		us.usedSpaceGb = Util.getRateGb(totalSize);
-		us.rateDownloadKb = Util.getRateKb(totalRateDownload);
-		us.rateUploadKb = Util.getRateKb(totalRateUpload);		
-		_userStats = us;	
-	}*/
-	/*
-	private transient UserStats _userStats;
-	public UserStats getUserStats() {
-		return null;/*
-		if (!hasPlanAndNode()) { return null; }
-		if (_userStats == null) {
-			try {
-				calculateUserStats(getTorrents());
-			} catch (MessageException ex) {
-				//do nothing
-			}
-		}
-		return _userStats;*//*
-	}	
+/*
 	
 	public List<UserMessage> getUnreadMessages() {
 		return null;/*

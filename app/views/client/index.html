@@ -1,15 +1,16 @@
 #{extends "main.html" /}
 #{set "moreScripts"}
 	<script type="text/javascript" src="#{asset.url 'javascripts/ajax-typeahead.min.js' /}"></script>
-	<script type="text/javascript" src="#{asset.url 'javascripts/jquery-ui-1.9.2.custom.min.js' /}"></script>
-#{/set}
-#{set "moreStyles"}
-	<link rel="stylesheet" type="text/css" href="#{asset.url 'stylesheets/jquery-ui-1.9.2.custom.min.css' /}" />
 #{/set}
 #{set title:"Torrents" /}
 <div class="row">
 	<div class="span10 offset2">
-		<h3>${currentGroup} torrents</h3>
+		#{if currentGroup == "Ungrouped" && groups.size == 1}
+			<h3>All torrents</h3>
+		#{/if}
+		#{else}
+			<h3>${currentGroup} torrents</h3>
+		#{/else}
 	</div>
 </div>
 <div class="row">
@@ -18,8 +19,13 @@
 			#{list items:groups, as:"group"}
 				<li class="group #{if currentGroup == group}active#{/if}" data-group-name="${group}">
 					<a href="@{Client.index(group)}">
-						${group.length() > 15 ? group.substring(0, 15) : group}
-						#{if group != "All"}
+						#{if group == "Ungrouped" && groups.size == 1}
+							All
+						#{/if}
+						#{else}
+							${group.length() > 15 ? group.substring(0, 15) : group}
+						#{/else}
+						#{if group != "Ungrouped"}
 							<i class="icon-minus pull-right hide remove-group" data-group-name="${group}" rel="tooltip" title="Remove"></i>
 						#{/if}
 					</a>
@@ -30,7 +36,6 @@
 		</ul>
 	</div>
 	<div class="span10">			
-		#{if torrents.size > 0}
 			<input id="select-all" type="checkbox" style="margin-right: 25px; margin-left: 10px; margin-top: 8px;" class="pull-left"/>
 			<form id="with-selected-form" class="no-margin" action="@{Client.action}" method="post">
 				<input type="hidden" name="what" value="" />
@@ -46,32 +51,69 @@
 					<li><a id="remove-from-group-button" href="#">Remove from Group</a></li>
 				</ul>
 			</div>
-			#{/if}
-		<a class="btn btn-success pull-right" data-toggle="modal" href="#add-torrent-dialog"><i class="icon-plus-sign"></i>Add Torrent</a>
+			<div class="btn-group pull-right">
+				<a class="btn btn-success dropdown-toggle" data-toggle="dropdown" href="#">
+					<i class="icon-plus-sign"></i>Add Torrent
+					<span class="caret"></span>
+				</a>
+				<ul class="dropdown-menu">
+					<li><a href="#add-torrent-from-file-dialog" data-toggle="modal">From File</a></li>
+					<li><a href="#add-torrent-from-url-dialog" data-toggle="modal">From URL/Magnet</a></li>
+					<li><a href="#add-torrent-from-search-dialog" data-toggle="modal">Search</a></li>
+				</ul>
+			</div>
 		<div class="clearfix" style="margin-bottom: 5px;"></div>
 		<div id="torrent-list">
 			${torrentList.raw()}
 		</div>
 	</div>
 </div>
-<div class="modal hide" id="add-torrent-dialog">
-	<form class="no-margin form-horizontal" enctype="multipart/form-data" method="post" action="@{Client.addTorrent}">
+<div class="modal hide" id="add-torrent-from-file-dialog">
+	<form class="form-horizontal" action="@{Client.addTorrent}" enctype="multipart/form-data" method="post">
+		<div class="modal-header">
+			<a class="close" data-dismiss="modal">&times;</a>
+			<h2>Add Torrent from local file</h2>
+		</div>
+		<div class="modal-body">
+			#{form.upload label:"Choose a file: ", name:"fileFromComputer", multiple:true /}
+		</div>
+		<div class="modal-footer">
+			<input type="submit" class="btn btn-primary" value="Add Torrent" />
+			<a href="#" class="btn" data-dismiss="modal">Close</a>			
+		</div>
+	</form>
+</div>
+<div class="modal hide" id="add-torrent-from-url-dialog">
+	<form action="@{Client.addTorrent}" method="post">
 	<div class="modal-header">
 		<a class="close" data-dismiss="modal">&times;</a>
-		<h2>Add Torrent</h2>
+		<h2>Add Torrent from URL/Magnet</h2>
 	</div>
 	<div class="modal-body">
-		#{set "ajax_url"}
-			#{asset.ajax /}
-		#{/set}
-		#{form.text label:"Search Isohunt:", name:"search", placeholder:"Enter search terms", extra:"<a id='clear' class='btn' href='#'>Clear</a><img class='hide' id='search-loader' src='${ajax_url.trim()}' />" /}
-		#{form.text label:"URL or Magnet:", name:"urlOrMagnet", placeholder:"Paste torrent URL or Magnet link" /}
-		#{form.upload label:"Upload from computer:", name:"fileFromComputer" /}
+		#{form.textarea label:"URLS/Magnet links (one per line): ", name:"urlOrMagnet", extraattrs:"style='width:520px;height:200px;'" /}
 	</div>
 	<div class="modal-footer">
 		<input type="submit" class="btn btn-primary" value="Add Torrent" />
-		<a href="#" class="btn" data-dismiss="modal">Close</a>
-	</div>	
+		<a href="#" class="btn" data-dismiss="modal">Close</a>		
+	</div>
+	</form>
+</div>
+<div class="modal hide" id="add-torrent-from-search-dialog">
+	<form class="form-horizontal" method="post" action="@{Client.addTorrent}">
+	<div class="modal-header">
+		<a class="close" data-dismiss="modal">&times;</a>
+		<h2>Search for Torrents <img id="search-loader" class="hide" src="#{asset.ajax /}" /></h2>
+	</div>
+	<div class="modal-body">
+		#{list items:searchPlugins, as:"sp"}
+			#{form.text css_class:"search", label:sp.pluginName, name:"query", extraattrs:"data-provider-class='${sp.class.name}'" /}
+		#{/list}
+		<input id="search-url" name="urlOrMagnet" value="" type="hidden" />
+	</div>
+	<div class="modal-footer">
+		<input type="submit" class="btn btn-primary" value="Add Torrent" />
+		<a href="#" class="btn" data-dismiss="modal">Close</a>		
+	</div>
 	</form>
 </div>
 <div class="modal hide" id="remove-torrent-dialog">
@@ -150,6 +192,11 @@ form.no-margin {
 .torrent-title {
 	margin-bottom: 0px;
 }
+
+#torrent-info-modal, #torrent-download-modal {
+	width: 800px;
+	margin-left: -370px;
+}
 </style>
 <script type="text/javascript">
 (function($) {
@@ -195,16 +242,16 @@ form.no-margin {
 				//$("#tab-header").html(data.data["client-tabs"]);
 				
 				//process checked hashes
-				$(".torrent-checkbox").each(function() {
+				$(".torrent-row").each(function() {
 					var my_hash = $(this).data("torrent-hash");
 					if ($.inArray(my_hash, checked_hashes) != -1) {
-						$(this).attr("checked", "checked");
+						$(this).addClass("info");
 					}					
 				});
 				already_refreshing = false;
 			});
 		};		
-		//setInterval(refresh, 10000); //db is only populated every 10 seconds so refreshing faster than this just causes undue load
+		setInterval(refresh, 10000); //db is only populated every 10 seconds so refreshing faster than this just causes undue load
 		
 		$(window).on("focus", function() {
 			window.refresh_disabled = false;
@@ -230,13 +277,13 @@ form.no-margin {
 
 		$("#select-all").click(function() {
 			if ($(this).is(":checked")) {
-				$(".torrent-checkbox").attr("checked", "checked");
+				$(".torrent-row").addClass("info");
 			} else {
-				$(".torrent-checkbox").removeAttr("checked");
+				$(".torrent-row").removeClass("info");
 			}
 			checked_hashes = [];
-			$(".torrent-checkbox").each(function() {
-				if ($(this).is(":checked")) {
+			$(".torrent-row").each(function() {
+				if ($(this).is(".info")) {
 					checked_hashes.push($(this).data("torrent-hash"));
 				}
 			});
@@ -269,46 +316,31 @@ form.no-margin {
 				}
 			}
 		});
-
-		$("#search").typeahead({
-			"ajax" : {
-				"url" : "@{Client.searchIsohunt}",
-				"displayField" : "label",
-				"preDispatch" : function(query) {
-					$("#search-loader").show();
-					return {
-						"query" : query
+		
+		$(".search").each(function() {
+			var provider = $(this).data("provider-class");
+			$(this).typeahead({
+				"ajax" : {
+					"url" : "@{Client.search}",
+					"displayField" : "label",
+					"preDispatch" : function(query) {
+						$("#search-loader").show();
+						return {
+							"query" : query,
+							"providerClass" : provider
+						};
+					},
+					"preProcess" : function(data) {
+						$("#search-loader").hide();
+						return data;
 					}
 				},
-				"preProcess" : function(data) {
-					$("#search-loader").hide();
-					return data;
+				"matcher" : function() { return true; },
+				"display" : "label",
+				"val" : "url",
+				"itemSelected" : function(item, val, text) {
+					$("#search-url").val(val);
 				}
-			},
-			"matcher" : function() { return true; },
-			"display" : "label",
-			"val" : "torrent_url",
-			"itemSelected" : function(item, val, text) {
-				$("#urlOrMagnet").val(val);
-			}
-		});
-
-		$("#clear").click(function() {
-			$("#search").val("");
-			$("#urlOrMagnet").val("");
-			return false;
-		});
-		
-		$(".download-button").click(function() {
-			var hash = $(this).data("hash");
-			var self = this;
-			$.get("@{Client.downloadButton}", { "hash" : hash }, function(data) {
-				$(self).popover({
-					"placement" : "bottom",
-					"title" : "Files",
-					"html" : true,
-					"content" : data
-				}).popover("show");
 			});
 		});
 		
@@ -337,20 +369,31 @@ form.no-margin {
 				});
 			});
 			return false;
-		}).on("click", ".torrent-checkbox", function() {
+		}).on("click", ".torrent-row", function() {
 			var hash = $(this).data("torrent-hash");
-			if ($(this).is(":checked")) {
+			if (!$(this).is(".info")) {
 				checked_hashes.push(hash);
+				$(this).addClass("info");
 			} else {
 				var idx = $.inArray(hash, checked_hashes);
 				if (idx != -1) {
 					checked_hashes = checked_hashes.slice(idx + 1);
 				}
+				$(this).removeClass("info");
 			}
 		}).on("mouseover", ".torrent-info", function() {
 			$(this).find(".hide").show();
 		}).on("mouseout", ".torrent-info", function() {
 			$(this).find(".hide").hide();
+		}).on("click", ".download-button", function() {
+			var hash = $(this).data("torrent-hash");
+			$.post("/client/torrentDownload", { "hash" : hash }, function(data) {
+				$("body>.container").append(data);
+				$("#torrent-download-modal").modal({
+					"backdrop" : false
+				});				
+			});
+			return false;
 		});	
 	});
 })(jQuery);
@@ -368,7 +411,7 @@ form.no-margin {
 	};
 	$.extend({
 		flashError : function(error) {
-			$("#flash-error-content").html(error);
+			$("#flash-error .flash-message-content").html(error);
 			$("#flash-error").show();
 		}
 	});

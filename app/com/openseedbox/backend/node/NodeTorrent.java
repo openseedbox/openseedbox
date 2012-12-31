@@ -7,7 +7,7 @@ import com.openseedbox.backend.ITracker;
 import com.openseedbox.backend.TorrentState;
 import com.openseedbox.code.Util;
 import java.util.List;
-import models.Node;
+import com.openseedbox.models.Node;
 import org.apache.commons.lang.StringUtils;
 
 public class NodeTorrent implements ITorrent {

@@ -20,14 +20,16 @@
 			${Util.getBestRate(_file.file.fileSizeBytes)}	
 		#{/if}
 	</td>
+	#{if _hidePercentComplete != "true"}
 	<td>
 		#{if _file.file}
 			${String.format("%.2f", _file.file.percentComplete * 100)}%
 		#{/if}
 	</td>
+	#{/if}
 </tr>
 #{if (_file.children.size > 0)}
 	#{list items:_file.children, as:"child"}
-		#{file-row file:child /}
+		#{file-row file:child, hidePercentComplete: _hidePercentComplete /}
 	#{/list}
 #{/if}

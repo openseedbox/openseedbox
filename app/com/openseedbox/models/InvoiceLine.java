@@ -1,13 +1,15 @@
-package models;
+package com.openseedbox.models;
 
 import java.math.BigDecimal;
 import siena.Column;
+import siena.Index;
 import siena.Table;
 
 @Table("invoice_line")
 public class InvoiceLine extends ModelBase {
 	
 	@Column("invoice_id")
+	@Index("invoice_line_invoice_IDX")
 	private Invoice parentInvoice;
 	
 	@Column("name")

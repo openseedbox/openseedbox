@@ -2,6 +2,7 @@
 <style type="text/css">
 	#nodes td {
 		vertical-align: middle;
+		text-align: center;
 	}
 </style>
 <h2>Nodes</h2>
@@ -34,9 +35,9 @@
 		</td>
 		<td class="node-backend-up"></td>
 		<td>			
-			<a class="btn btn-small" href="@{Admin.restartBackend(node.id)}"><i class="icon-retweet"></i></a>
-			<a class="btn btn-small" href="@{Admin.editNode(node.id)}"><i class="icon-edit"></i></a>
-			<a class="btn btn-danger btn-small" href="@{Admin.deleteNode(node.id)}"><i class="icon-remove"></i></a>
+			<a class="btn btn-small" href="@{Admin.restartBackend(node.id)}" rel="tooltip" title="Restart Backend"><i class="icon-retweet"></i></a>
+			<a class="btn btn-small" href="@{Admin.editNode(node.id)}" rel="tooltip" title="Edit"><i class="icon-edit"></i></a>
+			<a class="btn btn-danger btn-small" href="@{Admin.deleteNode(node.id)}" rel="tooltip" title="Remove"><i class="icon-remove"></i></a>
 		</td>
 	</tr>
 #{/list}
@@ -50,6 +51,7 @@
 </div>
 <script type="text/javascript">
 	$(document).ready(function() {
+		$('[rel=tooltip]').tooltip();
 		$(".node-line").each(function() {
 			var id = $(this).data("node-id");
 			var self = this;

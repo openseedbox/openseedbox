@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import models.Plan;
+import com.openseedbox.models.Plan;
 
 public class ApiPlans extends Api {
 	

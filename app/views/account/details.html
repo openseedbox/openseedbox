@@ -7,8 +7,14 @@
 <form class="form-horizontal" method="post" action="@{Account.updateDetails}">
 	#{form.hidden name:"user.id", value:currentUser.id /}
 	#{form.text name:"user.emailAddress", value:currentUser.emailAddress, label:"Email Address:" /}
-	#{form.text name:"user.avatarUrl", value:currentUser.avatarUrl, label:"Avatar URL" /}
 	#{form.text name:"user.displayName", value:currentUser.displayName, label:"Display Name" /}	
+	<div class="control-group">
+		<label class="control-label">Profile Picture</label>
+		<div class="controls">
+			<img src="${currentUser.avatarUrl}" />
+			<div class="help-inline">Note: We use <a target="_blank" href="http://gravatar.com">Gravatar</a> for avatars.</div>
+		</div>
+	</div>
 	<div class="form-actions">
 		<input class="btn btn-primary" value="Update Account Details" type="submit"/>
 	</div>
