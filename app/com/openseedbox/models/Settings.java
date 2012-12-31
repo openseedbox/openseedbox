@@ -1,4 +1,4 @@
-package models;
+package com.openseedbox.models;
 
 import com.openseedbox.code.Util;
 import javax.persistence.Column;

@@ -10,4 +10,4 @@ repositories:
        type: local 
        artifact: ${application.path}/../[module]
        contains:
-          - local
+          - openseedbox-common

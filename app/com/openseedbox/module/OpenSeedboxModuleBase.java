@@ -3,7 +3,7 @@ package com.openseedbox.module;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import models.ModuleSetting;
+import com.openseedbox.models.ModuleSetting;
 import play.PlayPlugin;
 import play.mvc.Router.Route;
 import play.templates.JavaExtensions;

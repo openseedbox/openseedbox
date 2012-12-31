@@ -1,7 +1,7 @@
 package controllers.api;
 
 import controllers.Base;
-import models.User;
+import com.openseedbox.models.User;
 import play.cache.Cache;
 import play.mvc.Before;
 

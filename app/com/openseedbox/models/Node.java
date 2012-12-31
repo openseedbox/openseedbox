@@ -1,4 +1,4 @@
-package models;
+package com.openseedbox.models;
 
 import com.google.gson.Gson;
 import com.openseedbox.Config;
@@ -17,7 +17,7 @@ import play.libs.WS.HttpResponse;
 import play.libs.WS.WSRequest;
 import siena.Column;
 import siena.Table;
-import validation.IsWholeNumber;
+import com.openseedbox.mvc.validation.IsWholeNumber;
 
 @Table("node")
 public class Node extends ModelBase {

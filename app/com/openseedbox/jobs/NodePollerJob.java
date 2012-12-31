@@ -3,9 +3,9 @@ package com.openseedbox.jobs;
 import com.openseedbox.backend.ITorrent;
 import java.util.ArrayList;
 import java.util.List;
-import models.Node;
-import models.Torrent;
-import notifiers.Mails;
+import com.openseedbox.models.Node;
+import com.openseedbox.models.Torrent;
+import com.openseedbox.notifiers.Mails;
 import play.jobs.Every;
 import play.jobs.Job;
 

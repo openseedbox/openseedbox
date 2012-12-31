@@ -1,4 +1,4 @@
-package models;
+package com.openseedbox.models;
 
 import java.lang.reflect.Method;
 import java.sql.Connection;

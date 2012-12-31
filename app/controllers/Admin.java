@@ -1,14 +1,14 @@
 package controllers;
 
-import com.openseedbox.code.MessageException;
+import com.openseedbox.models.Node;
+import com.openseedbox.models.Plan;
+import com.openseedbox.models.Torrent;
+import com.openseedbox.models.User;
 import com.openseedbox.code.Util;
 import com.openseedbox.code.Util.SelectItem;
 import com.openseedbox.mvc.ISelectListItem;
 import java.util.ArrayList;
 import java.util.List;
-import models.*;
-import org.apache.commons.io.FileUtils;
-import play.Play;
 import play.data.validation.Valid;
 import play.data.validation.Validation;
 import play.mvc.Before;
@@ -115,7 +115,7 @@ public class Admin extends Base {
 	
 	public static void users() {		
 		 String active = "users";
-		 List<User> users = User.all().fetch();		 
+		 List<User> users = User.all().fetch();	 
 		 renderTemplate("admin/users.html", active, users);
 	}	
 

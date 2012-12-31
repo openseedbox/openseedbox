@@ -17,10 +17,24 @@
 #{if (count % 2 == 0)}
 <div class="row">
 #{/if}
-	<div class="span6">
+	<div class="span4 #{if plan_parity == "even"}offset1#{/if}">
 		<div id="${plan.name}" class="well plan #{if isCurrentPlan}alert-info#{/if}">
-			<div class="pull-left">
-				<h2 style="display: inline-block">${plan.name}</h2>
+			<div>
+				<h2>${plan.name}
+					<div class="pull-right">
+					#{if (plan.freeSlots > 0)}
+						#{if (isCurrentPlan)}
+							<span class="btn btn-success">Current Plan</span>
+						#{/if}
+						#{else}
+							<a id="edit" class="btn btn-primary" href="@{Account.buyPlan(plan.id)}">Choose Plan</a>	
+						#{/else}
+					#{/if}
+					#{else}
+						<span class="btn btn-danger">Sold out</span>
+					#{/else}
+					</div>
+				</h2>
 			</div>
 			<div class="clearfix"></div>
 			<p>
@@ -44,19 +58,6 @@
 				<div class="pull-left" style="font-size:200%;">
 					<strong>$${plan.monthlyCost}</strong> / mo<br />
 				</div>			
-				<div class="pull-right">
-					#{if (plan.freeSlots > 0)}
-						#{if (isCurrentPlan)}
-							<span class="btn btn-success">Current Plan</span>
-						#{/if}
-						#{else}
-							<a id="edit" class="btn btn-primary" href="@{Account.buyPlan(plan.id)}">Choose Plan</a>	
-						#{/else}
-					#{/if}
-					#{else}
-						<span class="btn btn-danger">Sold out</span>
-					#{/else}
-				</div>
 			</div>			
 		</div>
 	</div>

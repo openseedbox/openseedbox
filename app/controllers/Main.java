@@ -1,8 +1,8 @@
 package controllers;
 
 import com.openseedbox.code.MessageException;
-import models.Node;
-import notifiers.Mails;
+import com.openseedbox.models.Node;
+import com.openseedbox.notifiers.Mails;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.SimpleEmail;
 import play.libs.Mail;

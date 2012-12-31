@@ -1,27 +1,26 @@
 package controllers;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.openseedbox.backend.ITorrent;
 import com.openseedbox.backend.ITorrentBackend;
+import com.openseedbox.backend.TorrentState;
 import com.openseedbox.code.MessageException;
 import com.openseedbox.code.Util;
 import com.openseedbox.jobs.GenericJob;
 import com.openseedbox.jobs.GenericJobResult;
+import com.openseedbox.plugins.OpenseedboxPlugin;
+import com.openseedbox.plugins.OpenseedboxPlugin.PluginSearchResult;
+import com.openseedbox.plugins.PluginManager;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import models.Node;
-import models.Torrent;
-import models.User;
-import models.UserTorrent;
+import com.openseedbox.models.Node;
+import com.openseedbox.models.Torrent;
+import com.openseedbox.models.User;
+import com.openseedbox.models.UserTorrent;
 import org.apache.commons.lang.StringUtils;
 import play.Logger;
 import play.data.binding.As;
 import play.libs.F.Promise;
-import play.libs.WS;
-import play.libs.WS.HttpResponse;
 import play.mvc.Before;
 
 public class Client extends Base {
@@ -68,13 +67,14 @@ public class Client extends Base {
 	
 	public static void index(String group) {		
 		if (group == null) {
-			group = "All";
+			group = "Ungrouped";
 		}
 		renderArgs.put("currentGroup", group);
 		List<UserTorrent> torrents = getCurrentUser().getTorrentsInGroup(group);
-		String torrentList = renderToString("client/torrent-list.html", Util.convertToMap(new Object[] { "torrents", torrents }));
 		List<String> groups = getCurrentUser().getGroups();
-		render("client/index.html", torrentList, groups, torrents);
+		String torrentList = renderToString("client/torrent-list.html", Util.convertToMap(new Object[] { "torrents", torrents, "groups", groups }));
+		List<OpenseedboxPlugin> searchPlugins = PluginManager.getSearchPlugins();
+		render("client/index.html", torrentList, groups, torrents, searchPlugins);
 	}
 	
 	public static void update(String group) {
@@ -87,38 +87,73 @@ public class Client extends Base {
 		result(data);
 	}
 	
-	public static void addTorrent(final String urlOrMagnet, final File fileFromComputer) throws IOException {			
-		if (StringUtils.isEmpty(urlOrMagnet) && fileFromComputer == null) {
+	public static void addTorrent(@As("\n") final String[] urlOrMagnet, final File[] fileFromComputer) throws IOException {			
+		if (urlOrMagnet == null && fileFromComputer == null) {
 			setGeneralErrorMessage("Please enter a valid URL or magent link, or choose a valid file to upload.");
 		} else {					
 			final User u = getCurrentUser();
 			Promise<GenericJobResult> p = new GenericJob() {
 				@Override
 				public Object doGenericJob() {	
-					Node node = Node.getBestForNewTorrent();
-					ITorrentBackend backend = node.getNodeBackend();
+					if (urlOrMagnet != null) {
+						for (String s : urlOrMagnet) {
+							addToDatabase(null, s);						
+						}
+					}
+					
+					if (fileFromComputer != null) {
+						for (File f : fileFromComputer) {
+							addToDatabase(f, null);	
+						}
+					}
+					return null;
+				}
+				
+				private void addToDatabase(File file, String urlOrMagnet) {
 					//TODO: check that we dont already have the torrent somewhere in the system
-					ITorrent added = (fileFromComputer != null)
-							  ? backend.addTorrent(fileFromComputer)
-							  : backend.addTorrent(urlOrMagnet);
-					//put in database					
+					Node node = Node.getBestForNewTorrent();
+					ITorrentBackend backend = node.getNodeBackend();	
+					ITorrent added = (file != null) ? backend.addTorrent(file) : backend.addTorrent(urlOrMagnet);
 					Torrent t = new Torrent();
 					t.setHashString(added.getTorrentHash());
-					t.setStatus(added.getStatus());
+					t.setStatus(TorrentState.DOWNLOADING);
 					t.setName(added.getName());
 					t.setNode(node);
 					t.save();
 					UserTorrent ut = new UserTorrent();
 					ut.setUser(u);
 					ut.setTorrentHash(added.getTorrentHash());
-					ut.insert();	
-					return null;
+					ut.insert();
 				}
+				
 			}.now();					  
 			successOrError(p);
 		}		
 		index(null);
 	}
+	
+	public static void search(String query, String providerClass) {
+		List<Map<String, Object>> ret = new ArrayList<Map<String, Object>>();
+		try {
+			OpenseedboxPlugin provider = (OpenseedboxPlugin) Class.forName(providerClass).newInstance();
+			if (provider.isSearchPlugin()) {
+				List<PluginSearchResult> res = provider.doSearch(query);
+				for (PluginSearchResult psr : res) {
+					ret.add(Util.convertToMap(new Object[] {
+						"label", String.format("%s", psr.getTorrentName()),
+						"url", psr.getTorrentUrl()
+					}));
+				}
+			}
+		} catch (ClassNotFoundException ex) {
+			resultError("Unable to find class: " + providerClass);
+		} catch (InstantiationException ex) {
+			Logger.error(ex, "Unable to instantiate class: %s", providerClass);
+		} catch (IllegalAccessException ex) {
+			Logger.error(ex, "Unable to instantiate class: %s", providerClass);
+		}
+		renderJSON(ret);
+	}	
 	
 	public static void torrentInfo(String hash) {		
 		//torrent info is seeders, peers, files, tracker stats
@@ -139,9 +174,34 @@ public class Client extends Base {
 			}
 			
 		}.now();
-		UserTorrent torrent = (UserTorrent) successOrError(p);
+		GenericJobResult res = await(p);
+		if (res.hasError()) {
+			resultError(res.getError().getMessage());
+		}
+		UserTorrent torrent = (UserTorrent) res.getResult();
 		renderTemplate("client/torrent-info.html", torrent);
 	}	
+	
+	public static void torrentDownload(String hash) {
+		//torrent download is just for files
+		final UserTorrent fromDb = UserTorrent.getByUser(getCurrentUser(), hash);
+		if (fromDb == null) {
+			resultError("No such torrent for user: " + hash);
+		}
+		Promise<GenericJobResult> p = new GenericJob() {
+			@Override
+			public Object doGenericJob() {
+				fromDb.getTorrent().getFiles();
+				return fromDb;
+			}	
+		}.now();
+		GenericJobResult res = await(p);
+		if (res.hasError()) {
+			resultError(res.getError().getMessage());
+		}
+		UserTorrent torrent = (UserTorrent) res.getResult();
+		renderTemplate("client/torrent-download.html", torrent);		
+	}
 	
 	public static void addGroup(String group) {
 		if (!StringUtils.isEmpty(group)) {
@@ -169,10 +229,14 @@ public class Client extends Base {
 		index(null);
 	}
 	
-	public static void addToGroup(List<String> hashes, String group) {
+	public static void addToGroup(@As(",") List<String> hashes, String group) {
 		List<UserTorrent> uts = UserTorrent.getByUser(getCurrentUser(), hashes);
 		for (UserTorrent ut : uts) {
-			ut.setGroupName(group);
+			if (group.equals("Ungrouped")) {
+				ut.setGroupName(null);
+			} else {
+				ut.setGroupName(group);
+			}
 		}
 		UserTorrent.batch().update(uts);
 		index(group);
@@ -269,36 +333,6 @@ public class Client extends Base {
 		}
 	}	
 	
-	public static void searchIsohunt(String query) {
-		if (!StringUtils.isEmpty(query)) {
-			Promise<HttpResponse> promise = 
-					WS.url("http://ca.isohunt.com/js/json.php?ihq=%s&rows=20&sort=seeds", query).getAsync();
-			HttpResponse res = await(promise);
-			if (res.getJson() != null) {
-				JsonObject itemsObject = res.getJson().getAsJsonObject().getAsJsonObject("items");
-				if (itemsObject != null) {
-					JsonArray items = itemsObject.getAsJsonArray("list");
-					//copy only the parts we need into a map structure
-					List<Map<String, String>> results = new ArrayList<Map<String, String>>();
-					for (JsonElement i : items) {
-						JsonObject it = i.getAsJsonObject();
-						Map<String, String> ite = new HashMap<String, String>();
-						ite.put("title",  Util.stripHtml(it.get("title").getAsString()));
-						ite.put("length", Util.getBestRate(it.get("length").getAsLong()));
-						ite.put("seeds", it.get("Seeds").getAsString());
-						ite.put("leechers", it.get("leechers").getAsString());
-						ite.put("label", String.format("%s (%s) - S: <span style='color:green'>%s</span>, L: <span style='color:red'>%s</span>",
-								ite.get("title"), ite.get("length"), ite.get("seeds"), ite.get("leechers")));
-						ite.put("torrent_url", it.get("enclosure_url").getAsString());
-						results.add(ite);
-					}
-					renderJSON(results);
-				}
-			}
-		}
-		renderJSON(new ArrayList<String>());
-	}
-	
 	protected static Object successOrError(Promise<GenericJobResult> p) {
 		if (p == null) { throw new IllegalArgumentException("You cant give me a null promise!"); }
 		GenericJobResult res = await(p);
@@ -320,21 +354,5 @@ public class Client extends Base {
 	
 	public static void newUser() {
 		render("client/new-user.html");
-	}
-	
-	public static void downloadButton(String hash) {
-		final UserTorrent fromDb = UserTorrent.getByUser(getCurrentUser(), hash);
-		if (fromDb == null) {
-			resultError("No such torrent for user: " + hash);
-		}
-		Promise<GenericJobResult> p = new GenericJob() {
-			@Override
-			public Object doGenericJob() {
-				fromDb.getTorrent().getFiles();
-				return fromDb;
-			}			
-		}.now();
-		UserTorrent torrent = (UserTorrent) successOrError(p);		
-		render("client/download-button.html", torrent);
 	}
 }

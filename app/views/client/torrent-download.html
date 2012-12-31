@@ -1,0 +1,35 @@
+%{ def Util = com.openseedbox.code.Util }%
+<div class="modal fade" id="torrent-download-modal">
+	<div class="modal-header">
+		<a class="close" data-dismiss="modal">&times;</a>
+		<h3>${torrent.torrent.name}</h3>
+	</div>
+	<div class="modal-body">
+		<table id="info-files-table" class="table table-condensed table-striped">
+			<tr>
+				<th style="width:85%">Name</th>
+				<th style="width:15%">Size</th>					
+			</tr>
+		#{list items:torrent.filesAsTree, as:"file"}
+			#{file-row file:file, hidePercentComplete:"true" /}
+		#{/list}
+		</table>
+	</div>
+	<div class="modal-footer">
+		<a class="btn" href="#" data-dismiss="modal">Close</a>		
+	</div>
+</div>
+<style type="text/css">
+	#info-files-table td {
+		vertical-align: middle;
+	}
+</style>
+<script type="text/javascript">
+(function($) {
+	$(document).ready(function() {
+		$("#torrent-download-modal").on("hidden", function() {
+			$(this).remove();
+		});	
+	});
+})(jQuery);
+</script>

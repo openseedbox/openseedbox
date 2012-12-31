@@ -1,11 +1,11 @@
-package models;
+package com.openseedbox.models;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import notifiers.Mails;
+import com.openseedbox.notifiers.Mails;
 import play.Logger;
 import play.templates.JavaExtensions;
 import siena.Column;

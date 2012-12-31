@@ -23,7 +23,7 @@
 							<th style="width:15%">Done</th>						
 						</tr>
 					#{list items:torrent.filesAsTree, as:"file"}
-						#{file-row file:file, type:"info" /}
+						#{file-row file:file, hidePercentComplete:false /}
 					#{/list}
 					</table>
 				#{/else}
@@ -49,9 +49,18 @@
 								<span class="text-error">${tracker.lastAnnounceResult}</span>
 							#{/else}
 						</td>
-						<td>${tracker.seederCount}</td>
-						<td>${tracker.leecherCount}</td>
-						<td>${tracker.downloadCount}</td>
+						<td>
+							#{if tracker.seederCount > -1}${tracker.seederCount}#{/if}
+							#{else}<span class="text-error">n/a</span>#{/else}
+						</td>
+						<td>
+							#{if tracker.leecherCount > -1}${tracker.leecherCount}#{/if}
+							#{else}<span class="text-error">n/a</span>#{/else}
+						</td>
+						<td>
+							#{if tracker.downloadCount > -1}${tracker.downloadCount}#{/if}
+							#{else}<span class="text-error">n/a</span>#{/else}
+						</td>
 					</tr>
 					#{/list}
 				</table>

@@ -1,4 +1,4 @@
-package models;
+package com.openseedbox.models;
 
 import com.openseedbox.code.BigDecimalUtils;
 import java.math.BigDecimal;
@@ -7,8 +7,8 @@ import play.data.validation.CheckWith;
 import play.data.validation.Required;
 import siena.Column;
 import siena.Table;
-import validation.IsDecimalNumber;
-import validation.IsWholeNumber;
+import com.openseedbox.mvc.validation.IsDecimalNumber;
+import com.openseedbox.mvc.validation.IsWholeNumber;
 
 @Table("plan")
 public class Plan extends ModelBase {

@@ -1,7 +1,7 @@
 package controllers;
 
 import java.util.Date;
-import models.User;
+import com.openseedbox.models.User;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 import play.cache.Cache;

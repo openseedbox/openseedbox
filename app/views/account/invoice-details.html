@@ -2,7 +2,7 @@
 #{set "moreScripts"}
 	<script type="text/javascript" src="https://www.paypalobjects.com/js/external/dg.js"></script>
 #{/set}
-<h2>Details for invoice #${invoice.id}</h2>
+<h2>Details for invoice #${invoice.id} <small class="pull-right">Created On: ${invoice.invoiceDate}</small></h2>
 <h4>Payable By: ${invoice.user.emailAddress}</h4>
 <h3>Items:</h3>
 <table class="table table-condensed">

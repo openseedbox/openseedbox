@@ -1,8 +1,10 @@
 package controllers;
 
+import com.openseedbox.models.Plan;
+import com.openseedbox.models.Invoice;
+import com.openseedbox.models.User;
 import com.openseedbox.code.MessageException;
 import java.util.List;
-import models.*;
 import play.cache.Cache;
 import play.data.validation.Email;
 import play.data.validation.Valid;
@@ -57,7 +59,7 @@ public class Account extends Base {
 		render("account/buyplan.html", active, user, newPlan, oldPlan);
 	}
 	
-	public static void invoicePlan(long id) throws MessageException {
+	public static void invoicePlan(long id) {
 		//check to see if there is an outstanding invoice for this plan.
 		//if there is, use that one instead of creating a new one
 		
@@ -92,7 +94,7 @@ public class Account extends Base {
 		}
 	}
 	
-	public static void paypalInvoice(long id) throws MessageException {		
+	public static void payInvoice(long id) {		
 		Invoice i = Invoice.findById(id);
 		redirect(i.getPaymentUrl());
 	}
@@ -134,6 +136,11 @@ public class Account extends Base {
 		params.flash();
 		details();		
 	}	
+	
+	public static void settings() {
+		String active = "settings";
+		render("account/settings.html", active);
+	}
 	
 	public static void api() {
 		String active = "api";

@@ -1,4 +1,4 @@
-package models;
+package com.openseedbox.models;
 
 import com.openseedbox.backend.IFile;
 import com.openseedbox.backend.IPeer;

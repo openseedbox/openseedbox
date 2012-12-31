@@ -20,4 +20,8 @@ public class Config {
 		return Play.configuration.getProperty("errors.mailfrom", "errors@openseedbox.com");
 	}	
 	
+	public static String getBitPayAPIKey() {
+		return Play.configuration.getProperty("bitpay.apikey");
+	}
+	
 }

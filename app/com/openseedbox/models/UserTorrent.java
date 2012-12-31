@@ -1,4 +1,4 @@
-package models;
+package com.openseedbox.models;
 
 import com.openseedbox.backend.IFile;
 import com.openseedbox.code.Util;
@@ -12,12 +12,9 @@ import siena.Table;
 @Table("torrent_group")
 public class UserTorrent extends ModelBase {
 
-	@Column("group_name")
-	private String groupName;
-	@Column("user_id")
-	private User user;
-	@Column("torrent_hash")
-	private String torrentHash;
+	@Column("group_name") private String groupName;
+	@Column("user_id") private User user;
+	@Column("torrent_hash") private String torrentHash;
 	private transient Torrent torrent;
 
 	public static int getAverageTorrentsPerUser() {

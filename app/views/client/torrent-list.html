@@ -5,13 +5,13 @@
 <table class="table table-condensed table-hover">
 	#{list items:torrents, as:"item"}
 	%{ def t = item.torrent }%
-	<tr class="torrent-row" style="width:100%;" data-torrent-hash="${item.torrent.torrentHash}">
+	<tr class="torrent-row" style="width:100%;" data-torrent-hash="${t.torrentHash}">
 		<td>
 			<table class="no-table torrent-info" style="width:100%;">
 				<tr>
 					<td colspan="4">
 						<h5 class="torrent-title pull-left">
-							${t.name.trimTo(80)}
+							${t.name.trimTo(70)}
 							
 							<small>- ${item.niceStatus}
 							#{if !t.error}
@@ -41,7 +41,7 @@
 						#{if (t.complete)}
 						<h5 class="torrent-speed pull-right">
 							<small>
-								[ <a class="download-button" data-hash="${t.torrentHash}" href="#">Download</a> ]
+								[ <a class="download-button" data-torrent-hash="${t.torrentHash}" href="#">Download</a> ]
 								[ <a class="zip-button" href="${t.zipDownloadLink}">Zip</a> ]
 							</small>
 						</h5>					
@@ -58,8 +58,7 @@
 					</td>
 				</tr>
 				<tr>
-					<td style="width:5%;"><input class="torrent-checkbox" data-torrent-hash="${t.torrentHash}" type="checkbox" /></td>
-					<td style="width:80%;">		
+					<td style="width:85%;">		
 						%{							
 							def progressClass = ""
 							def barClass = ""
@@ -123,22 +122,25 @@
 </table>
 #{/if}
 #{else}
-	#{if currentGroup == "All"}
+	#{if groups?.size == 0}
 		<h2 style="margin-top: -30px;">Right! Now you can add a torrent.</h2>
 		<ol>
 			<li><h3>Find a torrent somewhere. <a href="http://www.youtorrent.com/" target="_blank">Here</a> is a good place to start.</h3>
 				<img src="#{asset.url 'images/step1.png'/}" /><br /><br />
 			</li>
+			<hr />
 			<li><h3>Copy the torrent url <small>Magnet links are supported too</small></h3>
 				<img src="#{asset.url 'images/step2.png'/}" /><br /><br />
-			</li>			
+			</li>		
+			<hr />
 			<li><h3>Click <a class="btn btn-success"><i class="icon-plus"></i>Add Torrent</a> on the right and paste in the link</h3>
 				<img src="#{asset.url 'images/step3.png'/}" /><br /><br />
-			</li>			
+			</li>	
+			<hr />
 			<li><h3>Away you go! Your torrent will begin downloading.</h3></li>
 		</ol>
 	#{/if}
 	#{else}
-		<p style="margin-top: -30px;">No torrents found. Add a torrent using the button on the right.</p>
+		<p style="margin-top: 10px;">No torrents found. Add a torrent using the button on the right.</p>
 	#{/else}
 #{/else}

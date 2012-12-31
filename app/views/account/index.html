@@ -11,20 +11,25 @@
 	set your email address.
 </div>	
 #{/if}
-<ul class="nav nav-tabs">
-	<li #{if (active == "plans")}class="active"#{/if}>
-		<a href="@{Account.plans}">Plan</a>
-	</li>
-	<li #{if (active == "invoices")}class="active"#{/if}>
-		<a href="@{Account.invoices}">Invoices</a>
-	</li>
-	<li #{if (active == "details")}class="active"#{/if}>
-		<a href="@{Account.details}">Account Details</a>
-	</li>	
-	<li #{if (active == "api")}class="active"#{/if}>
-		<a href="@{Account.api}">API</a>
-	</li>	
-</ul>
-<div class="tab-content">
-	#{doLayout /}
+<div class="row">
+	<div class="span3">
+		<ul class="nav nav-tabs nav-stacked" style="margin-top: 50px;">
+			<li #{if (active == "plans")}class="active"#{/if}>
+				<a href="@{Account.plans}">Plans<i class="icon-chevron-right pull-right"></i></a>
+			</li>
+			<li #{if (active == "invoices")}class="active"#{/if}>
+				<a href="@{Account.invoices}">Invoices<i class="icon-chevron-right pull-right"></i></a>
+			</li>
+			<li #{if (active == "details")}class="active"#{/if}>
+				<a href="@{Account.details}">Account Details<i class="icon-chevron-right pull-right"></i></a>
+			</li>
+			<li #{if (active == "settings")}class="active"#{/if}>
+				<a href="@{Account.settings}">Settings<i class="icon-chevron-right pull-right"></i></a>
+			</li>
+			<li #{if (active == "api")}class="active"#{/if}>
+				<a href="@{Account.api}">API<i class="icon-chevron-right pull-right"></i></a>
+			</li>	
+		</ul>		
+	</div>
+	<div class="span9">#{doLayout /}</div>
 </div>

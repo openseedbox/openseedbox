@@ -37,20 +37,18 @@
 			</div>
 		</div>
 		<div id="container" class="container" style="padding-top: 20px;">
-			#{if (flash.error)}
-			<div id="flash-error" class="alert alert-error">
+			<div id="flash-error" class="alert alert-error #{if !(flash.error)}hide#{/if}">
 				<a class="close" data-dismiss="alert" href="#">&times;</a>
 				<h4 id="flash-success-heading" class="alert-heading">Error</h4>
-				<span id="flash-message-content">
+				<span class="flash-message-content">
 					${flash.error}
 				</span>
-			</div>				
-			#{/if}
+			</div>
 			#{if (flash.warning)}
 			<div id="flash-warning" class="alert alert-warning">
 				<a class="close" data-dismiss="alert" href="#">&times;</a>
 				<h4 id="flash-success-heading" class="alert-heading">Warning</h4>
-				<span id="flash-message-content">
+				<span class="flash-message-content">
 					${flash.warning}
 				</span>
 			</div>				
@@ -59,7 +57,7 @@
 			<div id="flash-message" class="alert alert-success">
 				<a class="close" data-dismiss="alert" href="#">&times;</a>
 				<h4 id="flash-success-heading" class="alert-heading">Success:</h4>
-				<span id="flash-message-content">
+				<span class="flash-message-content">
 					${flash.message}
 				</span>
 			</div>

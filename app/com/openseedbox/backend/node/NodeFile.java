@@ -4,7 +4,7 @@ import com.openseedbox.backend.IFile;
 import com.openseedbox.code.Util;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import models.Node;
+import com.openseedbox.models.Node;
 import org.apache.commons.lang.StringUtils;
 
 public class NodeFile implements IFile {

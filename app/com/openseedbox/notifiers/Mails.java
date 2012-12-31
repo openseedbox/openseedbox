@@ -1,9 +1,8 @@
-package notifiers;
+package com.openseedbox.notifiers;
 
 import com.openseedbox.Config;
-import java.net.ConnectException;
-import models.Invitation;
-import models.Node;
+import com.openseedbox.models.Invitation;
+import com.openseedbox.models.Node;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import play.mvc.Http.Request;
 import play.mvc.Mailer;

@@ -1,7 +1,7 @@
 package com.openseedbox.jobs;
 
 import java.util.List;
-import models.Node;
+import com.openseedbox.models.Node;
 import play.jobs.Job;
 import play.jobs.OnApplicationStart;
 
