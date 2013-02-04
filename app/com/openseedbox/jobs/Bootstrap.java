@@ -6,7 +6,7 @@ import play.jobs.Job;
 import play.jobs.OnApplicationStart;
 
 @OnApplicationStart
-public class Boostrap extends Job {
+public class Bootstrap extends Job {
 
 	@Override
 	public void doJob() throws Exception {

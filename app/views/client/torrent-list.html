@@ -5,49 +5,27 @@
 <table class="table table-condensed table-hover">
 	#{list items:torrents, as:"item"}
 	%{ def t = item.torrent }%
-	<tr class="torrent-row" style="width:100%;" data-torrent-hash="${t.torrentHash}">
+	<tr class="torrent-row unselectable" style="width:100%;" data-torrent-hash="${t.torrentHash}" data-index ="${item_index}">
 		<td>
 			<table class="no-table torrent-info" style="width:100%;">
 				<tr>
 					<td colspan="4">
 						<h5 class="torrent-title pull-left">
-							${t.name.trimTo(70)}
-							
-							<small>- ${item.niceStatus}
-							#{if !t.error}
-								#{if t.seeding}
-									at ${Util.getBestRate(t.uploadSpeedBytes)}/s
-								#{/if}
-								#{if t.metadataDownloading}
-									#{if t.paused}
-										Metadata
-									#{/if}
-									${(int) t.metadataPercentComplete * 100}%
-								#{/if}
-								#{elseif t.percentComplete < 1}
-									${(int) t.percentComplete * 100}%
-								#{/elseif}
-								#{if t.complete}
-									(${Util.getBestRate(t.totalSizeBytes)})
-								#{/if}
-								#{else}
-									#{if !t.metadataDownloading}
-										(${Util.getBestRate(t.downloadedBytes)} / ${Util.getBestRate(t.totalSizeBytes)})
-									#{/if}
-								#{/else}							
-							</small>
-							#{/if}
+							${t.name.trimTo(60)} (${item.niceTotalSize})
+							<small>- ${item.niceStatus} ${item.niceSubStatus}</small>							
 						</h5>	
 						#{if (t.complete)}
 						<h5 class="torrent-speed pull-right">
 							<small>
 								[ <a class="download-button" data-torrent-hash="${t.torrentHash}" href="#">Download</a> ]
+								#{if com.openseedbox.Config.zipEnabled}
 								[ <a class="zip-button" href="${t.zipDownloadLink}">Zip</a> ]
+								#{/if}
 							</small>
 						</h5>					
 						#{/if}
 						#{elseif (t.running)}
-						<h5 class="torrent-speed pull-right hide">
+						<h5 class="torrent-progress pull-right hide">
 							<small>${Util.getBestRate(t.downloadSpeedBytes)}/s down, ${Util.getBestRate(t.uploadSpeedBytes)}/s up</small>
 						</h5>
 						#{/elseif}
@@ -85,6 +63,7 @@
 					<td style="width:15%;">
 						<form action="@{Client.action}" method="post" class="no-margin pull-left">
 							<input type="hidden" name="hash" value="${t.torrentHash}" />
+							<input type="hidden" name="group" value="${currentGroup}" />
 							<div class="btn-group pull-right">							
 								<a class="btn btn-mini show-torrent-info" data-torrent-hash="${t.torrentHash}" href="#"><i class="icon-info-sign"></i></a>
 								#{if t.running}
@@ -104,9 +83,17 @@
 	#{/list}	
 	<tr>
 		<td>
+			<div class="pull-left">
+				#{if torrentAddEvents.size > 0}
+					<h5><span class="text-success">Waiting to Add:</span> ${torrentAddEvents.size} torrent${torrentAddEvents.size.pluralize("s")}</h5>
+				#{/if}
+				#{if torrentRemoveEvents.size > 0}
+					<h5><span class="text-error">Waiting to Remove:</span> ${torrentRemoveEvents.size} torrent${torrentRemoveEvents.size.pluralize("s")}</h5>
+				#{/if}
+			</div>
 			<div class="pull-right">
 				%{					
-					long available = currentUser.plan.maxDiskspaceBytes
+					long available = currentUser.plan.maxDiskspaceBytes									
 					def used = 0; def down = 0; def up = 0
 					torrents.each {
 						used += it.torrent.totalSizeBytes
@@ -115,7 +102,7 @@
 					}				
 					int usedPercent = used / available
 				}%
-				<h5><small>Available: ${currentUser.plan.maxDiskspaceGb} GB, Used: ${Util.getBestRate(used)} (${usedPercent}%), Down: ${Util.getBestRate(down)}/s, Up: ${Util.getBestRate(up)}/s</small></h5>
+				<h5><small>Available: ${currentUser.plan.maxDiskspaceGb != -1 ?: "Unlimited"} GB, Used: ${Util.getBestRate(used)}#{if currentUser.plan.maxDiskspaceGb != -1} (${usedPercent}%)#{/if}, Down: ${Util.getBestRate(down)}/s, Up: ${Util.getBestRate(up)}/s</small></h5>
 			</div>
 		</td>
 	</tr>	

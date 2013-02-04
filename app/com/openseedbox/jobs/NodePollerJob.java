@@ -1,19 +1,18 @@
 package com.openseedbox.jobs;
 
 import com.openseedbox.backend.ITorrent;
-import java.util.ArrayList;
-import java.util.List;
 import com.openseedbox.models.Node;
 import com.openseedbox.models.Torrent;
-import com.openseedbox.notifiers.Mails;
+import java.util.ArrayList;
+import java.util.List;
 import play.jobs.Every;
-import play.jobs.Job;
 
 @Every("10s")
-public class NodePollerJob extends Job {
+@JobName("Node Poller")
+public class NodePollerJob extends LoggedJob {
 	
 	@Override
-	public void doJob() {		
+	protected Object doGenericJob() {
 		List<Node> nodes = Node.getActiveNodes();
 		for (Node n : nodes) {	
 			if (!n.isDown()) {
@@ -27,7 +26,8 @@ public class NodePollerJob extends Job {
 				}
 				Torrent.batch().update(fromDb);	
 			}
-		}				
+		}	
+		return null;
 	}
 	
 	private List<String> getHashStrings(List<ITorrent> torrents) {

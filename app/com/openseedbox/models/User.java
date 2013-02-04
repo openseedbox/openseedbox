@@ -21,7 +21,7 @@ import siena.embed.Embedded;
 public class User extends ModelBase {
 	
 	@Email @Required @Column("email_address")
-	@Unique("email_address_unique") private String emailAddress;	
+	@Unique("email_address_unique") private String emailAddress;
 	@Column("open_id") private String openId;	
 	@Column("is_admin") private boolean isAdmin;	
 	@Column("avatar_url") private String avatarUrl;	

@@ -9,6 +9,7 @@
 			<li class="active"><a href="#torrent-files" data-toggle="tab">Files</a></li>
 			<li><a href="#torrent-trackers" data-toggle="tab">Trackers</a></li>
 			<li><a href="#torrent-peers" data-toggle="tab">Peers</a></li>
+			<li><a href="#torrent-stats" data-toggle="tab">Stats</a></li>
 		</ul>
 		<div class="tab-content">
 			<div class="tab-pane active" id="torrent-files">
@@ -96,6 +97,23 @@
 				#{else}
 					<p>No connected peers.</p>
 				#{/else}
+			</div>
+			<div class="tab-pane" id="torrent-stats">
+				<ul style="list-style-type:none;">
+				%{ def t = torrent.torrent }%
+				#{if t.metadataDownloading}
+					<li><strong>Metadata:</strong> ${Util.formatPercentage(t.metadataPercentComplete * 100)}% complete</li>
+				#{/if}
+				#{else}
+					<li><strong>Total Size:</strong> ${Util.getBestRate(t.totalSizeBytes)}</li>
+					<li><strong>Download Speed:</strong> ${Util.getBestRate(t.downloadSpeedBytes)}/s
+					<li><strong>Upload Speed:</strong> ${Util.getBestRate(t.uploadSpeedBytes)}/s</li>
+					<li><strong>Amount Downloaded:</strong> ${Util.getBestRate(t.downloadedBytes)}</li>
+					<li><strong>Amount Uploaded:</strong> ${Util.getBestRate(t.uploadedBytes)}<li>
+					<li><strong>Ratio:</strong> ${Util.formatPercentage(t.ratio)}</li>
+					<li><strong>Percent Complete:</strong> ${Util.formatPercentage(t.percentComplete * 100)}%</li>					
+				#{/else}
+				</ul>
 			</div>
 		</div>
 	</div>

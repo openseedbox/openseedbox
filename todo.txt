@@ -1,6 +1,20 @@
-- PlanSwitch.addMessage should String.format() the message and replace {message_id} with the id of the message (for use in auto-dismissing messages)
-- Need to implement an hourly Job that reverts any partial plan changes after 2 days (to free up slots)
-- Admin - auto update nodes, ssh in and git pull
-- Node: ping admin when it restarts so that admin can start the daemons
-- Set default ratio to 2.00
-- Push transmission configuration changes to nodes
+DONE - User switcher for admin
+DONE - Status pages for job queue details (admin only) - just to keep track of last time job ran / any exceptions
+DONE - Page render stats in the footer
+DONE - When adding to group, allow the creation of a new group
+DONE - Allow select multiple groups using shift
+DONE - Allow group action - "Download all as Zip"
+IMPOSSIBRU - Make 'available' show node free space if the plans total space is '-1'
+DONE - Show total up/ratio when seeding
+
+- Job that goes through and cleans up any 'waiting to add'/'waiting to remove' torrent events more than 10mins old
+- Implement resource constraints
+
+- Create queues for adding torrents to transmission and removing torrents from transmission - to make page reloads faster (dont rely on transmission-daemon to be quick, its bloody slow especially when writing to encfs)
+- Better unit tests
+- Maybe a task that cleans up torrents that are present in transmission but not in the database
+
+
+Maybe Never:
+
+- Implement deluge or rtorrent backend - transmission is retardedly slow when theres slow hard disks (due to IO thread and RPC thread being the same)

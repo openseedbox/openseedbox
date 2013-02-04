@@ -1,16 +1,25 @@
 #{extends "main.html" /}
+%{ def Config = com.openseedbox.Config; }%
 #{set "moreScripts"}
 	<script type="text/javascript" src="#{asset.url 'javascripts/ajax-typeahead.min.js' /}"></script>
 #{/set}
 #{set title:"Torrents" /}
 <div class="row">
 	<div class="span10 offset2">
+		<span class="pull-left">
 		#{if currentGroup == "Ungrouped" && groups.size == 1}
 			<h3>All torrents</h3>
 		#{/if}
 		#{else}
 			<h3>${currentGroup} torrents</h3>
 		#{/else}
+		</span>
+		#{if currentUser.admin}		
+		<form class="pull-right form-inline"action="@{Client.switchUser}" method="post">
+			#{form.dropdown name:"user_id", label:"", options:users, value:currentUser.id, raw:true /}
+			<input class="btn btn-primary btn-small" type="submit" value="Switch" />
+		</form>
+		#{/if}
 	</div>
 </div>
 <div class="row">
@@ -49,6 +58,9 @@
 					<li><a href="#" data-what="remove">Remove</a></li>
 					<li><a id="add-to-group-button" href="#">Add to Group</a></li>
 					<li><a id="remove-from-group-button" href="#">Remove from Group</a></li>
+					#{if Config.zipEnabled}
+						<li><a id="download-as-zip-button" href="#">Download as Zip</a></li>
+					#{/if}
 				</ul>
 			</div>
 			<div class="btn-group pull-right">
@@ -159,6 +171,7 @@
 		<div class="modal-body">
 			<p>Add <span class="torrent-count"></span> torrents to the following group:</p>
 			#{form.dropdown label:"Group", name:"group", options:groups.minus("All") /}
+			#{form.text label:"New Group", name:"new_group" /}
 		</div>
 		<div class="modal-footer">
 			<input class="btn btn-primary" type="submit" value="Add to Group" />
@@ -235,19 +248,17 @@ form.no-margin {
 				//and it will never disappear
 				$(".torrent-add-group").tooltip("hide");
 				
+				//get checked hashes before torrent-list is overwritten
+				var ch = checked_hashes();
+				
 				//update torrent list
 				$("#torrent-list").html(data.data);
 				
-				//update tabs incase user was adding/removing groups
-				//$("#tab-header").html(data.data["client-tabs"]);
-				
 				//process checked hashes
-				$(".torrent-row").each(function() {
-					var my_hash = $(this).data("torrent-hash");
-					if ($.inArray(my_hash, checked_hashes) != -1) {
-						$(this).addClass("info");
-					}					
-				});
+				for (var hash in ch) {
+					hash = ch[hash];					
+					$(".torrent-row[data-torrent-hash=" + hash + "]").addClass("info");
+				}
 				already_refreshing = false;
 			});
 		};		
@@ -281,38 +292,44 @@ form.no-margin {
 			} else {
 				$(".torrent-row").removeClass("info");
 			}
-			checked_hashes = [];
-			$(".torrent-row").each(function() {
-				if ($(this).is(".info")) {
-					checked_hashes.push($(this).data("torrent-hash"));
-				}
-			});
 		});
 
 		$("#with-selected-dropdown a[data-what]").click(function() {
-			var what = $(this).data("what");			
-			if (checked_hashes.length > 0) {
-				if (confirm("Are you sure you want to " + what + " these " + checked_hashes.length + " torrents?")) {
+			var what = $(this).data("what");		
+			var ch = checked_hashes();
+			if (ch.length > 0) {
+				if (confirm("Are you sure you want to " + what + " these " + ch.length + " torrents?")) {
 					$("#with-selected-form input[name=what]").val(what);
-					$("#with-selected-form input[name=hashes]").val(checked_hashes.join(","));			
+					$("#with-selected-form input[name=hashes]").val(ch.join(","));			
 					$("#with-selected-form").submit();
 					return false;	
 				}
 			}			
 		});
 		
-		$("#add-to-group-button").click(function() {						
-			if (checked_hashes.length > 0) {
-				$("#add-to-group-dialog input[name=hashes]").val(checked_hashes.join(","));
-				$("#add-to-group-dialog .torrent-count").html("<strong>" + checked_hashes.length + "</strong>");
+		$("#add-to-group-button").click(function() {
+			var ch = checked_hashes();
+			if (ch.length > 0) {
+				$("#add-to-group-dialog input[name=hashes]").val(ch.join(","));
+				$("#add-to-group-dialog .torrent-count").html("<strong>" + ch.length + "</strong>");
 				$("#add-to-group-dialog").modal("show");
 			}
 		});
 		
 		$("#remove-from-group-button").click(function() {
-			if (checked_hashes.length > 0) {
-				if (confirm("Are you sure you want to remove these " + checked_hashes.length + " torrents from this group?")) {
+			var ch = checked_hashes();
+			if (ch.length > 0) {
+				if (confirm("Are you sure you want to remove these " + ch.length + " torrents from this group?")) {
 					document.location.href = "@{Client.removeFromGroup(currentGroup)}";
+				}
+			}
+		});
+		
+		$("#download-as-zip-button").click(function() {
+			var ch = checked_hashes();
+			if (ch.length > 0) {
+				if (confirm("Are you sure you want to download these " + ch.length + " torrents as a combined zip?")) {
+					document.location.href = "@{Client.downloadMultiple}?hashes=" + ch.join(",");
 				}
 			}
 		});
@@ -345,7 +362,14 @@ form.no-margin {
 		});
 		
 		//LIVE EVENT HANDLERS
-		var checked_hashes = []; //for persisting checkboxes between requests 
+		var checked_hashes = function() {
+			var hashes = [];
+			$(".torrent-row.info").each(function() {
+				hashes.push($(this).data("torrent-hash"));
+			});
+			return hashes;
+		};
+		var clicked_index = -1;
 				
 		$("body").on("click", "a.remove-torrent", function() {
 			var dialog = $("#remove-torrent-dialog");
@@ -363,23 +387,43 @@ form.no-margin {
 				"hash" : $(this).data("torrent-hash")
 			}, function(data) {
 				$(self).loading();
-				$("body>.container").append(data);
+				$("#torrent-info-modal").remove();
+				$("#container").append(data);
 				$("#torrent-info-modal").modal({
 					"backdrop" : false
 				});
-			});
+			});			
 			return false;
-		}).on("click", ".torrent-row", function() {
-			var hash = $(this).data("torrent-hash");
-			if (!$(this).is(".info")) {
-				checked_hashes.push(hash);
-				$(this).addClass("info");
-			} else {
-				var idx = $.inArray(hash, checked_hashes);
-				if (idx != -1) {
-					checked_hashes = checked_hashes.slice(idx + 1);
+		}).on("click", ".torrent-row", function(evt) {			
+			var this_index = $(this).data("index");
+			if (clicked_index == -1 || !evt.shiftKey) {
+				clicked_index = this_index;
+			}
+			var highlight_rows = (!evt.shiftKey) ? [this] : [];
+			if (evt.shiftKey) {						
+				var start = (clicked_index < this_index) ? clicked_index : this_index;
+				var end = (clicked_index > this_index) ? clicked_index : this_index;				
+				for (var x = start; x <= end; x++) {
+					var elem = $(".torrent-row[data-index=" + x + "]");
+					highlight_rows.push(elem[0]);
 				}
-				$(this).removeClass("info");
+			}			
+			if (evt.ctrlKey) {
+				var ch = checked_hashes();
+				for (var c in ch) {
+					highlight_rows.push($(".torrent-row[data-torrent-hash=" + ch[c] + "]")[0]);
+				}				
+			}
+			//unhighlight all the rows
+			$(".torrent-row").removeClass("info");
+			for (var row in highlight_rows) {
+				row = highlight_rows[row];
+				var hash = $(row).data("torrent-hash");
+				if (!$(row).is(".info")) {					
+					$(row).addClass("info");
+				} else if (!evt.shiftKey) {					
+					$(row).removeClass("info");
+				}		
 			}
 		}).on("mouseover", ".torrent-info", function() {
 			$(this).find(".hide").show();
@@ -387,11 +431,15 @@ form.no-margin {
 			$(this).find(".hide").hide();
 		}).on("click", ".download-button", function() {
 			var hash = $(this).data("torrent-hash");
-			$.post("/client/torrentDownload", { "hash" : hash }, function(data) {
+			var oldhtml = $(this).html();
+			$(this).html("<img src='#{asset.ajax /}' />");
+			var self = this;
+			$.post("/client/torrentDownload", { "hash" : hash }, function(data) {				
 				$("body>.container").append(data);
 				$("#torrent-download-modal").modal({
 					"backdrop" : false
 				});				
+				$(self).html(oldhtml);
 			});
 			return false;
 		});	

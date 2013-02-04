@@ -5,6 +5,7 @@ import com.openseedbox.backend.IPeer;
 import com.openseedbox.backend.ITorrent;
 import com.openseedbox.backend.ITracker;
 import com.openseedbox.backend.TorrentState;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
@@ -36,7 +37,10 @@ public class Torrent extends ModelBase implements ITorrent {
 	}
 	
 	public static List<Torrent> getByHash(List<String> hashes) {
-		return Torrent.all().filter("torrentHash IN", hashes).fetch();
+		if (hashes.size() > 0) {
+			return Torrent.all().filter("torrentHash IN", hashes).fetch();
+		}
+		return new ArrayList<Torrent>();
 	}
 	
 	public Torrent() {
@@ -65,6 +69,15 @@ public class Torrent extends ModelBase implements ITorrent {
 		this.setZipDownloadLink(t.getZipDownloadLink());
 	}
 	
+	public double getRatio() {
+		if (uploadedBytes == 0) {
+			return 0;
+		}
+		return ((double) uploadedBytes) / ((double) downloadedBytes);
+	}
+	
+	/* Getters and Setters */
+	
 	private transient List<IPeer> _peers;
 	public List<IPeer> getPeers() {
 		if (_peers == null) {
@@ -78,7 +91,10 @@ public class Torrent extends ModelBase implements ITorrent {
 	}
  	
 	public boolean isRunning() {
-		return state != TorrentState.ERROR && state != TorrentState.PAUSED;
+		if (state == TorrentState.ERROR) {
+			return (downloadSpeedBytes > 0);
+		}
+		return state != TorrentState.PAUSED;
 	}
 	
 	private transient List<ITracker> _trackers;
@@ -203,7 +219,7 @@ public class Torrent extends ModelBase implements ITorrent {
 	}
 
 	public boolean isDownloading() {
-		return getStatus() == TorrentState.DOWNLOADING;
+		return getStatus() == TorrentState.DOWNLOADING || getDownloadSpeedBytes() > 0;
 	}
 
 	public boolean isPaused() {

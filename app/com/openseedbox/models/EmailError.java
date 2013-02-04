@@ -1,11 +1,9 @@
 package com.openseedbox.models;
 
+import com.openseedbox.notifiers.Mails;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import com.openseedbox.notifiers.Mails;
 import play.Logger;
 import play.templates.JavaExtensions;
 import siena.Column;
@@ -19,7 +17,9 @@ public class EmailError extends ModelBase {
 	
 	@Column("sent_to_email_address") private String sentToEmailAddress;
 	
-	@Temporal(TemporalType.TIMESTAMP) private Date lastSent;
+	private Date lastSent;
+	
+	private int sendCount;
 	
 	
 	public static void nodeDown(Node node, Throwable error) {
@@ -50,6 +50,10 @@ public class EmailError extends ModelBase {
 		Calendar c = new GregorianCalendar();
 		c.setTimeInMillis(newMillis);	
 		EmailError e = getForKey(key);
+		if (e.getSendCount() >= 3) { //if more than 3 have been sent, stop spamming the inbox
+			return false;
+		}
+		e.setSendCount(e.getSendCount() + 1);
 		if (e.getLastSent() == null) { return true; }
 		Date ls = e.getLastSent();
 		return (ls.before(c.getTime()));
@@ -78,6 +82,7 @@ public class EmailError extends ModelBase {
 		EmailError e = getForKey(key);
 		if (e != null) {
 			e.setLastSent(date);
+			e.setSendCount(0);
 			e.save();
 		}		
 	}	
@@ -115,5 +120,12 @@ public class EmailError extends ModelBase {
 	public void setLastSent(Date lastSent) {
 		this.lastSent = lastSent;
 	}
-	
+
+	public int getSendCount() {
+		return sendCount;
+	}
+
+	public void setSendCount(int sendCount) {
+		this.sendCount = sendCount;
+	}		
 }

@@ -65,6 +65,9 @@
 			<div class="clearfix"></div>
 			#{doLayout /}
 		</div>
+		<div id="footer" class="container">
+			<h6><small>Page: ${System.currentTimeMillis() - request.args.startTime}ms, Load: ${request.args.loadAverage}, Server: ${request.args.host}</small></h6>
+		</div>
 		#{if mode != "dev"}
 			<script type="text/javascript">
 			var _gaq = _gaq || [];
@@ -86,6 +89,19 @@
 				height: 40px;
 				margin-top: -8px;
 			}
+			#footer {
+				margin-top: 40px;
+				width: 200px;
+				margin-left: auto;
+				margin-right: auto;
+			}
+			.unselectable {
+				-moz-user-select: -moz-none;
+				-khtml-user-select: none;
+				-webkit-user-select: none;
+				-ms-user-select: none;
+				user-select: none;
+			}			
 		</style>
 	</body>
 </html>
