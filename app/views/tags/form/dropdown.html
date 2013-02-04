@@ -3,9 +3,11 @@ def value_str = _value_str ?: "value";
 def name_str = _name_str ?: "name";
 def id = (_id) ? _id : _name;
 }%
+#{if !_raw}
 <div class="control-group #{ifError _name}error#{/ifError}">
 	<label class="control-label" for="${_name}">${_label}</label>
 	<div class="controls">
+#{/if}
 		<select id="${id}" name="${_name}">
 		#{list items:_options, as:"option"}		
 			%{
@@ -14,7 +16,10 @@ def id = (_id) ? _id : _name;
 				if (option instanceof String) {
 					value = option
 					text = option
-				} else {				
+				} else if (option instanceof com.openseedbox.code.Util.SelectItem) {
+					value = option.value
+					text = option.name					
+				} else {
 					value = option[value_str];
 					text = option[name_str];
 				}
@@ -29,5 +34,7 @@ def id = (_id) ? _id : _name;
 			<p class="help-block">${_help}</p>
 		#{/if}
 		<span class="help-inline">#{error "${_name}" /}</span>
+#{if !_raw}		
 	</div>
 </div>
+#{/if}

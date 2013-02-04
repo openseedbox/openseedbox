@@ -1,7 +1,0 @@
-#{extends "Mails/main.html" /}
-<p>Hello, ${invitation.emailAddress}</p>
-<p>You have been invited to use ${invitation.invitingUser.displayName}'s account on MySeedbox.</p>
-<p>Please follow <a href="@@{Auth.login()}">this link</a> to create an account.</p>
-<p><strong>Note:</strong> if you use a different address than this one (${invitation.emailAddress})
-	then you will need to ask ${invitation.invitingUser.displayName} to re-invite you using the
-	email address you signed up with.</p>

@@ -1,21 +1,17 @@
 package com.openseedbox.jobs;
 
 import com.openseedbox.backend.INodeStatus;
-import java.util.List;
 import com.openseedbox.models.EmailError;
 import com.openseedbox.models.Node;
+import java.util.List;
 import play.jobs.Every;
-import play.jobs.Job;
 
-/**
- * @author Erin Drummond
- */
 @Every("10mn")
-public class HealthCheckJob extends Job {
+@JobName("Node Health Check")
+public class HealthCheckJob extends LoggedJob {	
 
 	@Override
-	public void doJob() throws Exception {
-		//Logger.info("Checking health...");
+	protected Object doGenericJob() {
 		List<Node> all = Node.getActiveNodes();
 		for (Node n : all) {
 			if (n.isReachable()) {
@@ -40,6 +36,7 @@ public class HealthCheckJob extends Job {
 				EmailError.nodeDown(n, null);
 			}
 		}
-	}		
+		return null;
+	}
 	
 }

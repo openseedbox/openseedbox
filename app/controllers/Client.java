@@ -1,26 +1,31 @@
 package controllers;
 
-import com.openseedbox.backend.ITorrent;
+import com.openseedbox.Config;
 import com.openseedbox.backend.ITorrentBackend;
-import com.openseedbox.backend.TorrentState;
 import com.openseedbox.code.MessageException;
 import com.openseedbox.code.Util;
 import com.openseedbox.jobs.GenericJob;
 import com.openseedbox.jobs.GenericJobResult;
+import com.openseedbox.jobs.torrent.AddTorrentJob;
+import com.openseedbox.jobs.torrent.RemoveTorrentJob;
+import com.openseedbox.jobs.torrent.StartStopTorrentJob;
 import com.openseedbox.plugins.OpenseedboxPlugin;
 import com.openseedbox.plugins.OpenseedboxPlugin.PluginSearchResult;
 import com.openseedbox.plugins.PluginManager;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import com.openseedbox.models.Node;
 import com.openseedbox.models.Torrent;
+import com.openseedbox.models.TorrentEvent;
+import com.openseedbox.models.TorrentEvent.TorrentEventType;
 import com.openseedbox.models.User;
 import com.openseedbox.models.UserTorrent;
 import org.apache.commons.lang.StringUtils;
 import play.Logger;
+import play.cache.Cache;
 import play.data.binding.As;
 import play.libs.F.Promise;
+import play.libs.WS;
 import play.mvc.Before;
 
 public class Client extends Base {
@@ -66,69 +71,61 @@ public class Client extends Base {
 	}
 	
 	public static void index(String group) {		
-		if (group == null) {
+		if (StringUtils.isEmpty(group)) {
 			group = "Ungrouped";
 		}
-		renderArgs.put("currentGroup", group);
-		List<UserTorrent> torrents = getCurrentUser().getTorrentsInGroup(group);
-		List<String> groups = getCurrentUser().getGroups();
-		String torrentList = renderToString("client/torrent-list.html", Util.convertToMap(new Object[] { "torrents", torrents, "groups", groups }));
-		List<OpenseedboxPlugin> searchPlugins = PluginManager.getSearchPlugins();
+		renderArgs.put("currentGroup", group);		
+		renderArgs.put("users", Util.toSelectItems(User.all().fetch(), "id", "emailAddress"));
+		User user = getCurrentUser();
+		List<UserTorrent> torrents = user.getTorrentsInGroup(group);
+		List<String> groups = user.getGroups();		
+		String torrentList = renderTorrentList(group);
+		List<OpenseedboxPlugin> searchPlugins = PluginManager.getSearchPlugins();				
 		render("client/index.html", torrentList, groups, torrents, searchPlugins);
 	}
 	
 	public static void update(String group) {
-		if (group == null) {
-			group = "All";
-		}		
-		//this is intended to be invoked via ajax
-		List<UserTorrent> torrents = getCurrentUser().getTorrentsInGroup(group);
-		String data = renderToString("client/torrent-list.html", Util.convertToMap(new Object[] { "torrents", torrents }));
-		result(data);
+		//this is intended to be invoked via ajax		
+		result(renderTorrentList(group));
 	}
 	
-	public static void addTorrent(@As("\n") final String[] urlOrMagnet, final File[] fileFromComputer) throws IOException {			
+	private static String renderTorrentList(String group) {	
+		if (StringUtils.isEmpty(group)) {
+			group = "Ungrouped";
+		}		
+		List<UserTorrent> torrents = getCurrentUser().getTorrentsInGroup(group);
+		List<TorrentEvent> torrentAddEvents = TorrentEvent.getIncompleteForUser(getCurrentUser(), TorrentEventType.ADDING);		
+		List<TorrentEvent> torrentRemoveEvents = TorrentEvent.getIncompleteForUser(getCurrentUser(), TorrentEventType.REMOVING);
+		return renderToString("client/torrent-list.html", Util.convertToMap(
+				  new Object[] { "torrents", torrents, "torrentAddEvents", torrentAddEvents, "torrentRemoveEvents", torrentRemoveEvents }));
+	}
+	
+	public static void addTorrent(@As("\n") final String[] urlOrMagnet, final File[] fileFromComputer) throws IOException {					
 		if (urlOrMagnet == null && fileFromComputer == null) {
 			setGeneralErrorMessage("Please enter a valid URL or magent link, or choose a valid file to upload.");
 		} else {					
-			final User u = getCurrentUser();
-			Promise<GenericJobResult> p = new GenericJob() {
-				@Override
-				public Object doGenericJob() {	
-					if (urlOrMagnet != null) {
-						for (String s : urlOrMagnet) {
-							addToDatabase(null, s);						
-						}
-					}
-					
-					if (fileFromComputer != null) {
-						for (File f : fileFromComputer) {
-							addToDatabase(f, null);	
-						}
-					}
-					return null;
+			int count = 0;
+			User user = getCurrentUser();
+			if (urlOrMagnet != null) {
+				for (String s : urlOrMagnet) {
+					new AddTorrentJob(s, null, user).now();
+					count++;
 				}
-				
-				private void addToDatabase(File file, String urlOrMagnet) {
-					//TODO: check that we dont already have the torrent somewhere in the system
-					Node node = Node.getBestForNewTorrent();
-					ITorrentBackend backend = node.getNodeBackend();	
-					ITorrent added = (file != null) ? backend.addTorrent(file) : backend.addTorrent(urlOrMagnet);
-					Torrent t = new Torrent();
-					t.setHashString(added.getTorrentHash());
-					t.setStatus(TorrentState.DOWNLOADING);
-					t.setName(added.getName());
-					t.setNode(node);
-					t.save();
-					UserTorrent ut = new UserTorrent();
-					ut.setUser(u);
-					ut.setTorrentHash(added.getTorrentHash());
-					ut.insert();
+			}
+			if (fileFromComputer != null) {
+				for (File f : fileFromComputer) {
+					new AddTorrentJob(null, f, user).now();
+					count++;
 				}
-				
-			}.now();					  
-			successOrError(p);
-		}		
+			}	
+			if (count > 0) {
+				if (count > 1) {
+					setGeneralMessage(count + " torrents have been scheduled for downloading! They will begin shortly.");
+				} else {
+					setGeneralMessage("Your torrent has been scheduled for downloading! It will begin shortly.");
+				}
+			}
+		}				
 		index(null);
 	}
 	
@@ -229,17 +226,28 @@ public class Client extends Base {
 		index(null);
 	}
 	
-	public static void addToGroup(@As(",") List<String> hashes, String group) {
+	public static void addToGroup(@As(",") List<String> hashes, String group, String new_group) {
+		User user = getCurrentUser();
 		List<UserTorrent> uts = UserTorrent.getByUser(getCurrentUser(), hashes);
+		if (!StringUtils.isEmpty(new_group)) {
+			if (new_group.length() > 12) {
+				new_group = new_group.substring(0, 12);
+			}
+			if (!user.getGroups().contains(new_group)) {
+				user.getGroups().add(new_group);
+				user.save();
+			}
+		}
+		String groupName = (!StringUtils.isEmpty(new_group)) ? new_group : group;
 		for (UserTorrent ut : uts) {
-			if (group.equals("Ungrouped")) {
+			if (groupName.equals("Ungrouped")) {
 				ut.setGroupName(null);
 			} else {
-				ut.setGroupName(group);
+				ut.setGroupName(groupName);
 			}
 		}
 		UserTorrent.batch().update(uts);
-		index(group);
+		index(groupName);
 	}
 	
 	public static void removeFromGroup(String group) {
@@ -247,101 +255,58 @@ public class Client extends Base {
 		index(null);
 	}
 	
-	public static void action(String what, String hash, @As(",") List<String> hashes) {
-		if (!StringUtils.isEmpty(what)) {
+	public static void action(String what, String hash, @As(",") List<String> hashes, String group) {
+		if (!StringUtils.isEmpty(hash)) { hashes = new ArrayList<String>(); }
+		if (hashes.isEmpty()) {
+			if (StringUtils.isEmpty(hash)) {
+				setGeneralErrorMessage("Please specify a 'hash' or 'hashes'");
+			}
+			hashes.add(hash);		
+		}		
+		if (!hashes.isEmpty() && !StringUtils.isEmpty(what)) {
 			if (what.equals("start")) {
-				doTorrentAction(hash, hashes, TorrentAction.START);
+				doTorrentAction(hashes, TorrentAction.START);
 			} else if (what.equals("stop")) {
-				doTorrentAction(hash, hashes, TorrentAction.STOP);
+				doTorrentAction(hashes, TorrentAction.STOP);
 			} else if (what.equals("remove")) {
-				doTorrentAction(hash, hashes, TorrentAction.REMOVE);
+				doTorrentAction(hashes, TorrentAction.REMOVE);
 			}
 		} else {
 			setGeneralErrorMessage("Please specify an 'action'");
-		}
-		index(null);
+		}			
+		index(group);
 	}
 	
-	private enum TorrentAction { START, STOP, REMOVE }
-	private static void doTorrentAction(final String hash, final List<String> hashes, final TorrentAction action) {
-		final User user = getCurrentUser();
-		Promise<GenericJobResult> p = new GenericJob() {
-			@Override
-			public Object doGenericJob() {				
-				if (!StringUtils.isEmpty(hash)) {
-					UserTorrent ut = UserTorrent.getByUser(user, hash);
-					if (ut == null) {
-						throw new MessageException("User has no such torrent with hash: " + hash);						
-					}
-					ITorrentBackend backend = ut.getTorrent().getNode().getNodeBackend();			
-					switch(action) {
-						case START:							
-							backend.startTorrent(hash);
-							break;
-						case STOP:
-							backend.stopTorrent(hash);
-							break;
-						case REMOVE:
-							backend.removeTorrent(hash);	
-							ut.delete();
-							removeTorrentsCompletelyIfRequired(hash);
-							break;
-					}			
-				} else if (hashes != null) {
-					List<UserTorrent> utList = UserTorrent.getByUser(user, hashes);
-					for (UserTorrent ut : utList) {
-						ITorrentBackend backend = ut.getTorrent().getNode().getNodeBackend();
-						switch(action) {
-							case START:
-								backend.startTorrent(ut.getTorrentHash());
-								break;
-							case STOP:
-								backend.stopTorrent(ut.getTorrentHash());
-								break;
-							case REMOVE:
-								backend.removeTorrent(ut.getTorrentHash());								
-								break;
-						}	
-					}
-					if (action == TorrentAction.REMOVE) {
-						UserTorrent.batch().delete(utList);
-						removeTorrentsCompletelyIfRequired(hashes);
-					}
-				} else {
-					setGeneralErrorMessage("Please specify a 'hash' or 'hashes'");
-				}		
-				return null;
-			}			
-		}.now();
-		successOrError(p);
-	}
-	
-	private static void removeTorrentsCompletelyIfRequired(String hash) {
-		List<String> l = new ArrayList<String>();
-		l.add(hash);			
-		removeTorrentsCompletelyIfRequired(l);
-	}
-	
-	private static void removeTorrentsCompletelyIfRequired(List<String> hashList) {
-		//called within a job, and you cant have nested jobs or await() will never work
-		for(String hash : hashList) {
-			if (UserTorrent.getUsersWithTorrentCount(hash) == 0) {
-				Torrent to = Torrent.getByHash(hash);
-				to.getNode().getNodeBackend().removeTorrent(hash);
-				to.delete();
+	public enum TorrentAction { START, STOP, REMOVE }
+	private static void doTorrentAction(List<String> hashes, TorrentAction action) {
+		User user = getCurrentUser();						
+		if (action == TorrentAction.REMOVE) {
+			for (String h : hashes) {
+				if (StringUtils.isEmpty(h)) {
+					continue;
+				}
+				new RemoveTorrentJob(h, user).now();
 			}
-		}
-	}	
+			if (hashes.size() > 1) {
+				setGeneralMessage(hashes.size() + " torrents are now scheduled for deletion.");
+			} else {
+				setGeneralMessage("This torrent is now scheduled for deletion.");
+			}			
+		} else {
+			successOrError(new StartStopTorrentJob(hashes, action, user).now());						
+		}		
+	}
 	
 	protected static Object successOrError(Promise<GenericJobResult> p) {
 		if (p == null) { throw new IllegalArgumentException("You cant give me a null promise!"); }
 		GenericJobResult res = await(p);
+		if (res == null) { return null; }
 		if (res.hasError()) {
 			if (res.getError() instanceof MessageException) {
 				setGeneralErrorMessage(res.getError().getMessage());
 				return null;
 			}
-			if (res.getError().getMessage().contains("Connection refused")) {
+			if (StringUtils.contains(res.getError().getMessage(), "Connection refused")) {
 				setGeneralErrorMessage("Unable to connect to backend! The administrators have been notified.");
 				//TODO: send error email
 				return null;
@@ -354,5 +319,41 @@ public class Client extends Base {
 	
 	public static void newUser() {
 		render("client/new-user.html");
+	}
+	
+	public static void switchUser(long user_id) {
+		User u = getCurrentUser();
+		if (!u.isAdmin()) {
+			resultError("You have to be admin to do this!");
+		}
+		session.put("currentUserId", user_id);
+		Cache.clear();
+		index(null);
+	}
+	
+	public static void downloadMultiple(@As(",") List<String> hashes) {
+		if (!Config.isZipEnabled()) {
+			notFound("Zip has been disabled.");
+		}
+		//Since the torrents are spread out over multiple nodes, we cant zip up multiple torrents into a single zip at the node level
+		//Basically, we send HEAD requests to get the Content-Length, and then point nginx's mod_zip to an internal route that makes nginx fetch the torrent zip files from the upstream server
+		if (hashes == null || hashes.isEmpty()) {
+			notFound("Please specify some hashes.");
+		}
+		String all = "";
+		for (Torrent t : Torrent.getByHash(hashes)) {
+			String link = t.getZipDownloadLink();			
+			String len = WS.url(link).head().getHeader("Content-Length");
+			//strip scheme and replace localhost with 127.0.0.1 so nginx resolver doesnt time out
+			link = link.replace("http://", "").replace("https://", "").replace("localhost", "127.0.0.1");
+			//no CRC32 because theres no way of knowing the CRC32 of the upstream zipfiles without downloading them first
+			all += String.format("- %s %s/%s /%s\n", len, Config.getZipPath(), link, t.getName() + ".zip");
+		}
+		if (!Config.isZipManifestOnly()) {
+			response.setHeader("X-Archive-Files", "zip"); //tell NGINX to create us a zip
+			response.setHeader("Content-Disposition", "attachment; filename=\"" + UUID.randomUUID().toString() + ".zip" + "\"");
+		}
+		response.setHeader("Last-Modified", Util.getLastModifiedHeader(System.currentTimeMillis()));
+		renderText(all);
 	}
 }

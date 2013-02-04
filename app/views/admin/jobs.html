@@ -1,0 +1,62 @@
+#{extends "admin/index.html" /}
+%{ def renderTable = { items -> }%
+	#{if items.size > 0}
+	<table class="table table-condensed">
+		<tr>
+			<th style="width:15%">Title</th>
+			<th>Last Ran (ago)</th>
+			<th style="width:10%">Duration (ms)</th>
+			<th style="width:55%">Errors</th>
+		</tr>
+		#{list items:items, as:"job"}
+		<tr>
+			<td>${job.jobTitle}</td>
+			<td>${job.lastRan}</td>
+			<td>${job.durationMilliseconds}</td>
+			<td>
+				#{if job.successful}
+					<span class="text-success">Successful</span>
+				#{/if}
+				#{else}
+					<pre class="text-error" style="margin-bottom:0px;">${job.stackTrace.trimTo(60)}</pre>
+					#{if job.stackTrace.length() > 60}
+					<a href="#" style="font-size: 70%" class="pull-right show-stack-trace">Show all</a>
+					#{/if}
+				#{/else}
+			</td>
+		</tr>
+			#{if !job.successful && job.stackTrace.length() > 60}
+			<tr class="hide full-stack-trace">
+				<td colspan="4">
+					<pre class="text-error">${job.stackTrace}</pre>
+				</td>
+			</tr>
+			#{/if}	
+		#{/list}
+	</table>
+	#{/if}
+	#{else}
+		<p>No jobs have been run yet.</p>
+	#{/else}
+%{ } }%
+<h2>Poller Jobs</h2>
+${renderTable(pollerJobs)}
+<h2>Health Check Jobs</h2>
+${renderTable(healthCheckJobs)}
+<h2>Last 30 Jobs</h2>
+${renderTable(jobResults)}
+<script type="text/javascript">
+	$(document).ready(function() {
+		$("a.show-stack-trace").click(function() {
+			$(this).prev().hide();
+			$(this).hide();
+			$(this).parents("tr:first").next(".full-stack-trace").show();
+			return false;
+		});
+	});
+</script>
+<style type="text/css">
+	.full-stack-trace td {
+		border-top: 0px;
+	}
+</style>

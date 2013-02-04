@@ -6,6 +6,9 @@ import com.openseedbox.models.Torrent;
 import com.openseedbox.models.User;
 import com.openseedbox.code.Util;
 import com.openseedbox.code.Util.SelectItem;
+import com.openseedbox.jobs.HealthCheckJob;
+import com.openseedbox.jobs.NodePollerJob;
+import com.openseedbox.models.JobEvent;
 import com.openseedbox.mvc.ISelectListItem;
 import java.util.ArrayList;
 import java.util.List;
@@ -158,5 +161,13 @@ public class Admin extends Base {
 	public static void nodeStatus(long id) {
 		Node n = Node.findById(id);
 		result(n.getNodeStatus());
+	}
+	
+	public static void jobs() {
+		renderArgs.put("active", "jobs");
+		List<JobEvent> pollerJobs = JobEvent.getLast(NodePollerJob.class, 8);
+		List<JobEvent> healthCheckJobs = JobEvent.getLast(HealthCheckJob.class, 8);
+		List<JobEvent> jobResults = JobEvent.getLast30();
+		render("admin/jobs.html", pollerJobs, healthCheckJobs, jobResults);
 	}
 }

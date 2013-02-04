@@ -1,7 +1,5 @@
 package com.openseedbox.models;
 
-import com.openseedbox.bitpay.BitPay;
-import com.openseedbox.bitpay.BitPayResponse;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
@@ -79,9 +77,9 @@ public class Invoice extends ModelBase {
 	
 	public String getPaymentUrl() {
 		if (this.bitpayUrl == null) {
-			BitPayResponse bpr = BitPay.createInvoice(this);
-			this.bitpayId = bpr.getId();
-			this.bitpayUrl = bpr.getUrl();
+			//BitPayResponse bpr = BitPay.createInvoice(this);
+			//this.bitpayId = bpr.getId();
+			//this.bitpayUrl = bpr.getUrl();
 			this.save();
 		}
 		return this.bitpayUrl;
