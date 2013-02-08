@@ -11,8 +11,8 @@
 			#{form.hidden name:"node.id", value:node?.id /}
 		#{/if}
 		#{form.text name:"node.name", value:node?.name, label:"Name" /}
-		#{form.text name:"node.ipAddress", value:node?.ipAddress, label:"Host / IP Address" /}
-		#{form.text name:"node.port", value:node?.port, label:"Webservice Port", css_class:"input-mini" /}
+		#{form.text name:"node.scheme", value:node?.scheme, label:"Scheme", css_class:"input-mini", help:"http or https" /}
+		#{form.text name:"node.ipAddress", value:node?.ipAddress, label:"Host / IP Address" /}		
 		#{form.text name:"node.apiKey", value:node?.apiKey, label:"Webservice API Key" /}			
 		#{form.checkbox name:"node.active", value:node?.active, label:"Active" /}
 		<div class="form-actions"> 

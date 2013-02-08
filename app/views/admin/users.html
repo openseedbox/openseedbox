@@ -9,13 +9,14 @@
 	<tr>
 		<th>Email Address</th>
 		<th>Plan</th>
+		<th>Dedicated Node</th>
 		<th>Available</th>
 		<th>Used</th>					
 		<th>Action</th>
 	</tr>
 	#{list items:users, as:"user"}
 	<tr>
-		<td>${user.emailAddress}</td>
+		<td>${user.emailAddress}</td>		
 		<td>
 			#{if user.plan}
 				${user.plan.name}
@@ -25,13 +26,21 @@
 			#{/else}
 		</td>
 		<td>
+		#{if user.hasDedicatedNode()}
+			<a href="@{Admin.editNode(user.dedicatedNode.id)}">${user.dedicatedNode.name}</a>
+		#{/if}
+		#{else}
+			N/A
+		#{/else}
+		</td>		
+		<td>
 			#{if user.plan}
 				${user.plan.maxDiskspaceGb} GB
 			#{/if}
 		</td>
 		<td>${user.usedSpace}</td>
 		<td>
-			<a class="btn btn-primary btn-small" href="@{Admin.editUser(user.id)}"><i class="icon-edit"></i></a>
+			<a class="btn btn-small" href="@{Admin.editUser(user.id)}"><i class="icon-edit"></i></a>
 			<a class="btn btn-danger btn-small" href="@{Admin.deleteUser(user.id)}"><i class="icon-remove"></i></a>
 		</td>
 	</tr>

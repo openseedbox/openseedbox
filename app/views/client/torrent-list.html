@@ -1,5 +1,14 @@
 %{
 	def Util = com.openseedbox.code.Util
+	def torrentQueue = { -> }%
+		#{if torrentAddEvents.size > 0}
+			<h5><span class="text-success">Waiting to Add:</span> ${torrentAddEvents.size} torrent${torrentAddEvents.size.pluralize("s")}</h5>
+		#{/if}
+		#{if torrentRemoveEvents.size > 0}
+			<h5><span class="text-error">Waiting to Remove:</span> ${torrentRemoveEvents.size} torrent${torrentRemoveEvents.size.pluralize("s")}</h5>
+		#{/if}	
+{%
+	}
 }%
 #{if torrents.size > 0}
 <table class="table table-condensed table-hover">
@@ -46,7 +55,7 @@
 								progressClass = (t.running) ? "progress-striped" : ""
 								barClass = "bar-danger"
 								width = t.metadataPercentComplete * 100
-							} else if (t.paused) {
+							} else if (item.paused) {
 								progressClass = "active"
 								barClass = "bar-warning";								
 							} else if (t.downloading) {
@@ -66,7 +75,7 @@
 							<input type="hidden" name="group" value="${currentGroup}" />
 							<div class="btn-group pull-right">							
 								<a class="btn btn-mini show-torrent-info" data-torrent-hash="${t.torrentHash}" href="#"><i class="icon-info-sign"></i></a>
-								#{if t.running}
+								#{if item.running}
 									<button type="submit" class="btn btn-mini" name="what" value="stop"><i class="icon-pause"></i></button>
 								#{/if}
 								#{else}
@@ -84,12 +93,7 @@
 	<tr>
 		<td>
 			<div class="pull-left">
-				#{if torrentAddEvents.size > 0}
-					<h5><span class="text-success">Waiting to Add:</span> ${torrentAddEvents.size} torrent${torrentAddEvents.size.pluralize("s")}</h5>
-				#{/if}
-				#{if torrentRemoveEvents.size > 0}
-					<h5><span class="text-error">Waiting to Remove:</span> ${torrentRemoveEvents.size} torrent${torrentRemoveEvents.size.pluralize("s")}</h5>
-				#{/if}
+				${torrentQueue()}
 			</div>
 			<div class="pull-right">
 				%{					
@@ -102,32 +106,13 @@
 					}				
 					int usedPercent = used / available
 				}%
-				<h5><small>Available: ${currentUser.plan.maxDiskspaceGb != -1 ?: "Unlimited"} GB, Used: ${Util.getBestRate(used)}#{if currentUser.plan.maxDiskspaceGb != -1} (${usedPercent}%)#{/if}, Down: ${Util.getBestRate(down)}/s, Up: ${Util.getBestRate(up)}/s</small></h5>
+				<h5><small>Available: ${currentUser.plan.maxDiskspaceGb != -1 ? currentUser.plan.maxDiskspaceGb : "Unlimited"} GB, Used: ${Util.getBestRate(used)}#{if currentUser.plan.maxDiskspaceGb != -1} (${usedPercent}%)#{/if}, Down: ${Util.getBestRate(down)}/s, Up: ${Util.getBestRate(up)}/s</small></h5>
 			</div>
 		</td>
 	</tr>	
 </table>
 #{/if}
-#{else}
-	#{if groups?.size == 0}
-		<h2 style="margin-top: -30px;">Right! Now you can add a torrent.</h2>
-		<ol>
-			<li><h3>Find a torrent somewhere. <a href="http://www.youtorrent.com/" target="_blank">Here</a> is a good place to start.</h3>
-				<img src="#{asset.url 'images/step1.png'/}" /><br /><br />
-			</li>
-			<hr />
-			<li><h3>Copy the torrent url <small>Magnet links are supported too</small></h3>
-				<img src="#{asset.url 'images/step2.png'/}" /><br /><br />
-			</li>		
-			<hr />
-			<li><h3>Click <a class="btn btn-success"><i class="icon-plus"></i>Add Torrent</a> on the right and paste in the link</h3>
-				<img src="#{asset.url 'images/step3.png'/}" /><br /><br />
-			</li>	
-			<hr />
-			<li><h3>Away you go! Your torrent will begin downloading.</h3></li>
-		</ol>
-	#{/if}
-	#{else}
-		<p style="margin-top: 10px;">No torrents found. Add a torrent using the button on the right.</p>
-	#{/else}
+#{else}	
+	<p style="margin-top: 10px;">No torrents found. Add a torrent using the button on the right.</p>
+	${torrentQueue()}	
 #{/else}

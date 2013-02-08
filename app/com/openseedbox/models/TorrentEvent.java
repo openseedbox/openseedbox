@@ -33,11 +33,11 @@ public class TorrentEvent extends EventBase {
 				  .order("eventType").order("startDate").fetch();
 	}
 	
-	public static TorrentEvent getIncompleteForUser(User u, String torrentHash) {
-		//There should be only one _incomplete_ TorrentEvent per user/torrentHash!
-		return null;/*
-		return TorrentEvent.all().filter("user", u)
-				  .filter("completionDate", null).filter("torrentHash", torrentHash).get();*/
+	public static List<TorrentEvent> getOlderThanMinutes(int minutes) {
+		Date nowMinusMinutes = new Date(System.currentTimeMillis() - (minutes * 1000 * 60));
+		return TorrentEvent.all()
+				  .filter("completionDate", null)
+				  .filter("startDate <", nowMinusMinutes).fetch();
 	}
 	
 	public enum TorrentEventType {

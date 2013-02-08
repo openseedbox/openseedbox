@@ -1,6 +1,7 @@
 package com.openseedbox.models;
 
 import com.openseedbox.backend.IFile;
+import com.openseedbox.backend.TorrentState;
 import com.openseedbox.code.Util;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,15 +13,12 @@ import siena.Table;
 @Table("torrent_group")
 public class UserTorrent extends ModelBase {
 
-	@Column("group_name")
-	private String groupName;
-	@Column("user_id")
-	private User user;
-	@Column("torrent_hash")
-	private String torrentHash;
+	@Column("group_name") private String groupName;
+	@Column("user_id") private User user;
+	@Column("torrent_hash") private String torrentHash;
 	private transient Torrent torrent;
-	private boolean adding;
-	private boolean deleting;
+	private boolean paused;	
+	private boolean running;
 
 	public static int getAverageTorrentsPerUser() {
 		return -1;
@@ -44,6 +42,10 @@ public class UserTorrent extends ModelBase {
 		return UserTorrent.all().filter("user", u)
 				  .filter("torrentHash IN", hashes).fetch();
 	}
+	
+	public static List<UserTorrent> getByHash(String hash) {
+		return UserTorrent.all().filter("torrentHash", hash).fetch();
+	}
 
 	public static int getUsersWithTorrentCount(String hash) {
 		return UserTorrent.all().filter("torrentHash", hash).count();
@@ -56,14 +58,25 @@ public class UserTorrent extends ModelBase {
 		}
 		UserTorrent.batch().update(list);
 	}
+	
+	public static boolean isTorrentStoppedByAllUsers(String hash) {
+		int count = UserTorrent.all().filter("torrentHash", hash).count();
+		int paused = UserTorrent.all().filter("torrentHash", hash).filter("paused", true).count();
+		return (count == paused);
+	}
+	
+	public static boolean isTorrentStartedByAUser(String hash) {
+		return UserTorrent.all().filter("torrentHash", hash).filter("paused", false).count() >= 1;
+	}
 
 	public String getNiceStatus() {
-		if (this.isAdding()) {
-			return "Adding";
-		} else if (this.isDeleting()) {
-			return "Deleting";
+		TorrentState ts = this.getTorrent().getStatus();
+		if (this.isPaused()) {
+			return "Paused";
+		} else if (running && ts == TorrentState.PAUSED) {			
+			return "Running";			
 		}
-		switch (this.getTorrent().getStatus()) {
+		switch (ts) {
 			case DOWNLOADING:
 				return "Downloading";
 			case SEEDING:
@@ -82,6 +95,9 @@ public class UserTorrent extends ModelBase {
 	}
 
 	public String getNiceSubStatus() {
+		if (this.isPaused()) {
+			return "";
+		}
 		String ret = "";
 		Torrent t = getTorrent();
 		if (t.hasErrorOccured() && (t.getDownloadSpeedBytes() == 0)) {
@@ -199,21 +215,25 @@ public class UserTorrent extends ModelBase {
 		return torrent;
 	}
 
-	public boolean isAdding() {
-		return adding;
+	public boolean isPaused() {
+		return paused;
 	}
 
-	public void setAdding(boolean adding) {
-		this.adding = adding;
+	public void setPaused(boolean paused) {
+		this.paused = paused;
 	}
 
-	public boolean isDeleting() {
-		return deleting;
+	public boolean isRunning() {
+		if (isPaused()) {
+			return false;
+		}
+		return running;
 	}
 
-	public void setDeleting(boolean deleting) {
-		this.deleting = deleting;
-	}	
+	public void setRunning(boolean running) {
+		this.running = running;
+	}
+	
 	/* End Getters and Setters */
 	
 	public class TreeNode implements Comparable {

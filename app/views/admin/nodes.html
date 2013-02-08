@@ -20,7 +20,7 @@
 	</tr>
 #{list items:nodes, as:"node"}
 	<tr class="node-line" data-node-id="${node.id}">
-		<td><a href="${com.openseedbox.Config.nodeAccessType}://${node.ipAddress}:${node.port}/" target="_blank">${node.name}</a></td>
+		<td><a href="${node.scheme}://${node.ipAddress}/" target="_blank">${node.name}</a></td>
 		<td>${node.ipAddress}</td>
 		<td class="node-uptime"><img src="#{asset.ajax /}" /></td>
 		<td class="node-free-space"></td>

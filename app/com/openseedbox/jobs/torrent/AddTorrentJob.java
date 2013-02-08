@@ -37,7 +37,7 @@ public class AddTorrentJob extends LoggedJob<TorrentEvent> {
 			sleep(2); //add in some lag to simulate slow backend
 		}
 		//TODO: check that we dont already have the torrent somewhere in the system. Hard because we dont know the torrent hash at this point
-		Node node = Node.getBestForNewTorrent();
+		Node node = Node.getBestForNewTorrent(user);
 		ITorrentBackend backend = node.getNodeBackend();			
 		ITorrent added = (file != null) ? backend.addTorrent(file) : backend.addTorrent(urlOrMagnet);		
 		

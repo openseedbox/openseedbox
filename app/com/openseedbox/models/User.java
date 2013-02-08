@@ -27,9 +27,34 @@ public class User extends ModelBase {
 	@Column("avatar_url") private String avatarUrl;	
 	@Required @Column("display_name") private String displayName;	
 	@Column("last_access") private Date lastAccess;				
-	@Max(32) @Column("api_key") private String apiKey;
+	@Column("api_key") private String apiKey;
 	@Column("plan_id") private Plan plan;
 	@Embedded private List<String> groups;
+	@Column("node_id") private Node dedicatedNode;
+	
+	public static User findByApiKey(String apiKey) {
+		return User.all().filter("apiKey", apiKey).get();
+	}
+	
+	public static User findByOpenId(String openId) {
+		return User.all().filter("openId", openId).get();
+	}
+	
+	public static User findByEmailAddress(String emailAddress) {
+		return User.all().filter("emailAddress", emailAddress).get();
+	}	
+	
+	public boolean hasExceededLimits() {
+		Plan p = getPlan();
+		if (p.getMaxDiskspaceBytes() == -1) {
+			return false;
+		}
+		return (getUsedSpaceBytes() > p.getMaxDiskspaceBytes());			
+	}
+	
+	public List<UserTorrent> getRunningTorrents() {
+		return UserTorrent.all().filter("user", this).filter("paused", false).fetch();
+	}
 	
 	public void generateApiKey() {
 		String salt = Play.configuration.getProperty("application.secret", "salt value");
@@ -41,6 +66,7 @@ public class User extends ModelBase {
 	public long getUsedSpaceBytes() {	
 		List<UserTorrent> ut = getTorrents();
 		long sum = 0;
+		//TODO: make less retardedly inefficient
 		for (UserTorrent u : ut) {
 			sum += u.getTorrent().getTotalSizeBytes();
 		}
@@ -180,119 +206,19 @@ public class User extends ModelBase {
 		this.groups = groups;
 	}
 	
-/*
-	
-	public List<UserMessage> getUnreadMessages() {
-		return null;/*
-		return UserMessage.all().filter("user", this).filter("dismissDateUtc", null).fetch();*//*
+	public boolean hasDedicatedNode() {
+		return dedicatedNode != null;
 	}
-	
-	public List<UserMessage> getAllMessages() {
-		return null;/*
-		return UserMessage.all().filter("user", this).fetch();*//*
-	}
-	
-	public UserMessage addUserMessage(String heading, String message) {
-		return addUserMessage(heading, message, UserMessage.State.MESSAGE, UserMessage.Type.GENERAL);
-	}
-	
-	public UserMessage addUserMessage(String heading, String message, UserMessage.Type type) {
-		return addUserMessage(heading, message, UserMessage.State.MESSAGE, type);
-	}	
-	
-	public UserMessage addUserErrorMessage(String heading, String message) {
-		return addUserMessage(heading, message, UserMessage.State.ERROR, UserMessage.Type.SWITCHPLAN);
-	}	
-	
-	public UserMessage addUserMessage(String heading, String message, UserMessage.State state, UserMessage.Type type) {
-		UserMessage um = new UserMessage();
-		um.setHeading(heading);
-		um.setMessage(message);
-		um.setState(state);
-		um.setType(type);
-		um.setCreateDateUtc(new Date());
-		um.setUser(this);
-		return um.save();
-	}
-	
-	public void dismissUserMessagesOfType(UserMessage.Type type) {
-		List<UserMessage> um = getUserMessagesOfType(type);
-		for (UserMessage u : um) {
-			u.setDismissDateUtc(new Date());
-			u.save();
+
+	public Node getDedicatedNode() {
+		if (dedicatedNode != null) {
+			dedicatedNode.get();
 		}
+		return dedicatedNode;
 	}
-	
-	public List<UserMessage> getUserMessagesOfType(UserMessage.Type type) {
-		return UserMessage.find("type = ? AND dismissDateUtc IS NULL", type).fetch();
-	}
-	
-	public List<Invoice> getUnpaidInvoices() {
-		return null;/*
-		return Invoice.all()
-				.filter("account", this.getPrimaryAccount())
-				.filter("paymentDateUtc", null).fetch();*//*
-	}
-	
-	public List<Invoice> getPaidInvoices() {
-		return null;/*
-		return Invoice.all()
-				.filter("account", this.getPrimaryAccount())
-				.filter("paymentDateUtc !=", null)
-				.order("-paymentDateUtc").fetch();*/	/*
-	}
-	
-	public boolean hasExceededLimits() throws MessageException {
-		UserStats us = this.getUserStats();
-		if (us != null) {
-			if (Double.parseDouble(us.maxSpaceGb) > -1) {
-				if (Double.parseDouble(us.usedSpaceGb) > Double.parseDouble(us.maxSpaceGb)) {
-					return true;
-				}		
-			}
-			Plan p = this.getPlan();
-			if (p != null) {
-				if (p.getMaxActiveTorrents() > -1) {
-					if (getRunningTorrents().size() > p.getMaxActiveTorrents()) {
-						return true;
-					}
-				}
-			}
-			return false;
-		} else {
-			//if the userstats are null, then likely the seedbox is unreachable
-			throw new MessageException("Your seedbox appears to be unreachable! Please contact support.");
-		}
-	}
-	
-	public void notifyLimitsExceeded() {
-		//check if user has already been notified
-		if (getUserMessagesOfType(UserMessage.Type.LIMITSEXCEEDED).isEmpty()) {
-			addUserMessage("Limits Exceeded", "You have exceeded your plan limits! All torrents will be paused until you remove some.", UserMessage.State.ERROR, UserMessage.Type.LIMITSEXCEEDED);
-		}
-	}
-	
-	public void removeLimitsExceeded() {
-		dismissUserMessagesOfType(UserMessage.Type.LIMITSEXCEEDED);
-	}
-	
-	public class UserStats {
-		public String maxSpaceGb;
-		public String usedSpaceGb;
-		public String rateDownloadKb;
-		public String rateUploadKb;
-	}*/
-	
-	public static User findByApiKey(String apiKey) {
-		return User.all().filter("apiKey", apiKey).get();
-	}
-	
-	public static User findByOpenId(String openId) {
-		return User.all().filter("openId", openId).get();
-	}
-	
-	public static User findByEmailAddress(String emailAddress) {
-		return User.all().filter("emailAddress", emailAddress).get();
+
+	public void setDedicatedNode(Node dedicatedNode) {
+		this.dedicatedNode = dedicatedNode;
 	}
 	
 }

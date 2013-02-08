@@ -12,10 +12,11 @@ public abstract class LoggedJob<T extends EventBase> extends GenericJob {
 
 	@Override
 	protected GenericJobResult runJob() throws Exception {				
+		EventBase eb = getJobEvent();
+		eb.setStartDate(new Date());
 		long startMillis = System.currentTimeMillis();
 		GenericJobResult res = super.runJob();
-		long endMillis = System.currentTimeMillis();
-		EventBase eb = getJobEvent();
+		long endMillis = System.currentTimeMillis();		
 		eb.setDurationMilliseconds(endMillis - startMillis);
 		eb.setCompletionDate(new Date());
 		if (res.hasError()) {
