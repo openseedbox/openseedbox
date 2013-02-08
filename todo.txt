@@ -6,15 +6,52 @@ DONE - Allow select multiple groups using shift
 DONE - Allow group action - "Download all as Zip"
 IMPOSSIBRU - Make 'available' show node free space if the plans total space is '-1'
 DONE - Show total up/ratio when seeding
+DONE - Job that goes through and cleans up any 'waiting to add'/'waiting to remove' torrent events more than 10mins old
+DONE - Create queues for adding torrents to transmission and removing torrents from transmission - to make page reloads faster (dont rely on transmission-daemon to be quick, its bloody slow especially when writing to encfs)
+DONE - Pause/Start need to only affect the Users view of the torrent, unless all users have it paused. Should be non-blocking, ie not wait for backend to actually pause the torrent.
+DONE - Maybe a task that cleans up torrents that are present in transmission but not in the database
+DONE - Implement resource constraints
 
-- Job that goes through and cleans up any 'waiting to add'/'waiting to remove' torrent events more than 10mins old
-- Implement resource constraints
+- Implement node chooser for new torrents
 
-- Create queues for adding torrents to transmission and removing torrents from transmission - to make page reloads faster (dont rely on transmission-daemon to be quick, its bloody slow especially when writing to encfs)
 - Better unit tests
-- Maybe a task that cleans up torrents that are present in transmission but not in the database
 
 
 Maybe Never:
 
 - Implement deluge or rtorrent backend - transmission is retardedly slow when theres slow hard disks (due to IO thread and RPC thread being the same)
+
+1d5fafbf7b2f
+
+
+Node Choosing Algorithm
+-----------------------
+
+Nodes: 1 (50GB), 2(200GB), 3(120GB)
+
+Note: We dont know the size of the torrent at node choosing time, so we must assume that there is capacity available.
+We do know the space sum of all the active torrents on the nodes though.
+
+Add torrent (40GB but we dont know that yet):
+Node 1 has 50GB free, Node 2 has 200GB free and Node 3 has 120GB free. None of the nodes have any torrents yet.
+Choose Node 2 because its less likely to have problems.
+
+Now: 1 (50GB), 2 (160GB + 1 torrent), 3(120GB)
+
+Add torrent (25GB but we dont know that yet):
+Node 2 has a torrent on it but Node 1 and Node 3 dont have any yet. Choose Node 3 because it has more space
+
+Now: 1 (50GB), 2 (160GB + 1 torrent), 3(95GB + 1 torrent)
+
+
+Basically, choose a node with less torrents on it UNLESS theres nodes with more free space. Otherwise, choose the node with the most free space.
+
+Room for improvement - with the exception of magnet links, find out the torrent size _before_ adding it to transmission. This would allow for algorithms like putting small torrents on nodes with less disk space because you know theres going to be enough available.
+
+
+
+
+
+
+
+

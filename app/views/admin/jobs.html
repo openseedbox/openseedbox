@@ -15,17 +15,19 @@
 			<td>${job.durationMilliseconds}</td>
 			<td>
 				#{if job.successful}
-					<span class="text-success">Successful</span>
+					<span class="text-success">						
+						${job.stackTrace ?: "Success"}					
+					</span>
 				#{/if}
 				#{else}
-					<pre class="text-error" style="margin-bottom:0px;">${job.stackTrace.trimTo(60)}</pre>
-					#{if job.stackTrace.length() > 60}
+					<pre class="text-error" style="margin-bottom:0px;">${job.stackTrace?.trimTo(60)}</pre>
+					#{if job.stackTrace?.length() > 60}
 					<a href="#" style="font-size: 70%" class="pull-right show-stack-trace">Show all</a>
 					#{/if}
 				#{/else}
 			</td>
 		</tr>
-			#{if !job.successful && job.stackTrace.length() > 60}
+			#{if !job.successful && job.stackTrace?.length() > 60}
 			<tr class="hide full-stack-trace">
 				<td colspan="4">
 					<pre class="text-error">${job.stackTrace}</pre>
@@ -39,12 +41,13 @@
 		<p>No jobs have been run yet.</p>
 	#{/else}
 %{ } }%
-<h2>Poller Jobs</h2>
+<span class="pull-right">Time: ${new Date()}</span>
+<h2>Poller Jobs <small><a href="@{Admin.runJobManually('poller')}">Run</a></small></h2>
 ${renderTable(pollerJobs)}
-<h2>Health Check Jobs</h2>
+<h2>Health Check Jobs <small><a href="@{Admin.runJobManually('healthcheck')}">Run</a></small></h2>
 ${renderTable(healthCheckJobs)}
-<h2>Last 30 Jobs</h2>
-${renderTable(jobResults)}
+<h2>Cleanup Jobs <small><a href="@{Admin.runJobManually('cleanup')}">Run</a></small></h2>
+${renderTable(cleanupJobs)}
 <script type="text/javascript">
 	$(document).ready(function() {
 		$("a.show-stack-trace").click(function() {

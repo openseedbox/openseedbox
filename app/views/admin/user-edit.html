@@ -1,9 +1,15 @@
 #{extends "admin/index.html" /}
+#{ifErrors}
+	#{errors}
+		${error}
+	#{/errors}
+#{/ifErrors}
 <h2>Edit user ${user.emailAddress}</h2>
 <form class="form-horizontal" action="@{Admin.updateUser}" method="post">
 	#{form.hidden name:"user.id", value:user.id /}
 	#{form.checkbox name:"user.isAdmin", value:user.isAdmin, label:"Is Administrator" /}
 	#{form.dropdown name:"user.plan.id", value:user.plan?.id, label:"Plan", options:plans, name_str:"name", value_str:"id" /}	
+	#{form.dropdown name:"user.dedicatedNode.id", value:user.dedicatedNode?.id, label:"Dedicated Node", options:nodes, name_str:"name", value_str:"id" /}
 	<div class="form-actions">
 		<input class="btn btn-primary" value="Update User" type="submit" />
 	</div>

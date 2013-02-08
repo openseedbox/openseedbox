@@ -15,7 +15,7 @@ public class NodePollerJob extends LoggedJob {
 	protected Object doGenericJob() {
 		List<Node> nodes = Node.getActiveNodes();
 		for (Node n : nodes) {	
-			if (!n.isDown()) {
+			if (n.isReachable()) {
 				List<ITorrent> torrents = n.getNodeBackend().listTorrents();
 				List<Torrent> fromDb = Torrent.getByHash(getHashStrings(torrents));
 				for (Torrent db : fromDb) {

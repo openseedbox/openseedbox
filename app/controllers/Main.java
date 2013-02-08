@@ -28,11 +28,11 @@ public class Main extends Base {
 	}
 	
 	public static void testNodeDown() {
-		Mails.nodeDown(Node.getBestForNewTorrent(), null);
+		Mails.nodeDown(Node.getActiveNodes().get(0), null);
 	}
 	
 	public static void testNodeBackUp() {
-		Mails.nodeBackUp(Node.getBestForNewTorrent());
+		Mails.nodeBackUp(Node.getActiveNodes().get(0));
 	}	
 	
 	public static void triggerError() throws Exception {

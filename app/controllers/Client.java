@@ -1,7 +1,6 @@
 package controllers;
 
 import com.openseedbox.Config;
-import com.openseedbox.backend.ITorrentBackend;
 import com.openseedbox.code.MessageException;
 import com.openseedbox.code.Util;
 import com.openseedbox.jobs.GenericJob;
@@ -46,28 +45,19 @@ public class Client extends Base {
 			Auth.login();
 		}
 
-		//check that limits have not been exceeded. if they have, pause all the torrents and notify user
-		/*
+		//check that limits have not been exceeded. if they have, pause all the torrents and notify user		
 		try {
 			if (u.hasExceededLimits()) {
-				List<Torrent> running = u.getRunningTorrents();
-				List<String> hashes = new ArrayList<String>();
-				for (Torrent t : running) {
-					hashes.add(t.getHashString());
+				List<UserTorrent> running = u.getRunningTorrents();
+				for (UserTorrent ut : running) {
+					new StartStopTorrentJob(ut.getTorrentHash(), TorrentAction.STOP, u).now();					
 				}
-				//Note: cant use async/continuations in @Before method, potential bottleneck
-				TorrentControlJobResult res = 
-						new TorrentControlJob(getActiveAccount(), hashes, TorrentAction.STOP).doJobWithResult();
-				if (res.hasError()) {
-					addGeneralError(res.error);
-				}
-				u.notifyLimitsExceeded();
-			} else {
-				u.removeLimitsExceeded();
+				UserTorrent.batch().update(running);
+				setGeneralErrorMessage("You have exceeded your plan limits! All your torrents will be paused until you free up some space.");
 			}
-		} catch (Exception ex) {
-			addGeneralError(ex);
-		}	*/	
+		} catch (Exception ex) {			
+			setGeneralErrorMessage(ex.toString());
+		}
 	}
 	
 	public static void index(String group) {		
@@ -106,8 +96,14 @@ public class Client extends Base {
 		} else {					
 			int count = 0;
 			User user = getCurrentUser();
+			if (user.hasDedicatedNode()) {
+				if (!user.getDedicatedNode().isReachable()) {
+					setGeneralErrorMessage("Your dedicated node is down. Please try again later.");
+					index(null);
+				}
+			}
 			if (urlOrMagnet != null) {
-				for (String s : urlOrMagnet) {
+				for (String s : urlOrMagnet) {					
 					new AddTorrentJob(s, null, user).now();
 					count++;
 				}
@@ -293,7 +289,16 @@ public class Client extends Base {
 				setGeneralMessage("This torrent is now scheduled for deletion.");
 			}			
 		} else {
-			successOrError(new StartStopTorrentJob(hashes, action, user).now());						
+			for (String hash : hashes) {
+				UserTorrent ut = UserTorrent.getByUser(user, hash);
+				if (ut == null) {
+					throw new MessageException("User has no such torrent with hash: " + hash);						
+				}					
+				ut.setPaused(action == TorrentAction.STOP);
+				ut.setRunning(action == TorrentAction.START);
+				ut.save(); //so client updates instantly
+				new StartStopTorrentJob(hash, action, user).now();				
+			}			
 		}		
 	}
 	
@@ -331,7 +336,7 @@ public class Client extends Base {
 		index(null);
 	}
 	
-	public static void downloadMultiple(@As(",") List<String> hashes) {
+	public static void downloadMultiple(@As(",") List<String> hashes, String debug) {
 		if (!Config.isZipEnabled()) {
 			notFound("Zip has been disabled.");
 		}
@@ -346,10 +351,11 @@ public class Client extends Base {
 			String len = WS.url(link).head().getHeader("Content-Length");
 			//strip scheme and replace localhost with 127.0.0.1 so nginx resolver doesnt time out
 			link = link.replace("http://", "").replace("https://", "").replace("localhost", "127.0.0.1");
+			link += "&scheme=" + t.getNode().getScheme(); //note: we specify scheme here to help nginx incase the frontend is running on http and the backend is running on https
 			//no CRC32 because theres no way of knowing the CRC32 of the upstream zipfiles without downloading them first
 			all += String.format("- %s %s/%s /%s\n", len, Config.getZipPath(), link, t.getName() + ".zip");
 		}
-		if (!Config.isZipManifestOnly()) {
+		if (!Config.isZipManifestOnly() && debug == null) {
 			response.setHeader("X-Archive-Files", "zip"); //tell NGINX to create us a zip
 			response.setHeader("Content-Disposition", "attachment; filename=\"" + UUID.randomUUID().toString() + ".zip" + "\"");
 		}

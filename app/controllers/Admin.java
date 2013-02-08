@@ -6,6 +6,7 @@ import com.openseedbox.models.Torrent;
 import com.openseedbox.models.User;
 import com.openseedbox.code.Util;
 import com.openseedbox.code.Util.SelectItem;
+import com.openseedbox.jobs.CleanupJob;
 import com.openseedbox.jobs.HealthCheckJob;
 import com.openseedbox.jobs.NodePollerJob;
 import com.openseedbox.models.JobEvent;
@@ -125,11 +126,15 @@ public class Admin extends Base {
 	public static void editUser(long id) {		
 		 String active = "users";
 		 User user = User.findById(id);
-		 List<Plan> all_plans = Plan.all().filter("visible", true).fetch();		 
+		 List<Plan> all_plans = Plan.all().filter("visible", true).fetch();
+		 List<Node> all_nodes = Node.getActiveNodes();
 		 List<ISelectListItem> plans = new ArrayList<ISelectListItem>();
+		 List<ISelectListItem> nodes = new ArrayList<ISelectListItem>();
 		 plans.add(new SelectItem("None", "", false));
 		 plans.addAll(Util.toSelectItems(all_plans, "id", "name"));		 
-		 renderTemplate("admin/user-edit.html", active, user, plans);
+		 nodes.add(new SelectItem("None", "", false));
+		 nodes.addAll(Util.toSelectItems(all_nodes, "id", "name"));
+		 renderTemplate("admin/user-edit.html", active, user, plans, nodes);
 	}
 
 	public static void updateUser(@Valid User user) {
@@ -165,9 +170,21 @@ public class Admin extends Base {
 	
 	public static void jobs() {
 		renderArgs.put("active", "jobs");
-		List<JobEvent> pollerJobs = JobEvent.getLast(NodePollerJob.class, 8);
-		List<JobEvent> healthCheckJobs = JobEvent.getLast(HealthCheckJob.class, 8);
-		List<JobEvent> jobResults = JobEvent.getLast30();
-		render("admin/jobs.html", pollerJobs, healthCheckJobs, jobResults);
+		List<JobEvent> pollerJobs = JobEvent.getLast(NodePollerJob.class, 5);
+		List<JobEvent> healthCheckJobs = JobEvent.getLast(HealthCheckJob.class, 5);
+		List<JobEvent> cleanupJobs = JobEvent.getLast(CleanupJob.class, 5);
+		render("admin/jobs.html", pollerJobs, healthCheckJobs, cleanupJobs);
+	}
+	
+	public static void runJobManually(String type) {
+		if (type.equals("poller")) {
+			new NodePollerJob().now();
+		} else if (type.equals("healthcheck")) {
+			new HealthCheckJob().now();
+		} else if (type.equals("cleanup")) {
+			new CleanupJob().now();
+		}
+		setGeneralMessage("Job started.");
+		jobs();
 	}
 }

@@ -67,6 +67,11 @@ public class NodeBackend implements ITorrentBackend {
 		HttpResponse res = node.getWebService("/backend/restart").get();
 		getResponseBodyOrError(res);
 	}
+	
+	public void cleanup() {
+		HttpResponse res = node.getWebService("/backend/cleanup").get();
+		getResponseBodyOrError(res);
+	}
 
 	public boolean isRunning() {
 		return node.getNodeStatus().isBackendRunning();
