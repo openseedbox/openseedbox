@@ -87,6 +87,7 @@ public class NodeBackend implements ITorrentBackend {
 	
 	private ITorrent add(File file, String urlOrMagnet) {
 		WSRequest req = node.getWebService("/torrents/add");
+		req.timeout("5min"); //some torrents can take ages to add due to the encryption and having to be allocated
 		HttpResponse res;
 		if (file != null) {
 			FileParam fp = new FileParam(file, "torrent");
