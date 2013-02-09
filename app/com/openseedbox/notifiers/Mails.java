@@ -1,7 +1,6 @@
 package com.openseedbox.notifiers;
 
 import com.openseedbox.Config;
-import com.openseedbox.models.Invitation;
 import com.openseedbox.models.Node;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import play.mvc.Http.Request;
@@ -27,7 +26,7 @@ public class Mails extends Mailer {
 		if (exactError != null) {
 			stackTrace = ExceptionUtils.getStackTrace(exactError);
 		}		
-		String status = "down";
+		String status = "down";		
 		send("mails/nodeDown", node, stackTrace, status);		
 	}
 	

@@ -1,42 +1,44 @@
 package com.openseedbox.models;
 
 import java.util.Date;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import play.db.jpa.Model;
+import java.util.List;
+import siena.Column;
+import siena.Table;
 
-@Table(name="user_message")
-public class UserMessage extends Model {
+@Table("user_message")
+public class UserMessage extends ModelBase {
 	
 	public static enum State {
 		MESSAGE, ERROR
 	}
 	
-	public static enum Type {
-		GENERAL, SWITCHPLAN, LIMITSEXCEEDED
+	private State state;			
+	private String heading;	
+	private String message;	
+	@Column("user_id") private User user;		
+	@Column("create_date") private Date createDate;	
+	private boolean retrieved;
+	
+	public UserMessage() {
+		retrieved = false;
+		createDate = new Date();
+		state = State.ERROR;
 	}
 	
-	private State state;
-	
-	private Type type;
-	
-	private String heading;
-	
-	private String message;
-	
-	@Column(name="user_id")
-	private User user;
-	
-	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name="create_date_utc")
-	private Date createDateUtc;
-	
-	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name="dismiss_date_utc")
-	private Date dismissDateUtc;
+	/**
+	 * Retrieve all unretrieved messages for the specified user.
+	 * Note: retrieving an unretrieved message marks it as retrieved!
+	 * @param u The user to retrieve unretrieved messages for
+	 * @return A list of unretrieved messages
+	 */
+	public static List<UserMessage> retrieveForUser(User u) {
+		List<UserMessage> all = UserMessage.all().filter("user", u).filter("retrieved", false).fetch();
+		for (UserMessage um : all) {
+			um.setRetrieved(true);
+		}
+		UserMessage.batch().update(all);
+		return all;
+	}
 	
 	/* Getters and Setters */
 
@@ -46,14 +48,6 @@ public class UserMessage extends Model {
 
 	public void setState(State state) {
 		this.state = state;
-	}
-
-	public Type getType() {
-		return type;
-	}
-
-	public void setType(Type type) {
-		this.type = type;
 	}
 
 	public String getHeading() {
@@ -80,20 +74,20 @@ public class UserMessage extends Model {
 		this.user = user;
 	}
 
-	public Date getCreateDateUtc() {
-		return createDateUtc;
+	public Date getCreateDate() {
+		return createDate;
 	}
 
-	public void setCreateDateUtc(Date createDateUtc) {
-		this.createDateUtc = createDateUtc;
+	public void setCreateDate(Date createDate) {
+		this.createDate = createDate;
 	}
 
-	public Date getDismissDateUtc() {
-		return dismissDateUtc;
+	public boolean isRetrieved() {
+		return retrieved;
 	}
 
-	public void setDismissDateUtc(Date dismissDateUtc) {
-		this.dismissDateUtc = dismissDateUtc;
+	public void setRetrieved(boolean retrieved) {
+		this.retrieved = retrieved;
 	}
-	
+
 }

@@ -4,6 +4,24 @@
 	<script type="text/javascript" src="#{asset.url 'javascripts/ajax-typeahead.min.js' /}"></script>
 #{/set}
 #{set title:"Torrents" /}
+<div id="user-messages">
+#{if userMessages?.size > 0}
+	#{list userMessages}
+	<div class="alert alert-error">
+		<a href="#" data-dismiss="alert" class="close">&times;</a>
+		<h4 class="alert-heading">${_.heading}</h4>
+		<p>${_.message}</p>
+	</div>
+	#{/list}
+#{/if}
+</div>
+<script id="user-message-template" type="text/x-jquery-tmpl">
+	<div class="alert alert-error">
+		<a href="#" data-dismiss="alert" class="close">&times;</a>
+		<h4 class="alert-heading">__heading__</h4>
+		<p>__message__</p>
+	</div>	
+</script>
 <div class="row">
 	<div class="span10 offset2">
 		<span class="pull-left">
@@ -242,7 +260,8 @@ form.no-margin {
 			}
 			activeAjaxRequest = $.getJSON("/client/update", {"group" : activeGroup, "ext" :"json" }, function(data) {
 				
-				if (!data) { return; }				
+				if (!data) { return; }
+				data = data.data;
 
 				//hide any tooltips before replacing, otherwise bootstrap loses the reference to the tooltip text
 				//and it will never disappear
@@ -252,7 +271,19 @@ form.no-margin {
 				var ch = checked_hashes();
 				
 				//update torrent list
-				$("#torrent-list").html(data.data);
+				$("#torrent-list").html(data["torrent-list"]);
+				
+				//write out any error messages
+				if (data["user-messages"]) {					
+					for (um in data["user-messages"]) {
+						um = data["user-messages"][um];						
+						//using Maori Templates because I cant be bothered including jquery-templates
+						var t = $("#user-message-template").html();						
+						t = t.replace("__heading__", um.heading);
+						t = t.replace("__message__", um.message);						
+						$("#user-messages").append(t);
+					}
+				}
 				
 				//process checked hashes
 				for (var hash in ch) {
