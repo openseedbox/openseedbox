@@ -18,7 +18,9 @@ import com.openseedbox.models.Torrent;
 import com.openseedbox.models.TorrentEvent;
 import com.openseedbox.models.TorrentEvent.TorrentEventType;
 import com.openseedbox.models.User;
+import com.openseedbox.models.UserMessage;
 import com.openseedbox.models.UserTorrent;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import play.Logger;
 import play.cache.Cache;
@@ -50,7 +52,8 @@ public class Client extends Base {
 			if (u.hasExceededLimits()) {
 				List<UserTorrent> running = u.getRunningTorrents();
 				for (UserTorrent ut : running) {
-					new StartStopTorrentJob(ut.getTorrentHash(), TorrentAction.STOP, u).now();					
+					new StartStopTorrentJob(ut.getTorrentHash(), TorrentAction.STOP, u).now();	
+					ut.setPaused(true);
 				}
 				UserTorrent.batch().update(running);
 				setGeneralErrorMessage("You have exceeded your plan limits! All your torrents will be paused until you free up some space.");
@@ -70,13 +73,26 @@ public class Client extends Base {
 		List<UserTorrent> torrents = user.getTorrentsInGroup(group);
 		List<String> groups = user.getGroups();		
 		String torrentList = renderTorrentList(group);
-		List<OpenseedboxPlugin> searchPlugins = PluginManager.getSearchPlugins();				
-		render("client/index.html", torrentList, groups, torrents, searchPlugins);
+		List<OpenseedboxPlugin> searchPlugins = PluginManager.getSearchPlugins();
+		List<UserMessage> userMessages = UserMessage.retrieveForUser(user);
+		render("client/index.html", torrentList, groups, torrents, searchPlugins, userMessages);
 	}
 	
 	public static void update(String group) {
 		//this is intended to be invoked via ajax		
-		result(renderTorrentList(group));
+		List<UserMessage> messages = UserMessage.retrieveForUser(getCurrentUser());
+		List<Object> messagesAsObjects = new ArrayList<Object>();
+		for (UserMessage um : messages) {
+			messagesAsObjects.add(Util.convertToMap(new Object[] {
+				"state", um.getState(),
+				"heading", um.getHeading(),
+				"message", um.getMessage()
+			}));
+		}
+		result(Util.convertToMap(new Object[] {
+			"torrent-list", renderTorrentList(group),
+			"user-messages", messagesAsObjects
+		}));
 	}
 	
 	private static String renderTorrentList(String group) {	
@@ -110,7 +126,10 @@ public class Client extends Base {
 			}
 			if (fileFromComputer != null) {
 				for (File f : fileFromComputer) {
-					new AddTorrentJob(null, f, user).now();
+					//copy the file to somewhere more permanent because Play! deletes it when the action completes so the Job cant use it
+					File tempFile = File.createTempFile(f.getName(), "");
+					FileUtils.copyFile(f, tempFile);
+					new AddTorrentJob(null, tempFile, user).now();
 					count++;
 				}
 			}	

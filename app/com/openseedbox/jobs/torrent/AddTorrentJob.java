@@ -9,8 +9,11 @@ import com.openseedbox.models.Torrent;
 import com.openseedbox.models.TorrentEvent;
 import com.openseedbox.models.TorrentEvent.TorrentEventType;
 import com.openseedbox.models.User;
+import com.openseedbox.models.UserMessage;
+import com.openseedbox.models.UserMessage.State;
 import com.openseedbox.models.UserTorrent;
 import java.io.File;
+import org.apache.commons.io.FileUtils;
 
 public class AddTorrentJob extends LoggedJob<TorrentEvent> {
 	
@@ -54,9 +57,22 @@ public class AddTorrentJob extends LoggedJob<TorrentEvent> {
 		ut.insert();		
 		
 		event.setTorrentHash(added.getTorrentHash());
-		event.setUserNotified(false);		
+		event.setUserNotified(false);	
+		
+		if (file != null) {
+			FileUtils.deleteQuietly(file);
+		}
 		
 		return null;
 	}
+
+	@Override
+	protected void onException(Exception ex) {
+		UserMessage um = new UserMessage();		
+		um.setUser(user);
+		um.setHeading("An error occured adding a torrent!");
+		um.setMessage("The following error occured: " + ex.getMessage());
+		um.insert();
+	}		
 	
 }

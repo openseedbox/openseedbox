@@ -49,14 +49,16 @@ public class Node extends ModelBase {
 			if (res.success()) {			
 				INodeStatus status = Util.getGson().fromJson(res.getJson().getAsJsonObject().get("data"), NodeStatus.class);
 				return status;
-			}	
+			}
+			throw new MessageException("Node returned status: " + res.getStatus() + ". Probably java isnt running.");
 		} catch (Exception ex) {
 			if (ex.getMessage().contains("Connection refused")) {
 				throw new MessageException("Connection refused");
+			} else if (ex.getMessage().contains("No route to host")) {
+				throw new MessageException("Unable to contact node at all! No route to host.");
 			}
 			throw new MessageException(ex.getMessage());
 		}
-		return null;
 	}
 	
 	public ITorrentBackend getNodeBackend() {
