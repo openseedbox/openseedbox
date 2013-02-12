@@ -10,7 +10,6 @@ import com.openseedbox.models.TorrentEvent;
 import com.openseedbox.models.TorrentEvent.TorrentEventType;
 import com.openseedbox.models.User;
 import com.openseedbox.models.UserMessage;
-import com.openseedbox.models.UserMessage.State;
 import com.openseedbox.models.UserTorrent;
 import java.io.File;
 import org.apache.commons.io.FileUtils;
@@ -22,10 +21,10 @@ public class AddTorrentJob extends LoggedJob<TorrentEvent> {
 	private TorrentEvent event;
 	private User user;
 	
-	public AddTorrentJob(String urlOrMagnet, File file, User user) {
+	public AddTorrentJob(String urlOrMagnet, File file, long userId) {
 		this.urlOrMagnet = urlOrMagnet;
 		this.file = file;
-		this.user = user;
+		this.user = User.findById(userId);
 		this.event = new TorrentEvent(TorrentEventType.ADDING, user);
 	}
 
