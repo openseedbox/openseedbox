@@ -64,7 +64,7 @@
 	</div>
 	<div class="span10">			
 			<input id="select-all" type="checkbox" style="margin-right: 25px; margin-left: 10px; margin-top: 8px;" class="pull-left"/>
-			<form id="with-selected-form" class="no-margin" action="@{Client.action}" method="post">
+			<form id="with-selected-form" action="@{Client.action}" method="post" style="margin:0px;">
 				<input type="hidden" name="what" value="" />
 				<input type="hidden" name="hashes" value="" />
 			</form>
@@ -76,7 +76,7 @@
 					<li><a href="#" data-what="remove">Remove</a></li>
 					<li><a id="add-to-group-button" href="#">Add to Group</a></li>
 					<li><a id="remove-from-group-button" href="#">Remove from Group</a></li>
-					#{if Config.zipEnabled}
+					#{if Config.multiZipEnabled}
 						<li><a id="download-as-zip-button" href="#">Download as Zip</a></li>
 					#{/if}
 				</ul>
