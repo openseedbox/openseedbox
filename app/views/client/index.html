@@ -465,8 +465,9 @@ a.download-link, a.download-link:hover {
 			var oldhtml = $(this).html();
 			$(this).html("<img src='#{asset.ajax /}' />");
 			var self = this;
-			$.post("/client/torrentDownload", { "hash" : hash }, function(data) {				
-				$("body>.container").append(data);
+			$.post("/client/torrentDownload", { "hash" : hash }, function(data) {	
+				$("#torrent-download-modal").remove();
+				$("#container").append(data);
 				$("#torrent-download-modal").modal({
 					"backdrop" : false
 				});				
