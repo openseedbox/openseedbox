@@ -52,7 +52,7 @@ public class Client extends Base {
 			if (u.hasExceededLimits()) {
 				List<UserTorrent> running = u.getRunningTorrents();
 				for (UserTorrent ut : running) {
-					new StartStopTorrentJob(ut.getTorrentHash(), TorrentAction.STOP, u).now();	
+					new StartStopTorrentJob(ut.getTorrentHash(), TorrentAction.STOP, u.getId()).now();	
 					ut.setPaused(true);
 				}
 				UserTorrent.batch().update(running);
@@ -120,16 +120,16 @@ public class Client extends Base {
 			}
 			if (urlOrMagnet != null) {
 				for (String s : urlOrMagnet) {					
-					new AddTorrentJob(s, null, user).now();
+					new AddTorrentJob(s, null, user.getId()).now();
 					count++;
 				}
 			}
 			if (fileFromComputer != null) {
 				for (File f : fileFromComputer) {
-					//copy the file to somewhere more permanent because Play! deletes it when the action completes so the Job cant use it
-					File tempFile = File.createTempFile(f.getName(), "");
+					//copy the file to somewhere more permanent because Play! deletes it when the action completes so the Job cant use it					
+					File tempFile = File.createTempFile(UUID.randomUUID().toString(), ".torrent");
 					FileUtils.copyFile(f, tempFile);
-					new AddTorrentJob(null, tempFile, user).now();
+					new AddTorrentJob(null, tempFile, user.getId()).now();
 					count++;
 				}
 			}	
@@ -300,7 +300,7 @@ public class Client extends Base {
 				if (StringUtils.isEmpty(h)) {
 					continue;
 				}
-				new RemoveTorrentJob(h, user).now();
+				new RemoveTorrentJob(h, user.getId()).now();
 			}
 			if (hashes.size() > 1) {
 				setGeneralMessage(hashes.size() + " torrents are now scheduled for deletion.");
@@ -316,7 +316,7 @@ public class Client extends Base {
 				ut.setPaused(action == TorrentAction.STOP);
 				ut.setRunning(action == TorrentAction.START);
 				ut.save(); //so client updates instantly
-				new StartStopTorrentJob(hash, action, user).now();				
+				new StartStopTorrentJob(hash, action, user.getId()).now();				
 			}			
 		}		
 	}

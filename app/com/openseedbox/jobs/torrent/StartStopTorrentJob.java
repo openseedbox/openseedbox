@@ -13,10 +13,10 @@ public class StartStopTorrentJob extends GenericJob {
 	private String hash;
 	private User user;
 	
-	public StartStopTorrentJob(String hash, TorrentAction action, User user) {
+	public StartStopTorrentJob(String hash, TorrentAction action, long userId) {
 		this.action = action;
 		this.hash = hash;
-		this.user = user;				
+		this.user = User.findById(userId);
 	}
 
 	@Override

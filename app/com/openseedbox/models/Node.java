@@ -1,5 +1,6 @@
 package com.openseedbox.models;
 
+import com.google.gson.JsonObject;
 import com.openseedbox.backend.INodeStatus;
 import com.openseedbox.backend.ITorrentBackend;
 import com.openseedbox.backend.NodeStatus;
@@ -47,7 +48,12 @@ public class Node extends ModelBase {
 		try {
 			HttpResponse res = getWebService("/status").get();
 			if (res.success()) {			
-				INodeStatus status = Util.getGson().fromJson(res.getJson().getAsJsonObject().get("data"), NodeStatus.class);
+				JsonObject fullResponse = res.getJson().getAsJsonObject();
+				if (!fullResponse.get("success").getAsBoolean()) {
+					String error = fullResponse.get("error").getAsString();
+					throw new MessageException(error);
+				}
+				INodeStatus status = Util.getGson().fromJson(fullResponse.get("data"), NodeStatus.class);
 				return status;
 			}
 			throw new MessageException("Node returned status: " + res.getStatus() + ". Probably java isnt running.");

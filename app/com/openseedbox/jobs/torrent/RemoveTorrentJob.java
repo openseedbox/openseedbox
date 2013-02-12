@@ -15,10 +15,10 @@ public class RemoveTorrentJob extends LoggedJob<TorrentEvent> {
 	private TorrentEvent event;
 	private User user;
 	
-	public RemoveTorrentJob(String hash, User user) {
+	public RemoveTorrentJob(String hash, long userId) {
 		event = new TorrentEvent(TorrentEventType.REMOVING, user);
 		event.setTorrentHash(hash);
-		this.user = user;
+		this.user = User.findById(userId);
 		this.hash = hash;
 	}
 
