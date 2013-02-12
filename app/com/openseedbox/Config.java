@@ -29,9 +29,14 @@ public class Config {
 	}	
 	
 	public static Boolean isZipEnabled() {
-		String z = Play.configuration.getProperty("openseedbox.zip", "false");
+		String z = Play.configuration.getProperty("openseedbox.zip", "true");
 		return Boolean.valueOf(z);
 	}
+	
+	public static Boolean isMultiZipEnabled() {
+		String z = Play.configuration.getProperty("openseedbox.multizip", "true");
+		return Boolean.valueOf(z);
+	}	
 	
 	public static Boolean isZipManifestOnly() {
 		String z = Play.configuration.getProperty("openseedbox.zip.manifestonly", "false");

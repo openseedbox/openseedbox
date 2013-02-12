@@ -81,7 +81,7 @@ public class Auth extends Base {
 					}
 					if (!StringUtils.isEmpty(u.getEmailAddress())) {
 						u.setEmailAddress(u.getEmailAddress().toLowerCase());
-						u.setAvatarUrl(String.format("http://www.gravatar.com/avatar/%s",
+						u.setAvatarUrl(String.format("https://www.gravatar.com/avatar/%s",
 								DigestUtils.md5Hex(u.getEmailAddress())));
 					}
 					u.setLastAccess(new Date());
