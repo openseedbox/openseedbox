@@ -46,7 +46,7 @@ public class User extends ModelBase {
 	
 	public boolean hasExceededLimits() {
 		Plan p = getPlan();
-		if (p.getMaxDiskspaceBytes() == -1) {
+		if (p.getMaxDiskspaceGb() == -1) {
 			return false;
 		}
 		return (getUsedSpaceBytes() > p.getMaxDiskspaceBytes());			
