@@ -20,12 +20,14 @@ public class AddTorrentJob extends LoggedJob<TorrentEvent> {
 	private File file;
 	private TorrentEvent event;
 	private User user;
+	private String groupName;
 	
-	public AddTorrentJob(String urlOrMagnet, File file, long userId) {
+	public AddTorrentJob(String urlOrMagnet, File file, long userId, String groupName) {
 		this.urlOrMagnet = urlOrMagnet;
 		this.file = file;
 		this.user = User.findById(userId);
 		this.event = new TorrentEvent(TorrentEventType.ADDING, user);
+		this.groupName = groupName;
 	}
 
 	@Override
@@ -53,6 +55,9 @@ public class AddTorrentJob extends LoggedJob<TorrentEvent> {
 		UserTorrent ut = new UserTorrent();
 		ut.setUser(user);
 		ut.setTorrentHash(added.getTorrentHash());
+		user.addTorrentGroup(groupName);
+		ut.setGroupName(groupName);	
+		ut.setRunning(true);
 		ut.insert();		
 		
 		event.setTorrentHash(added.getTorrentHash());

@@ -8,6 +8,7 @@
 <table class="table table-condensed">
 	<tr>
 		<th>Email Address</th>
+		<th>Admin</th>
 		<th>Plan</th>
 		<th>Dedicated Node</th>
 		<th>Available</th>
@@ -17,6 +18,7 @@
 	#{list items:users, as:"user"}
 	<tr>
 		<td>${user.emailAddress}</td>		
+		<td>${user.admin ? "yes" : "no"}</td>
 		<td>
 			#{if user.plan}
 				${user.plan.name}

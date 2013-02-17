@@ -23,7 +23,7 @@ public class User extends ModelBase {
 	@Email @Required @Column("email_address")
 	@Unique("email_address_unique") private String emailAddress;
 	@Column("open_id") private String openId;	
-	@Column("is_admin") private boolean isAdmin;	
+	@Column("is_admin") private boolean admin;	
 	@Column("avatar_url") private String avatarUrl;	
 	@Required @Column("display_name") private String displayName;	
 	@Column("last_access") private Date lastAccess;				
@@ -31,6 +31,8 @@ public class User extends ModelBase {
 	@Column("plan_id") private Plan plan;
 	@Embedded private List<String> groups;
 	@Column("node_id") private Node dedicatedNode;
+	
+	public static final transient String TORRENT_GROUP_UNGROUPED = "Ungrouped";
 	
 	public static User findByApiKey(String apiKey) {
 		return User.all().filter("apiKey", apiKey).get();
@@ -85,8 +87,9 @@ public class User extends ModelBase {
 		List<UserTorrent> ut;
 		if (group == null) {
 			ut = UserTorrent.getByUser(this);
-		} else if (group.equals("Ungrouped")) {
+		} else if (group.equals(User.TORRENT_GROUP_UNGROUPED)) {
 			ut = UserTorrent.getByUserAndGroup(this, null);
+			ut.addAll(UserTorrent.getByUserAndGroup(this, User.TORRENT_GROUP_UNGROUPED));
 		} else {
 			ut = UserTorrent.getByUserAndGroup(this, group);
 		}
@@ -120,7 +123,23 @@ public class User extends ModelBase {
 	
 	public List<Invoice> getPaidInvoices() {		
 		return Invoice.getPaidForUser(this);
-	}	
+	}
+	
+	public void addTorrentGroup(String groupName) {
+		List<String> tgroups = getGroups();
+		if (!tgroups.contains(groupName)) {
+			tgroups.add(groupName);
+			setGroups(tgroups);
+			save();
+		}		
+	}
+	
+	public void removeTorrentGroup(String groupName) {
+		List<String> tgroups = getGroups();
+		tgroups.remove(groupName);
+		setGroups(tgroups);
+		save();		
+	}
 
 	/* Getters and Setters */
 	public String getDisplayName() {
@@ -148,11 +167,11 @@ public class User extends ModelBase {
 	}
 
 	public boolean isAdmin() {
-		return isAdmin;
+		return admin;
 	}
 
 	public void setAdmin(boolean isAdmin) {
-		this.isAdmin = isAdmin;
+		this.admin = isAdmin;
 	}
 
 	public String getAvatarUrl() {

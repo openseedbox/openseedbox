@@ -1,4 +1,5 @@
 #{extends "admin/index.html" /}
+%{ def Util = com.openseedbox.code.Util }%
 <h2>Stats</h2>
 <table class="table table-condensed">
 	<tr>
@@ -18,7 +19,11 @@
 		<td>${torrentCount}</td>
 	</tr>
 	<tr>
-		<td>Average Torrents per User</td>
-		<td>${torrentCountAverage}</td>
+		<td>Total space available across all nodes</td>
+		<td>${Util.getBestRate(totalSpaceBytes)}</td>
 	</tr>
+	<tr>
+		<td>Total space used across all nodes</td>
+		<td>${Util.getBestRate(usedSpaceBytes)}</td>
+	</tr>	
 </table>

@@ -64,10 +64,11 @@ public class Client extends Base {
 	}
 	
 	public static void index(String group) {		
-		if (StringUtils.isEmpty(group)) {
-			group = "Ungrouped";
+		if (!StringUtils.isEmpty(group)) {
+			setCurrentGroupName(group);
 		}
-		renderArgs.put("currentGroup", group);		
+		renderArgs.put("currentGroup", getCurrentGroupName());	
+		setCurrentGroupName(group);		
 		renderArgs.put("users", Util.toSelectItems(User.all().fetch(), "id", "emailAddress"));
 		User user = getCurrentUser();
 		List<UserTorrent> torrents = user.getTorrentsInGroup(group);
@@ -120,7 +121,7 @@ public class Client extends Base {
 			}
 			if (urlOrMagnet != null) {
 				for (String s : urlOrMagnet) {					
-					new AddTorrentJob(s, null, user.getId()).now();
+					new AddTorrentJob(s, null, user.getId(), getCurrentGroupName()).now();
 					count++;
 				}
 			}
@@ -129,7 +130,7 @@ public class Client extends Base {
 					//copy the file to somewhere more permanent because Play! deletes it when the action completes so the Job cant use it					
 					File tempFile = File.createTempFile(UUID.randomUUID().toString(), ".torrent");
 					FileUtils.copyFile(f, tempFile);
-					new AddTorrentJob(null, tempFile, user.getId()).now();
+					new AddTorrentJob(null, tempFile, user.getId(), getCurrentGroupName()).now();
 					count++;
 				}
 			}	
@@ -141,7 +142,7 @@ public class Client extends Base {
 				}
 			}
 		}				
-		index(null);
+		index(getCurrentGroupName());
 	}
 	
 	public static void search(String query, String providerClass) {
@@ -222,21 +223,28 @@ public class Client extends Base {
 			if (group.length() > 12) {
 				group = group.substring(0, 12);
 			}
-			groups.add(group);
-			user.setGroups(groups);
-			user.save();
+			if (groups.contains(group)) {
+				setGeneralErrorMessage("Group '" + group + "' already exists!");
+			} else {
+				groups.add(group);
+				user.setGroups(groups);
+				user.save();
+			}
 		} else {
 			setGeneralErrorMessage("Please enter a group name.");
 		}
-		index(null);
+		index(getCurrentGroupName());
 	}
 	
 	public static void removeGroup(String group) {
 		if (!StringUtils.isEmpty(group)) {
 			User user = getCurrentUser();
-			user.getGroups().remove(group);
-			user.save();
-			UserTorrent.blankOutGroup(user, group);
+			user.removeTorrentGroup(group);
+			UserTorrent.blankOutGroup(user, group);			
+		}
+		String currentGroup = getCurrentGroupName();
+		if (!currentGroup.equals(group)) {
+			index(getCurrentGroupName());
 		}
 		index(null);
 	}
@@ -248,14 +256,11 @@ public class Client extends Base {
 			if (new_group.length() > 12) {
 				new_group = new_group.substring(0, 12);
 			}
-			if (!user.getGroups().contains(new_group)) {
-				user.getGroups().add(new_group);
-				user.save();
-			}
+			user.addTorrentGroup(new_group);
 		}
 		String groupName = (!StringUtils.isEmpty(new_group)) ? new_group : group;
 		for (UserTorrent ut : uts) {
-			if (groupName.equals("Ungrouped")) {
+			if (groupName.equals(User.TORRENT_GROUP_UNGROUPED)) {
 				ut.setGroupName(null);
 			} else {
 				ut.setGroupName(groupName);
@@ -267,10 +272,10 @@ public class Client extends Base {
 	
 	public static void removeFromGroup(String group) {
 		UserTorrent.blankOutGroup(getCurrentUser(), group);
-		index(null);
+		index(group);
 	}
 	
-	public static void action(String what, String hash, @As(",") List<String> hashes, String group) {
+	public static void action(String what, String hash, @As(",") List<String> hashes) {
 		if (!StringUtils.isEmpty(hash)) { hashes = new ArrayList<String>(); }
 		if (hashes.isEmpty()) {
 			if (StringUtils.isEmpty(hash)) {
@@ -289,7 +294,7 @@ public class Client extends Base {
 		} else {
 			setGeneralErrorMessage("Please specify an 'action'");
 		}			
-		index(group);
+		index(getCurrentGroupName());
 	}
 	
 	public enum TorrentAction { START, STOP, REMOVE }
@@ -380,5 +385,21 @@ public class Client extends Base {
 		}
 		response.setHeader("Last-Modified", Util.getLastModifiedHeader(System.currentTimeMillis()));
 		renderText(all);
+	}
+	
+	private static void setCurrentGroupName(String group) {
+		Cache.set(getCurrentGroupNameCacheKey(), group, "3d");	
+	}
+	
+	private static String getCurrentGroupName() {
+		String name = Cache.get(getCurrentGroupNameCacheKey(), String.class);
+		if (StringUtils.isEmpty(name)) {
+			return User.TORRENT_GROUP_UNGROUPED;
+		}
+		return name;
+	}
+	
+	private static String getCurrentGroupNameCacheKey() {
+		return session.getId() + "_currentGroupName";
 	}
 }
