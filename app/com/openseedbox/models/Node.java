@@ -9,28 +9,25 @@ import com.openseedbox.code.MessageException;
 import com.openseedbox.code.Util;
 import java.net.InetAddress;
 import java.util.List;
+import org.apache.commons.lang.StringUtils;
 import play.data.validation.Required;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
 import play.libs.WS.WSRequest;
 import siena.Column;
 import siena.Table;
-import org.apache.commons.lang.StringUtils;
+import siena.embed.Embedded;
 
 @Table("node")
 public class Node extends ModelBase {
 
-	@Required private String name;
-	
-	@Required @Column("ip_address") private String ipAddress;
-	
-	@Required private String scheme;		
-	
-	@Required @Column("api_key") private String apiKey;
-	
-	private boolean down;	
-		
+	@Required private String name;	
+	@Required @Column("ip_address") private String ipAddress;	
+	@Required private String scheme;			
+	@Required @Column("api_key") private String apiKey;	
+	private boolean down;			
 	private boolean active;
+	@Embedded private NodeStatus status;
 	
 	public static Node getBestForNewTorrent(User u) {
 		//TODO: work this out properly. For now, just use the first one
@@ -44,7 +41,46 @@ public class Node extends ModelBase {
 		return Node.all().filter("active", true).fetch();
 	}
 	
+	/**
+	 * Returns the total space available from all the nodes in the system
+	 * @return The space, in bytes
+	 */
+	public static long getTotalSpaceBytes() {
+		long space = 0;
+		List<Node> nodes = getActiveNodes();
+		for (Node n : nodes) {
+			INodeStatus s = n.getNodeStatus(true);
+			if (s != null) {
+				space += s.getTotalSpaceBytes();
+			}
+		}
+		return space;
+	}
+	
+	/**
+	 * Returns the total space used on all the nodes in the system
+	 * @return The space, in bytes
+	 */
+	public static long getUsedSpaceBytes() {
+		long space = 0;
+		List<Node> nodes = getActiveNodes();
+		for (Node n : nodes) {
+			INodeStatus s = n.getNodeStatus(true);
+			if (s != null) {
+				space += s.getUsedSpaceBytes();
+			}
+		}
+		return space;		
+	}
+	
 	public INodeStatus getNodeStatus() {
+		return getNodeStatus(false);
+	}
+	
+	public INodeStatus getNodeStatus(boolean fromDb) {
+		if (fromDb) {
+			return status;
+		}
 		try {
 			HttpResponse res = getWebService("/status").get();
 			if (res.success()) {			
@@ -157,4 +193,10 @@ public class Node extends ModelBase {
 	public void setScheme(String scheme) {
 		this.scheme = scheme;
 	}
+	
+	public void setNodeStatus(NodeStatus status) {
+		this.status = status;
+	}
+	
+	/* End Getters and Setters */	
 }

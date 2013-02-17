@@ -13,7 +13,7 @@
 	#{form.text name:"plan.name", value:plan?.name, label:"Plan Name" /}
 	#{form.text name:"plan.maxDiskspaceGb", value:plan?.maxDiskspaceGb, label:"Max. Diskspace (GB)", css_class:"input-mini" /}
 	#{form.text name:"plan.maxActiveTorrents", value:plan?.maxActiveTorrents, label:"Max. Active Torrents", help:"(-1 for unlimited)", css_class:"input-mini" /}
-	#{form.text name:"plan.monthlyCost", value:plan?.monthlyCost, label:"Monthly Cost (\$)", css_class:"input-small" /}
+	#{form.text name:"plan.monthlyCost", value:plan?.monthlyCost.setScale(2).toPlainString(), label:"Monthly Cost (\$)", css_class:"input-small" /}
 	#{form.text name:"plan.totalSlots", value:plan?.totalSlots, label:"Total Slots Available", css_class:"input-small" /}
 	#{form.checkbox name:"plan.visible", value:plan?.visible, label:"Visible to Customers" /}
 	<div class="form-actions">

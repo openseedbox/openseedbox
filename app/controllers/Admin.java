@@ -1,15 +1,18 @@
 package controllers;
 
-import com.openseedbox.models.Node;
-import com.openseedbox.models.Plan;
-import com.openseedbox.models.Torrent;
-import com.openseedbox.models.User;
+import com.openseedbox.code.MessageException;
 import com.openseedbox.code.Util;
 import com.openseedbox.code.Util.SelectItem;
 import com.openseedbox.jobs.CleanupJob;
 import com.openseedbox.jobs.HealthCheckJob;
 import com.openseedbox.jobs.NodePollerJob;
+import com.openseedbox.jobs.torrent.RemoveTorrentJob;
 import com.openseedbox.models.JobEvent;
+import com.openseedbox.models.Node;
+import com.openseedbox.models.Plan;
+import com.openseedbox.models.Torrent;
+import com.openseedbox.models.User;
+import com.openseedbox.models.UserTorrent;
 import com.openseedbox.mvc.ISelectListItem;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,9 +39,10 @@ public class Admin extends Base {
 		long nodeCount = Node.count();
 		long userCount = User.count();
 		long torrentCount = Torrent.count();
-		int torrentCountAverage = -1;//TODO - figure out how to do this in Siena
+		long totalSpaceBytes = Node.getTotalSpaceBytes();
+		long usedSpaceBytes = Node.getUsedSpaceBytes();
 		renderTemplate("admin/stats.html", active, nodeCount, userCount, torrentCount,
-				  torrentCountAverage);
+				  totalSpaceBytes, usedSpaceBytes);
 	}
 
 	public static void nodes() {
@@ -139,7 +143,7 @@ public class Admin extends Base {
 
 	public static void updateUser(@Valid User user) {
 		if (!Validation.hasErrors()) {
-			user.update();
+			user.save();
 			setGeneralMessage("User updated successfully.");
 			users();
 		}
@@ -152,14 +156,22 @@ public class Admin extends Base {
 		User u = User.findById(id);
 		u.delete();
 		//TODO: delete all UserTorrents and invoices and shit
+		List<UserTorrent> uts = u.getTorrents();
+		for (UserTorrent ut : uts) {
+			new RemoveTorrentJob(ut.getTorrentHash(), u.getId()).now();
+		}
 		setGeneralMessage("User '" + u.getEmailAddress() + "' deleted.");
 		users();
 	}
 	
 	public static void restartBackend(long id) {
-		Node n = Node.getByKey(id);
-		n.getNodeBackend().restart();
-		setGeneralMessage("Restart request sent successfully!");
+		try {
+			Node n = Node.getByKey(id);
+			n.getNodeBackend().restart();
+			setGeneralMessage("Restart request sent successfully!");
+		} catch (MessageException ex) {
+			setGeneralErrorMessage(ex.getMessage());
+		}
 		nodes();
 	}
 	

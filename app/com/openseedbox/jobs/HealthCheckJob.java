@@ -1,6 +1,7 @@
 package com.openseedbox.jobs;
 
 import com.openseedbox.backend.INodeStatus;
+import com.openseedbox.backend.NodeStatus;
 import com.openseedbox.models.EmailError;
 import com.openseedbox.models.Node;
 import java.util.List;
@@ -26,7 +27,10 @@ public class HealthCheckJob extends LoggedJob {
 					} else {
 						n.setDown(true); n.save();
 						EmailError.nodeDown(n, null);
-					}					
+					}
+					//save status for later
+					n.setNodeStatus(new NodeStatus(status));
+					n.save();
 				} catch (Exception ex) {
 					n.setDown(true); n.save();
 					EmailError.nodeDown(n, ex);
