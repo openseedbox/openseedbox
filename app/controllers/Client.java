@@ -67,8 +67,8 @@ public class Client extends Base {
 		if (!StringUtils.isEmpty(group)) {
 			setCurrentGroupName(group);
 		}
-		renderArgs.put("currentGroup", getCurrentGroupName());	
-		setCurrentGroupName(group);		
+		group = getCurrentGroupName();
+		renderArgs.put("currentGroup", group);				
 		renderArgs.put("users", Util.toSelectItems(User.all().fetch(), "id", "emailAddress"));
 		User user = getCurrentUser();
 		List<UserTorrent> torrents = user.getTorrentsInGroup(group);
@@ -217,7 +217,7 @@ public class Client extends Base {
 	}
 	
 	public static void addGroup(String group) {
-		if (!StringUtils.isEmpty(group)) {
+		if (!StringUtils.isBlank(group)) {
 			User user = getCurrentUser();
 			List<String> groups = user.getGroups();
 			if (group.length() > 12) {
@@ -237,10 +237,12 @@ public class Client extends Base {
 	}
 	
 	public static void removeGroup(String group) {
-		if (!StringUtils.isEmpty(group)) {
+		if (!StringUtils.isBlank(group)) {
 			User user = getCurrentUser();
 			user.removeTorrentGroup(group);
 			UserTorrent.blankOutGroup(user, group);			
+		} else {
+			setGeneralErrorMessage("Please enter a group to remove.");
 		}
 		String currentGroup = getCurrentGroupName();
 		if (!currentGroup.equals(group)) {
@@ -385,6 +387,18 @@ public class Client extends Base {
 		}
 		response.setHeader("Last-Modified", Util.getLastModifiedHeader(System.currentTimeMillis()));
 		renderText(all);
+	}
+	
+	//intended to be called via ajax
+	public static void updateGroupOrder(List<String> newOrder) {
+		if (newOrder != null && !newOrder.isEmpty()) {
+			User u = getCurrentUser();
+			u.setGroups(newOrder);
+			u.save();
+		}
+		result(Util.convertToMap(new Object[] {
+			"success", true
+		}));
 	}
 	
 	private static void setCurrentGroupName(String group) {

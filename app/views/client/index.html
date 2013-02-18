@@ -2,6 +2,7 @@
 %{ def Config = com.openseedbox.Config; }%
 #{set "moreScripts"}
 	<script type="text/javascript" src="#{asset.url 'javascripts/ajax-typeahead.min.js' /}"></script>
+	<script type="text/javascript" src="#{asset.url 'javascripts/jquery-ui.custom.min.js' /}"></script>
 #{/set}
 #{set title:"Torrents" /}
 <div id="user-messages">
@@ -42,7 +43,7 @@
 </div>
 <div class="row">
 	<div class="span2">
-		<ul class="nav nav-pills nav-stacked nav-list">
+		<ul id="torrent-groups" class="nav nav-pills nav-stacked nav-list">
 			#{list items:groups, as:"group"}
 				<li class="group #{if currentGroup == group}active#{/if}" data-group-name="${group}">
 					<a href="@{Client.index(group)}">
@@ -475,6 +476,18 @@ a.download-link, a.download-link:hover {
 			});
 			return false;
 		});	
+		
+		$("#torrent-groups").sortable({
+			"items" : "li.group",
+			"update" : function(evt, ui) {				
+				var groups = [];
+				$("#torrent-groups li.group").each(function() {
+					groups.push($(this).data("group-name"));
+				});
+				$.getJSON("@{Client.updateGroupOrder}", { "newOrder" : groups });
+			}
+		});
+		
 	});
 })(jQuery);
 

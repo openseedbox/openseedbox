@@ -10,7 +10,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 import play.Play;
 import play.data.validation.Email;
-import play.data.validation.Max;
 import play.data.validation.Required;
 import siena.Column;
 import siena.Table;
@@ -140,6 +139,20 @@ public class User extends ModelBase {
 		setGroups(tgroups);
 		save();		
 	}
+	
+	public UserStats getUserStats() {
+		int available = getPlan().getMaxDiskspaceGb();
+		long used = 0l;
+		long down = 0l;
+		long up = 0l;
+		List<UserTorrent> torrents = getTorrents();
+		for (UserTorrent ut : torrents) {
+			used += ut.getTorrent().getTotalSizeBytes();
+			down += ut.getTorrent().getDownloadSpeedBytes();
+			up += ut.getTorrent().getUploadSpeedBytes();
+		}
+		return new UserStats(available, used, down, up);
+	}
 
 	/* Getters and Setters */
 	public String getDisplayName() {
@@ -238,6 +251,50 @@ public class User extends ModelBase {
 
 	public void setDedicatedNode(Node dedicatedNode) {
 		this.dedicatedNode = dedicatedNode;
+	}
+	
+	/* End Getters and Setters */
+	
+	public class UserStats {
+		
+		private int availableSpaceGb;
+		private long usedSpaceBytes;
+		private long totalDownloadSpeedBytes;
+		private long totalUploadSpeedBytes;
+		
+		public UserStats(int availableSpaceGb, long usedSpaceBytes, long totalDownloadSpeedBytes, long totalUploadSpeedBytes) {
+			this.availableSpaceGb = availableSpaceGb;
+			this.usedSpaceBytes = usedSpaceBytes;
+			this.totalDownloadSpeedBytes = totalDownloadSpeedBytes;
+			this.totalUploadSpeedBytes = totalUploadSpeedBytes;
+		}
+		
+		public String getAvailableSpaceGb() {
+			if (availableSpaceGb != -1) {
+				return "" + availableSpaceGb + " GB";
+			}
+			return "Unlimited GB";
+		}
+		
+		public String getUsedSpaceGb() {
+			return Util.getBestRate(usedSpaceBytes);
+		}
+		
+		public String getPercentUsed() {
+			if (availableSpaceGb != -1) {
+				long bytes = getPlan().getMaxDiskspaceBytes();
+				return "(" + (bytes / usedSpaceBytes) + "%)";
+			}
+			return "";
+		}
+		
+		public String getTotalDownloadRate() {
+			return Util.getBestRate(totalDownloadSpeedBytes);
+		}
+		
+		public String getTotalUploadRate() {
+			return Util.getBestRate(totalUploadSpeedBytes);
+		}		
 	}
 	
 }
