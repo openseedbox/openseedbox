@@ -1,16 +1,5 @@
-DONE - User switcher for admin
-DONE - Status pages for job queue details (admin only) - just to keep track of last time job ran / any exceptions
-DONE - Page render stats in the footer
-DONE - When adding to group, allow the creation of a new group
-DONE - Allow select multiple groups using shift
-DONE - Allow group action - "Download all as Zip"
-IMPOSSIBRU - Make 'available' show node free space if the plans total space is '-1'
-DONE - Show total up/ratio when seeding
-DONE - Job that goes through and cleans up any 'waiting to add'/'waiting to remove' torrent events more than 10mins old
-DONE - Create queues for adding torrents to transmission and removing torrents from transmission - to make page reloads faster (dont rely on transmission-daemon to be quick, its bloody slow especially when writing to encfs)
-DONE - Pause/Start need to only affect the Users view of the torrent, unless all users have it paused. Should be non-blocking, ie not wait for backend to actually pause the torrent.
-DONE - Maybe a task that cleans up torrents that are present in transmission but not in the database
-DONE - Implement resource constraints
+- Implement some sort of hook system, eg onTorrentAdded, onTorrentStateChange, onTorrentCompleted so CRC32's can be pre-calculated because for large torrents, zip takes way too long to start and sometimes times out
+- Make stats at the bottom of the page show Used in general, instead of Used for that group
 
 - Implement node chooser for new torrents
 
@@ -21,7 +10,10 @@ Maybe Never:
 
 - Implement deluge or rtorrent backend - transmission is retardedly slow when theres slow hard disks (due to IO thread and RPC thread being the same)
 
-1d5fafbf7b2f
+- Implement a "reseller" function that would allow people to use their own nodes and resell OpenSeedbox to their customers. This would need invoicing to work first. Also need the ability to customise the theme etc.
+If required, the person should be able to ignore our interface completely and make their own version using our API.
+
+
 
 
 Node Choosing Algorithm

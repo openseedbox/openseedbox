@@ -96,17 +96,8 @@
 				${torrentQueue()}
 			</div>
 			<div class="pull-right">
-				%{					
-					long available = currentUser.plan.maxDiskspaceBytes									
-					def used = 0; def down = 0; def up = 0
-					torrents.each {
-						used += it.torrent.totalSizeBytes
-						down += it.torrent.downloadSpeedBytes
-						up += it.torrent.uploadSpeedBytes
-					}				
-					int usedPercent = used / available
-				}%
-				<h5><small>Available: ${currentUser.plan.maxDiskspaceGb != -1 ? currentUser.plan.maxDiskspaceGb : "Unlimited"} GB, Used: ${Util.getBestRate(used)}#{if currentUser.plan.maxDiskspaceGb != -1} (${usedPercent}%)#{/if}, Down: ${Util.getBestRate(down)}/s, Up: ${Util.getBestRate(up)}/s</small></h5>
+				%{	def stats = currentUser.userStats }%
+				<h5><small>Available: ${stats.availableSpaceGb}, Used: ${stats.usedSpaceGb} ${stats.percentUsed}, Down: ${stats.totalDownloadRate}/s, Up: ${stats.totalUploadRate}/s</small></h5>
 			</div>
 		</td>
 	</tr>	
