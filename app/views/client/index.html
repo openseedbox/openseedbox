@@ -45,6 +45,7 @@
 	<div class="span2">
 		<ul id="torrent-groups" class="nav nav-pills nav-stacked nav-list">
 			#{list items:groups, as:"group"}
+				%{ if (group.startsWith("_")) { continue; } }%
 				<li class="group #{if currentGroup == group}active#{/if}" data-group-name="${group}">
 					<a href="@{Client.index(group)}">
 						#{if group == "Ungrouped" && groups.size == 1}
@@ -55,7 +56,7 @@
 						#{/else}
 						#{if group != "Ungrouped"}
 							<i class="icon-minus pull-right hide remove-group" data-group-name="${group}" rel="tooltip" title="Remove"></i>
-						#{/if}
+						#{/if}													
 					</a>
 				</li>
 			#{/list}
