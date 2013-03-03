@@ -28,7 +28,8 @@
 							<small>
 								[ <a class="download-button" data-torrent-hash="${t.torrentHash}" href="#">Download</a> ]
 								#{if com.openseedbox.Config.zipEnabled}
-								[ <a class="zip-button" href="${t.zipDownloadLink}">Zip</a> ]
+								[ <span class="zip-percentage"></span>
+								  <a class="zip-button" href="#" data-torrent-hash="${t.torrentHash}">Zip</a> ]
 								#{/if}
 							</small>
 						</h5>					

@@ -1,5 +1,7 @@
 package controllers;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.openseedbox.Config;
 import com.openseedbox.code.MessageException;
 import com.openseedbox.code.Util;
@@ -8,6 +10,7 @@ import com.openseedbox.jobs.GenericJobResult;
 import com.openseedbox.jobs.torrent.AddTorrentJob;
 import com.openseedbox.jobs.torrent.RemoveTorrentJob;
 import com.openseedbox.jobs.torrent.StartStopTorrentJob;
+import com.openseedbox.models.Node;
 import com.openseedbox.plugins.OpenseedboxPlugin;
 import com.openseedbox.plugins.OpenseedboxPlugin.PluginSearchResult;
 import com.openseedbox.plugins.PluginManager;
@@ -27,6 +30,7 @@ import play.cache.Cache;
 import play.data.binding.As;
 import play.libs.F.Promise;
 import play.libs.WS;
+import play.libs.WS.HttpResponse;
 import play.mvc.Before;
 
 public class Client extends Base {
@@ -75,8 +79,8 @@ public class Client extends Base {
 		List<String> groups = user.getGroups();		
 		String torrentList = renderTorrentList(group);
 		List<OpenseedboxPlugin> searchPlugins = PluginManager.getSearchPlugins();
-		List<UserMessage> userMessages = UserMessage.retrieveForUser(user);
-		render("client/index.html", torrentList, groups, torrents, searchPlugins, userMessages);
+		List<UserMessage> userMessages = UserMessage.retrieveForUser(user);		
+		renderTemplate("client/index.html", torrentList, groups, torrents, searchPlugins, userMessages);
 	}
 	
 	public static void update(String group) {
@@ -195,26 +199,48 @@ public class Client extends Base {
 		renderTemplate("client/torrent-info.html", torrent);
 	}	
 	
-	public static void torrentDownload(String hash) {
+	public static void torrentDownload(String hash, String type) {
 		//torrent download is just for files
 		final UserTorrent fromDb = UserTorrent.getByUser(getCurrentUser(), hash);
 		if (fromDb == null) {
 			resultError("No such torrent for user: " + hash);
 		}
-		Promise<GenericJobResult> p = new GenericJob() {
-			@Override
-			public Object doGenericJob() {
-				fromDb.getTorrent().getFiles();
-				return fromDb;
-			}	
-		}.now();
-		GenericJobResult res = await(p);
-		if (res.hasError()) {
-			resultError(res.getError().getMessage());
+		if (StringUtils.equalsIgnoreCase(type, "zip")) {
+			Promise<GenericJobResult> p = new GenericJob() {
+				@Override
+				protected Object doGenericJob() throws Exception {
+					Node n = fromDb.getTorrent().getNode();
+					HttpResponse res = WS.url(fromDb.getTorrent().getZipDownloadLink()).get();
+					JsonObject result = n.handleWebServiceResponse(res).getAsJsonObject();
+					JsonElement dl = result.get("download-link");
+					String downloadLink = (dl != null) ? dl.getAsString() : null;
+					return Util.convertToMap(new Object[] {
+						"percent-complete", result.get("percent-complete").getAsString(),
+						"download-link", downloadLink
+					});
+				}				
+			}.now();
+			GenericJobResult res = await(p);
+			if (res.hasError()) {
+				resultError(res.getError().getMessage());
+			}
+			result(res.getResult());
+		} else {
+			Promise<GenericJobResult> p = new GenericJob() {
+				@Override
+				public Object doGenericJob() {
+					fromDb.getTorrent().getFiles();
+					return fromDb;
+				}	
+			}.now();
+			GenericJobResult res = await(p);
+			if (res.hasError()) {
+				resultError(res.getError().getMessage());
+			}
+			UserTorrent torrent = (UserTorrent) res.getResult();
+			renderTemplate("client/torrent-download.html", torrent);
 		}
-		UserTorrent torrent = (UserTorrent) res.getResult();
-		renderTemplate("client/torrent-download.html", torrent);		
-	}
+	}		
 	
 	public static void addGroup(String group) {
 		if (!StringUtils.isBlank(group)) {

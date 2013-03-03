@@ -1,6 +1,8 @@
 package com.openseedbox.models;
 
 import com.openseedbox.code.BigDecimalUtils;
+import com.openseedbox.gson.SerializedAccessorName;
+import com.openseedbox.gson.UseAccessor;
 import com.openseedbox.mvc.validation.IsDecimalNumber;
 import com.openseedbox.mvc.validation.IsWholeNumber;
 import java.math.BigDecimal;
@@ -11,6 +13,7 @@ import siena.Column;
 import siena.Table;
 
 @Table("plan")
+@UseAccessor
 public class Plan extends ModelBase {
 	
 	@Required @Column("name") private String name;	
@@ -23,14 +26,17 @@ public class Plan extends ModelBase {
 	@Column("visible") private boolean visible;	
 	@Column("totalSlots") private int totalSlots;
 	
+	@SerializedAccessorName("is-free")
 	public boolean isFree() {
 		return (BigDecimalUtils.LessThanOrEqual(monthlyCost, BigDecimal.ZERO));
 	}
 	
+	@SerializedAccessorName("used-slots")
 	public int getUsedSlots() {
 		return User.all().filter("plan", this).count();
 	}
 	
+	@SerializedAccessorName("free-slots")
 	public int getFreeSlots() {
 		int used = getUsedSlots();
 		return totalSlots - used;
@@ -50,6 +56,7 @@ public class Plan extends ModelBase {
 	
 	/* Getters and Setters */
 
+	@SerializedAccessorName("name")
 	public String getName() {
 		return name;
 	}
@@ -58,6 +65,7 @@ public class Plan extends ModelBase {
 		this.name = name;
 	}
 
+	@SerializedAccessorName("max-diskspace-gb")
 	public int getMaxDiskspaceGb() {
 		return maxDiskspaceGb;
 	}
@@ -71,6 +79,7 @@ public class Plan extends ModelBase {
 		this.maxDiskspaceGb = maxDiskspaceGb;
 	}
 
+	@SerializedAccessorName("max-active-torrents")
 	public int getMaxActiveTorrents() {
 		return maxActiveTorrents;
 	}
@@ -79,6 +88,7 @@ public class Plan extends ModelBase {
 		this.maxActiveTorrents = maxActiveTorrents;
 	}
 
+	@SerializedAccessorName("monthly-cost")	
 	public BigDecimal getMonthlyCost() {
 		return monthlyCost;
 	}
@@ -87,6 +97,7 @@ public class Plan extends ModelBase {
 		this.monthlyCost = monthlyCost;
 	}
 
+	@SerializedAccessorName("is-visible")	
 	public boolean isVisible() {
 		return visible;
 	}
@@ -95,6 +106,7 @@ public class Plan extends ModelBase {
 		this.visible = visible;
 	}
 
+	@SerializedAccessorName("total-slots-available")	
 	public int getTotalSlots() {
 		return totalSlots;
 	}

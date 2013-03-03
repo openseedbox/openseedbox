@@ -208,8 +208,7 @@ public class NodeBackend implements ITorrentBackend {
 			List<IFile> li = ret.get(hash);
 			for (IFile f : li) {
 				NodeFile nf = (NodeFile) f;
-				nf.setNode(this.node);
-				nf.setTorrentHash(hash);
+				nf.setNode(this.node);				
 			}
 		}
 		return ret;		
@@ -273,6 +272,8 @@ public class NodeBackend implements ITorrentBackend {
 	}	
 	
 	private JsonElement getResponseBodyOrError(HttpResponse res) {
+		return this.node.handleWebServiceResponse(res);
+		/*
 		if (res.success()) {							
 			try {
 				JsonObject ob = res.getJson().getAsJsonObject();
@@ -284,7 +285,7 @@ public class NodeBackend implements ITorrentBackend {
 				throw new MessageException(ex.getMessage());
 			}
 		}
-		throw new MessageException(res.getStatusText());
+		throw new MessageException(res.getStatusText());*/
 	}
 	
 }

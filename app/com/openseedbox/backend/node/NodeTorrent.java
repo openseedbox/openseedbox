@@ -1,21 +1,18 @@
 package com.openseedbox.backend.node;
 
+import com.openseedbox.backend.AbstractTorrent;
 import com.openseedbox.backend.IFile;
 import com.openseedbox.backend.IPeer;
-import com.openseedbox.backend.ITorrent;
 import com.openseedbox.backend.ITracker;
 import com.openseedbox.backend.TorrentState;
 import com.openseedbox.code.Util;
-import java.util.List;
 import com.openseedbox.models.Node;
-import org.apache.commons.lang.StringUtils;
+import java.util.List;
 
-public class NodeTorrent implements ITorrent {
+public class NodeTorrent extends AbstractTorrent {
 	
-	private String name;
-	private boolean running;
+	private String name;	
 	private double metadataPercentComplete;
-	private boolean metadataDownloading;
 	private double percentComplete;
 	private long downloadSpeedBytes;
 	private long uploadSpeedBytes;
@@ -40,16 +37,8 @@ public class NodeTorrent implements ITorrent {
 		return Util.URLDecode(name);
 	}
 
-	public boolean isRunning() {
-		return running;
-	}
-
 	public double getMetadataPercentComplete() {
 		return metadataPercentComplete;
-	}
-
-	public boolean isMetadataDownloading() {
-		return metadataPercentComplete != 1.0;
 	}
 
 	public double getPercentComplete() {
@@ -66,10 +55,6 @@ public class NodeTorrent implements ITorrent {
 
 	public String getTorrentHash() {
 		return torrentHash;
-	}
-
-	public boolean hasErrorOccured() {
-		return !StringUtils.isEmpty(getErrorMessage());
 	}
 
 	public String getErrorMessage() {
@@ -120,10 +105,6 @@ public class NodeTorrent implements ITorrent {
 		this.name = name;
 	}
 
-	public void setRunning(boolean running) {
-		this.running = running;
-	}
-
 	public void setMetadataPercentComplete(double metadataPercentComplete) {
 		this.metadataPercentComplete = metadataPercentComplete;
 	}
@@ -162,25 +143,6 @@ public class NodeTorrent implements ITorrent {
 
 	public void setStatus(TorrentState state) {
 		this.state = state;
-	}
-
-	public boolean isSeeding() {
-		if (isComplete() && getUploadSpeedBytes() > 0) {
-			return true;
-		}
-		return getStatus() == TorrentState.SEEDING;
-	}
-
-	public boolean isDownloading() {
-		return getStatus() == TorrentState.DOWNLOADING;
-	}
-
-	public boolean isPaused() {
-		return getStatus() == TorrentState.PAUSED;
-	}
-
-	public boolean isComplete() {
-		return getPercentComplete() == 1.0;
 	}
 
 	public String getZipDownloadLink() {
