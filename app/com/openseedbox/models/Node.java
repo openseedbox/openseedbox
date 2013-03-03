@@ -85,7 +85,7 @@ public class Node extends ModelBase {
 		HttpResponse res = getWebService("/status").get();
 		if (res.success()) {
 			JsonObject fullResponse = handleWebServiceResponse(res).getAsJsonObject();
-			return Util.getGson().fromJson(fullResponse.get("data"), NodeStatus.class);			
+			return Util.getGson().fromJson(fullResponse, NodeStatus.class);			
 		} else {
 			throw new MessageException("Node returned status: " + res.getStatus() + ". Probably java isnt running.");
 		}
