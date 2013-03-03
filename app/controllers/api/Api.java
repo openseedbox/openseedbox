@@ -1,13 +1,13 @@
 package controllers.api;
 
-import controllers.Base;
 import com.openseedbox.models.User;
+import controllers.Base;
 import play.cache.Cache;
 import play.mvc.Before;
 
 public class Api extends Base {
 	
-	@Before
+	@Before(unless="index")
 	protected static void ApiControllerBefore() {
 		String apiKey = getApiKey();
 		if (apiKey == null) {
@@ -21,6 +21,10 @@ public class Api extends Base {
 		if (request.params.get("ext") == null) {
 			request.params.put("ext", "json");
 		}
+	}
+	
+	public static void index() {
+		render("api/index.html");
 	}
 	
 	protected static String getApiKey() {

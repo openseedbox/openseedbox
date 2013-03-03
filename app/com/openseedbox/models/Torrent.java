@@ -5,6 +5,9 @@ import com.openseedbox.backend.IPeer;
 import com.openseedbox.backend.ITorrent;
 import com.openseedbox.backend.ITracker;
 import com.openseedbox.backend.TorrentState;
+import com.openseedbox.code.Util;
+import com.openseedbox.gson.SerializedAccessorName;
+import com.openseedbox.gson.UseAccessor;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -13,6 +16,7 @@ import siena.Column;
 import siena.Table;
 
 @Table("torrent")
+@UseAccessor
 public class Torrent extends ModelBase implements ITorrent {
 	
 	@Column("torrent_hash") private String torrentHash;	
@@ -69,6 +73,7 @@ public class Torrent extends ModelBase implements ITorrent {
 		this.setZipDownloadLink(t.getZipDownloadLink());
 	}
 	
+	@SerializedAccessorName("ratio")
 	public double getRatio() {
 		if (uploadedBytes == 0) {
 			return 0;
@@ -86,10 +91,12 @@ public class Torrent extends ModelBase implements ITorrent {
 		return _peers;
 	}
 	
+	@SerializedAccessorName("is-metadata-downloading")
 	public boolean isMetadataDownloading() {
 		return metadataPercentComplete != 1;
 	}
  	
+	@SerializedAccessorName("is-running")
 	public boolean isRunning() {
 		if (state == TorrentState.ERROR) {
 			return (downloadSpeedBytes > 0);
@@ -114,50 +121,62 @@ public class Torrent extends ModelBase implements ITorrent {
 		return _files;
 	}
 
+	@SerializedAccessorName("name")
 	public String getName() {
-		return name;
+		return Util.URLDecode(name);
 	}
 
+	@SerializedAccessorName("metadata-percent-complete")
 	public double getMetadataPercentComplete() {
 		return metadataPercentComplete;
 	}
 
+	@SerializedAccessorName("percent-complete")
 	public double getPercentComplete() {
 		return percentComplete;
 	}
 
+	@SerializedAccessorName("download-speed-bytes")
 	public long getDownloadSpeedBytes() {
 		return downloadSpeedBytes;
 	}
-
+	
+	@SerializedAccessorName("upload-speed-bytes")
 	public long getUploadSpeedBytes() {
 		return uploadSpeedBytes;
 	}
-
+	
+	@SerializedAccessorName("hash")	
 	public String getTorrentHash() {
 		return torrentHash;
 	}
 
+	@SerializedAccessorName("has-error-occured")	
 	public boolean hasErrorOccured() {
 		return !StringUtils.isEmpty(error);
 	}
 
+	@SerializedAccessorName("error-message")	
 	public String getErrorMessage() {
 		return error;
 	}
 
+	@SerializedAccessorName("total-size-bytes")	
 	public long getTotalSizeBytes() {
 		return totalSizeBytes;
 	}
 
+	@SerializedAccessorName("downloaded-bytes")	
 	public long getDownloadedBytes() {
 		return downloadedBytes;
 	}
 
+	@SerializedAccessorName("uploaded-bytes")	
 	public long getUploadedBytes() {
 		return uploadedBytes;
 	}
 
+	@SerializedAccessorName("status")	
 	public TorrentState getStatus() {
 		return state;
 	}
@@ -214,22 +233,27 @@ public class Torrent extends ModelBase implements ITorrent {
 		this.node = node;
 	}
 
+	@SerializedAccessorName("is-seeding")
 	public boolean isSeeding() {
 		return getStatus() == TorrentState.SEEDING;
 	}
 
+	@SerializedAccessorName("is-downloading")
 	public boolean isDownloading() {
 		return getStatus() == TorrentState.DOWNLOADING || getDownloadSpeedBytes() > 0;
 	}
 
+	@SerializedAccessorName("is-paused")
 	public boolean isPaused() {
 		return getStatus() == TorrentState.PAUSED;
 	}
 
+	@SerializedAccessorName("is-complete")
 	public boolean isComplete() {
 		return getPercentComplete() == 1.0;
 	}
 
+	@SerializedAccessorName("zip-download-link")
 	public String getZipDownloadLink() {
 		return this.zipDownloadLink;
 	}

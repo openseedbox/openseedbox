@@ -1,32 +1,22 @@
 package com.openseedbox.backend.node;
 
-import com.openseedbox.backend.IFile;
-import com.openseedbox.code.Util;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+import com.openseedbox.backend.AbstractFile;
 import com.openseedbox.models.Node;
-import org.apache.commons.lang.StringUtils;
 
-public class NodeFile implements IFile {
+public class NodeFile extends AbstractFile {
 	
 	private String id;
 	private String name;
 	private String fullPath;
-	private boolean wanted;
-	private boolean completed;
+	private boolean wanted;	
 	private long bytesCompleted;
 	private long fileSizeBytes;
 	private int priority;
-	private Node node;
-	private String torrentHash;
+	private Node node;	
 	private String downloadLink;
 	
 	public void setNode(Node n) {
 		this.node = n;
-	}
-	
-	public void setTorrentHash(String hash) {
-		this.torrentHash = hash;
 	}
 
 	public String getId() {
@@ -59,14 +49,6 @@ public class NodeFile implements IFile {
 
 	public void setWanted(boolean wanted) {
 		this.wanted = wanted;
-	}
-
-	public boolean isCompleted() {
-		return completed;
-	}
-
-	public void setCompleted(boolean completed) {
-		this.completed = completed;
 	}
 
 	public long getBytesCompleted() {
@@ -102,9 +84,5 @@ public class NodeFile implements IFile {
 	
 	public void setDownloadLink(String downloadLink) {
 		this.downloadLink = downloadLink;
-	}	
-
-	public double getPercentComplete() {
-		return (double) getBytesCompleted() / (double) getFileSizeBytes();
 	}
 }

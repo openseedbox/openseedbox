@@ -22,12 +22,16 @@ public class JobEvent extends EventBase {
 	}	
 	
 	public static List<JobEvent> getLast30() {
-		return JobEvent.all().order("-completionDate").limit(30).fetch();
+		return JobEvent.all().order("-startDate").limit(30).fetch();
 	}
 	
 	public static List<JobEvent> getLast(Class jobClass, int limit) {
 		return JobEvent.all().filter("jobClass", jobClass.getName())
-				  .order("-completionDate").limit(limit).fetch();
+				  .order("-startDate").limit(limit).fetch();
+	}
+	
+	public static void deleteOlderThan(Date date) {
+		JobEvent.all().filter("startDate <", date).delete();
 	}
 	
 	/* Getters and Setters */

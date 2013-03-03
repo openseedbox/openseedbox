@@ -8,7 +8,8 @@ import com.openseedbox.models.Plan;
 
 public class ApiPlans extends Api {
 	
-	public static void plans() {
+	/* GET /api/plans */
+	public static void index() {
 		List<Plan> plans = Plan.getVisiblePlans();
 		List<Map<String, Object>> ret = new ArrayList<Map<String, Object>>();
 		for (Plan plan : plans) {
@@ -23,6 +24,7 @@ public class ApiPlans extends Api {
 		result(ret);
 	}
 	
+	/* GET /api/renderPlans */
 	public static void renderPlans() {
 		Map<String, Object> args = new HashMap<String, Object>();
 		args.put("plans", Plan.getVisiblePlans());

@@ -1,6 +1,8 @@
 package com.openseedbox.models;
 
 import com.openseedbox.code.Util;
+import com.openseedbox.gson.SerializedAccessorName;
+import com.openseedbox.gson.UseAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,7 +35,7 @@ public class User extends ModelBase {
 	
 	public static final transient String TORRENT_GROUP_UNGROUPED = "Ungrouped";
 	
-	public static User findByApiKey(String apiKey) {
+	public static User findByApiKey(String apiKey) {		
 		return User.all().filter("apiKey", apiKey).get();
 	}
 	
@@ -255,6 +257,7 @@ public class User extends ModelBase {
 	
 	/* End Getters and Setters */
 	
+	@UseAccessor
 	public class UserStats {
 		
 		private int availableSpaceGb;
@@ -269,6 +272,7 @@ public class User extends ModelBase {
 			this.totalUploadSpeedBytes = totalUploadSpeedBytes;
 		}
 		
+		@SerializedAccessorName("available-space-gb")
 		public String getAvailableSpaceGb() {
 			if (availableSpaceGb != -1) {
 				return "" + availableSpaceGb + " GB";
@@ -276,22 +280,27 @@ public class User extends ModelBase {
 			return "Unlimited GB";
 		}
 		
+		@SerializedAccessorName("used-space-gb")
 		public String getUsedSpaceGb() {
 			return Util.getBestRate(usedSpaceBytes);
 		}
 		
+		@SerializedAccessorName("percent-used")
 		public String getPercentUsed() {
-			if (availableSpaceGb != -1) {
+			if (availableSpaceGb != -1 && usedSpaceBytes > 0) {
 				long bytes = getPlan().getMaxDiskspaceBytes();
-				return "(" + (bytes / usedSpaceBytes) + "%)";
+				String asPercent = Util.formatPercentage(((double) usedSpaceBytes / (double) bytes) * 100);
+				return asPercent + "%";
 			}
 			return "";
 		}
 		
+		@SerializedAccessorName("total-download-rate")
 		public String getTotalDownloadRate() {
 			return Util.getBestRate(totalDownloadSpeedBytes);
 		}
 		
+		@SerializedAccessorName("total-upload-rate")
 		public String getTotalUploadRate() {
 			return Util.getBestRate(totalUploadSpeedBytes);
 		}		

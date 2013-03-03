@@ -1,8 +1,12 @@
 package com.openseedbox.models;
 
+import com.openseedbox.backend.AbstractFile;
 import com.openseedbox.backend.IFile;
+import com.openseedbox.backend.ITorrent;
 import com.openseedbox.backend.TorrentState;
 import com.openseedbox.code.Util;
+import com.openseedbox.gson.SerializedAccessorName;
+import com.openseedbox.gson.UseAccessor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -11,6 +15,7 @@ import siena.Column;
 import siena.Table;
 
 @Table("torrent_group")
+@UseAccessor
 public class UserTorrent extends ModelBase {
 
 	@Column("group_name") private String groupName;
@@ -69,6 +74,7 @@ public class UserTorrent extends ModelBase {
 		return UserTorrent.all().filter("torrentHash", hash).filter("paused", false).count() >= 1;
 	}
 
+	@SerializedAccessorName("nice-status")
 	public String getNiceStatus() {
 		TorrentState ts = this.getTorrent().getStatus();
 		if (this.isPaused()) {
@@ -94,6 +100,7 @@ public class UserTorrent extends ModelBase {
 		return null;
 	}
 
+	@SerializedAccessorName("nice-sub-status")
 	public String getNiceSubStatus() {
 		if (this.isPaused()) {
 			return "";
@@ -125,13 +132,15 @@ public class UserTorrent extends ModelBase {
 		}
 		return ret;
 	}
-
+	
 	public String getNiceTotalSize() {
-		Torrent t = getTorrent();
-		if (t.getTotalSizeBytes() > 0) {
-			return Util.getBestRate(t.getTotalSizeBytes());
-		}
-		return "Unknown";
+		String ts = getStats().getTotalSize();
+		return (!ts.equals("N/A")) ? ts : "Unknown";
+	}
+	
+	@SerializedAccessorName("nice-stats")
+	public NiceStats getStats() {
+		return new NiceStats(this.getTorrent());
 	}
 
 	public List<TreeNode> getFilesAsTree() {
@@ -180,14 +189,18 @@ public class UserTorrent extends ModelBase {
 	}
 
 	/* Getters and Setters */
+	@SerializedAccessorName("group")
 	public String getGroupName() {
+		if (groupName == null) {
+			return User.TORRENT_GROUP_UNGROUPED;
+		}
 		return groupName;
 	}
 
 	public void setGroupName(String groupName) {
 		this.groupName = groupName;
 	}
-
+	
 	public User getUser() {
 		return user;
 	}
@@ -196,6 +209,7 @@ public class UserTorrent extends ModelBase {
 		this.user = user;
 	}
 
+	@SerializedAccessorName("hash")
 	public String getTorrentHash() {
 		return torrentHash;
 	}
@@ -208,6 +222,7 @@ public class UserTorrent extends ModelBase {
 		this.torrent = t;
 	}
 
+	@SerializedAccessorName("torrent-data")
 	public Torrent getTorrent() {
 		if (this.torrent == null) {
 			this.torrent = Torrent.getByHash(this.getTorrentHash());
@@ -235,14 +250,14 @@ public class UserTorrent extends ModelBase {
 	}
 	
 	/* End Getters and Setters */
-	
-	public class TreeNode implements Comparable {
+	@UseAccessor
+	public class TreeNode extends AbstractFile implements Comparable {
 
-		public String name = "";
-		public IFile file = null;
-		public List<TreeNode> children = new ArrayList<TreeNode>();
-		public int level = 0;
-		public String fullPath = "";
+		private String name = "";
+		private IFile file = null;
+		private List<TreeNode> children = new ArrayList<TreeNode>();
+		private int level = 0;
+		private String fullPath = "";
 
 		@Override
 		public String toString() {
@@ -288,6 +303,7 @@ public class UserTorrent extends ModelBase {
 			return complete;
 		}
 
+		@SerializedAccessorName("total-size-bytes")		
 		public long getTotalSize() {
 			long total = 0l;
 			if (this.file != null) {
@@ -298,6 +314,176 @@ public class UserTorrent extends ModelBase {
 				}
 			}
 			return total;
+		}
+				
+		public String getDownloadLink() {
+			if (this.file != null) {
+				return this.file.getDownloadLink();
+			}
+			return null;
+		}
+		
+		/* Getters and Setters */								
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public IFile getFile() {
+			return file;
+		}
+
+		public void setFile(IFile file) {
+			this.file = file;
+		}
+
+		@SerializedAccessorName("children")
+		public List<TreeNode> getChildren() {
+			return children;
+		}
+
+		public void setChildren(List<TreeNode> children) {
+			this.children = children;
+		}
+
+		public int getLevel() {
+			return level;
+		}
+
+		public void setLevel(int level) {
+			this.level = level;
+		}
+		
+		public String getFullPath() {
+			return fullPath;
+		}
+
+		public void setFullPath(String fullPath) {
+			this.fullPath = fullPath;
+		}
+		
+		public String getId() {
+			if (file != null) {
+				return file.getId();
+			}
+			return "";
+		}
+
+		public boolean isWanted() {
+			if (file != null) {
+				return file.isWanted();
+			}
+			return isAnyChildWanted();
+		}
+
+		public long getBytesCompleted() {
+			if (file != null) {
+				return file.getBytesCompleted();
+			}
+			long ret = -1;
+			for (TreeNode c : this.children) {
+				ret += c.getBytesCompleted();
+			}
+			return ret;
+		}
+
+		public long getFileSizeBytes() {
+			if (file != null) {
+				return file.getFileSizeBytes();
+			}
+			return getTotalSize();
+		}
+
+		public int getPriority() {
+			if (file != null) {
+				return file.getPriority();
+			}
+			return -1;
+		}
+
+		@Override
+		public double getPercentComplete() {
+			if (isCompleted()) {
+				return 1d;
+			}
+			return super.getPercentComplete();
+		}
+		
+		@Override
+		public boolean isCompleted() {
+			return !isAnyChildIncomplete();
+		}				
+		/* End Getters and Setters */
+	}
+	
+	@UseAccessor
+	public class NiceStats {
+		
+		private ITorrent t;
+		
+		public NiceStats(ITorrent t) {
+			this.t = t;
+		}
+		
+		@SerializedAccessorName("total-size")
+		public String getTotalSize() {
+			if (!t.isMetadataDownloading()) {
+				return Util.getBestRate(t.getTotalSizeBytes());
+			}
+			return "N/A";
+		}
+		
+		@SerializedAccessorName("download-speed")
+		public String getDownloadSpeed() {
+			if (!t.isMetadataDownloading()) {
+				return Util.getBestRate(t.getDownloadSpeedBytes());
+			}
+			return "N/A";
+		}
+		
+		@SerializedAccessorName("upload-speed")
+		public String getUploadSpeed() {
+			if (!t.isMetadataDownloading()) {
+				return Util.getBestRate(t.getUploadSpeedBytes());
+			}
+			return "N/A";			
+		}
+		
+		@SerializedAccessorName("amount-downloaded")
+		public String getAmountDownloaded() {
+			if (!t.isMetadataDownloading()) {
+				return Util.getBestRate(t.getDownloadedBytes());
+			}
+			return "N/A";			
+		}
+		
+		@SerializedAccessorName("amount-uploaded")
+		public String getAmountUploaded() {
+			if (!t.isMetadataDownloading()) {
+				return Util.getBestRate(t.getUploadedBytes());
+			}
+			return "N/A";			
+		}
+		
+		@SerializedAccessorName("ratio")
+		public String getRatio() {
+			if (!t.isMetadataDownloading()) {
+				return Util.formatPercentage(t.getRatio());
+			}
+			return "N/A";
+		}
+		
+		@SerializedAccessorName("percent-complete")
+		public String getPercentComplete() {
+			return Util.formatPercentage(t.getPercentComplete() * 100) + "%";
+		}
+		
+		@SerializedAccessorName("metadata-percent-complete")
+		public String getMetadataPercentComplete() {
+			return Util.formatPercentage(t.getMetadataPercentComplete() * 100) + "%";
 		}
 	}
 }

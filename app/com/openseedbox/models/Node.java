@@ -1,5 +1,6 @@
 package com.openseedbox.models;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.openseedbox.backend.INodeStatus;
 import com.openseedbox.backend.ITorrentBackend;
@@ -81,18 +82,26 @@ public class Node extends ModelBase {
 		if (fromDb) {
 			return status;
 		}
-		try {
-			HttpResponse res = getWebService("/status").get();
+		HttpResponse res = getWebService("/status").get();
+		if (res.success()) {
+			JsonObject fullResponse = handleWebServiceResponse(res).getAsJsonObject();
+			return Util.getGson().fromJson(fullResponse.get("data"), NodeStatus.class);			
+		} else {
+			throw new MessageException("Node returned status: " + res.getStatus() + ". Probably java isnt running.");
+		}
+	}
+	
+	public JsonElement handleWebServiceResponse(HttpResponse res) {
+		try {			
 			if (res.success()) {			
 				JsonObject fullResponse = res.getJson().getAsJsonObject();
 				if (!fullResponse.get("success").getAsBoolean()) {
 					String error = fullResponse.get("error").getAsString();
 					throw new MessageException(error);
 				}
-				INodeStatus status = Util.getGson().fromJson(fullResponse.get("data"), NodeStatus.class);
-				return status;
+				return fullResponse.get("data");
 			}
-			throw new MessageException("Node returned status: " + res.getStatus() + ". Probably java isnt running.");
+			throw new MessageException("Unsuccessful webservice call, status: " + res.getStatusText());
 		} catch (Exception ex) {
 			if (ex.getMessage().contains("Connection refused")) {
 				throw new MessageException("Connection refused");
@@ -100,7 +109,7 @@ public class Node extends ModelBase {
 				throw new MessageException("Unable to contact node at all! No route to host.");
 			}
 			throw new MessageException(ex.getMessage());
-		}
+		}		
 	}
 	
 	public ITorrentBackend getNodeBackend() {

@@ -9,11 +9,13 @@ import com.openseedbox.models.Torrent;
 import com.openseedbox.models.TorrentEvent;
 import com.openseedbox.models.UserTorrent;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import play.jobs.Every;
 
 @Every("5mn")
@@ -78,6 +80,10 @@ public class CleanupJob extends LoggedJob<JobEvent> {
 				UserTorrent.batch().delete(deleteMeToo);
 			}
 		}
+		//clean up job log
+		long now = new Date().getTime();
+		now -= 1000 * 60 * 60 * 24; //1 day
+		JobEvent.deleteOlderThan(new Date(now));
 		
 		return String.format("Deleted %s torrent events, %s torrents in DB but not in backend and %s torrents in backend but not in DB",
 				  deletedEvents, inDbButNotInBackend, inBackendButNotInDb);
