@@ -1,0 +1,40 @@
+application.name=openseedbox
+application.mode=dev
+application.secret=isnONYuAmgrglqEEiCujUnm0xtGHYkUspt8FzHQ6h4GDVoZ7KyxhPwH50itwFVvd
+date.format=yyyy-MM-dd
+
+application.log=DEBUG
+
+db.url=jdbc:mysql://localhost/openseedbox
+db.driver=com.mysql.jdbc.Driver
+db.user=user
+db.pass=pass
+
+siena.ddl=update
+#siena.jpa.disable=false
+
+#Note: nginx does the SSL in production so no https port required
+http.port=9000
+application.session.maxAge=3d
+
+#%prod.memcached=enabled
+#%prod.memcached.host=127.0.0.1:11211
+
+%prod.mail.smtp.host=smtp.openseedbox.com
+%prod.mail.smtp.user=admin@openseedbox.com
+%prod.mail.smtp.pass=pass
+%prod.mail.smtp.channel=ssl
+mail.debug=true
+%prod.mail.debug=false
+
+#OpenSeedbox-specific config
+openseedbox.node.access=http
+openseedbox.errors.mailto=your.email@gmail.com
+openseedbox.errors.mailfrom=Openseedbox Errors <errors@openseedbox.com>
+openseedbox.zip=true
+openseedbox.multizip=false
+openseedbox.zip.path=/rdr
+openseedbox.zip.manifestonly=false
+openseedbox.assets.prefix=/public
+%prod.openseedbox.assets.prefix=https://s3.amazonaws.com/cdn.openseedbox.com/public/
+
