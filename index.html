@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="stylesheets/styles.css">
     <link rel="stylesheet" href="stylesheets/pygment_trac.css">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <link rel="shortcut icon" href="images/favicon.ico" />
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
@@ -15,45 +16,54 @@
   <body>
     <div class="wrapper">
       <header>
-        <h1>Openseedbox</h1>
-        <p>OpenSeedbox - Open Source Multi-User Bittorrent Web UI</p>
-
+        <h1><img src="images/openseedbox-web.png" /></h1>
+        <p>Open Source Multi-User Bittorrent Web UI</p>
+        <p class="view"><a href="#screens">Click here for Screenshots</a></p>
         <p class="view"><a href="https://github.com/erindru/openseedbox">View the Project on GitHub <small>erindru/openseedbox</small></a></p>
-
-
-        <ul>
-          <li><a href="https://github.com/erindru/openseedbox/zipball/master">Download <strong>ZIP File</strong></a></li>
-          <li><a href="https://github.com/erindru/openseedbox/tarball/master">Download <strong>TAR Ball</strong></a></li>
-          <li><a href="https://github.com/erindru/openseedbox">View On <strong>GitHub</strong></a></li>
-        </ul>
       </header>
       <section>
-        <h3>Welcome to GitHub Pages.</h3>
+      <p>
+      <strong>Note:</strong> <span style="color:red;">OpenSeedbox is intended only for developers at this time!</span> It does not have an install process that a typical user will find easy to follow. By all means give it a go if you're keen though</p>
+        <h3>Overview</h3>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
-
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
-</code></pre>
-
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
-
-<h3>Designer Templates</h3>
-
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
-
-<h3>Rather Drive Stick?</h3>
-
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
-
-<h3>Authors and Contributors</h3>
-
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
-
-<h3>Support or Contact</h3>
-
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
+<p>OpenSeedbox is essentially a BitTorrent <a href="http://en.wikipedia.org/wiki/Seedbox">seedbox</a> platform. It was created to solve the following problems while downloading torrents:</p>
+<ul>
+	<li><strong>Multiple Users</strong> - Keep everyones torrents separate and private from everyone elses</li>
+	<li><strong>File downloads from within the Web UI</strong> with full support for download accelerators and resume - Other clients (transmission-daemon in particular) provide no ability to download the actual files via their Web UI and instead rely on someone installing an additional webserver</li>
+	<li><strong>On-The-Fly ZIP downloads from within the UI</strong> with full support for download accelerators and resume - This is achieved by NGINX mod_zip, an amazing piece of software. Zip downloads need to be on the fly to save taking up excess space (and also initial zip time), and making them resumable makes them just as fast as normal downloads. The ZIP feature is useful for when there are a lot of individual files in the torrent, for example music torrents</li>
+	<li><strong>Security</strong> - If setup correctly, everything runs over HTTPS and files are downloaded to encrypted partitions. Also, peer blocklists are automatically set up. This means that your ISP and Webhost cannot track what you or your users are downloading (this of course does not stop people monitoring the tracker)</li>
+	<li><strong>Backend nodes act like one big node</strong> - The backend nodes should act like one huge node, allowing efficient use of resources and flexibility in where torrents are placed.</li>
+</ul>
+	<h3>Architecture</h3>
+	<p>
+		OpenSeedbox has a frontend node (called the client) that farms out requests to as many backend nodes as you like (called servers). The client holds all the state and the backend nodes are just dumb torrent downloading machines.
+	</p>
+	<p>
+		OpenSeedbox is based on the following open source projects:
+		<ul>
+			<li>OpenJDK 1.6 / Play Framework 1.2.5 for the server side code</li>
+			<li>Nginx for the frontend webserver (mod_zip handles zip file downloads)</li>
+			<li>transmission-daemon for the actual torrent client (although adding other clients is as simple as implementing an interface)</li>
+			<li>Twitter Bootstrap/JQuery for the frontend UI code</li>
+		</ul>
+	</p>
+	<h3>Installation</h3>
+	<p>
+		Installation is covered in the README file <a href="https://github.com/erindru/openseedbox">here</a>.
+	</p>
+	<h3 id="screens">Screenshots</h3>
+	<p>
+		<ul>
+			<li><a href="images/screen1.png">Torrents in a group</a></li>
+			<li><a href="images/screen2.png">Admin - View node status</a></li>
+			<li><a href="images/screen3.png">Admin - View plans</a></li>
+			<li><a href="images/screen4.png">Adding a torrent</a></li>	
+		</ul>
+	</p>
+	<h3>License</h3>
+	<p>
+		OpenSeedbox is licensed under the <a href="">GNU General Public License v3</a>. I originally created it for my flatemates and myself to use, but I decided to release it as open source because I thought that other people might benefit from it too.
+	</p>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/erindru">erindru</a></p>
