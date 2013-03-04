@@ -476,7 +476,8 @@ a.download-link, a.download-link:hover {
 				$(self).html(oldhtml);
 			});
 			return false;
-		}).on("click", ".zip-button", function() {									
+		}).on("click", ".zip-button", function() {
+			activeAjaxRequest.abort(); //incase one has already started when we click the link
 			$(this).html("<img src='#{asset.ajax /}' />");
 			var hash = $(this).data("torrent-hash");
 			var per = $(this).prev(".zip-percentage");
