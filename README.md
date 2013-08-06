@@ -1,4 +1,4 @@
-OpenSeedbox - Open Source Seedbox UI - https://www.openseedbox.com
+OpenSeedbox - Open Source Seedbox UI - http://www.openseedbox.com
 
 Comprised of the following projects:
 
