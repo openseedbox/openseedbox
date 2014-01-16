@@ -24,6 +24,8 @@ public class CleanupJob extends LoggedJob<JobEvent> {
 
 	@Override
 	protected Object doGenericJob() throws Exception {
+		return false;
+/*
 		//clean up TorrentEvents that are older than 10 mins
 		List<TorrentEvent> event = TorrentEvent.getOlderThanMinutes(10);
 		int deletedEvents = event.size();
@@ -87,6 +89,7 @@ public class CleanupJob extends LoggedJob<JobEvent> {
 		
 		return String.format("Deleted %s torrent events, %s torrents in DB but not in backend and %s torrents in backend but not in DB",
 				  deletedEvents, inDbButNotInBackend, inBackendButNotInDb);
+*/
 	}
 
 	@Override

@@ -39,7 +39,7 @@ public class Client extends Base {
 	public static void checkPlan() {
 		User u = getCurrentUser();
 		//check that a plan has been purchased		
-		if (u.getPlan() == null) {
+		if (u != null && u.getPlan() == null) {
 			newUser();
 		}
 	}

@@ -65,9 +65,7 @@
 			<div class="clearfix"></div>
 			#{doLayout /}
 		</div>
-		<div id="footer" class="container">
-			<h6><small>Page: ${System.currentTimeMillis() - request.args.startTime}ms, Load: ${request.args.loadAverage}, Server: ${request.args.host}</small></h6>
-		</div>
+		<div id="footer" class="container"></div>
 		#{if mode != "dev"}
 			<script type="text/javascript">
 			var _gaq = _gaq || [];
