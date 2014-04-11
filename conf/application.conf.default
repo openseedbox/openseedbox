@@ -7,8 +7,8 @@ application.log=DEBUG
 
 db.url=jdbc:mysql://localhost/openseedbox
 db.driver=com.mysql.jdbc.Driver
-db.user=root
-db.pass=S*a!m()$
+db.user=user
+db.pass=pass
 
 siena.ddl=update
 #siena.jpa.disable=false
@@ -22,17 +22,28 @@ application.session.maxAge=3d
 
 %prod.mail.smtp.host=smtp.openseedbox.com
 %prod.mail.smtp.user=admin@openseedbox.com
+<<<<<<< HEAD
 %prod.mail.smtp.pass=S*a!m()$
+=======
+%prod.mail.smtp.pass=pass
+>>>>>>> cff454c625163370c66a324b97251469d0da6aa4
 %prod.mail.smtp.channel=ssl
 mail.debug=true
 %prod.mail.debug=false
 
 #OpenSeedbox-specific config
 openseedbox.node.access=http
+<<<<<<< HEAD
 openseedbox.errors.mailto=erin.dru@gmail.com
 openseedbox.errors.mailfrom=Openseedbox Errors <errors@openseedbox.com>
 openseedbox.zip=true
 openseedbox.multizip=true
+=======
+openseedbox.errors.mailto=your.email@gmail.com
+openseedbox.errors.mailfrom=Openseedbox Errors <errors@openseedbox.com>
+openseedbox.zip=true
+openseedbox.multizip=false
+>>>>>>> cff454c625163370c66a324b97251469d0da6aa4
 openseedbox.zip.path=/rdr
 openseedbox.zip.manifestonly=false
 openseedbox.assets.prefix=/public
