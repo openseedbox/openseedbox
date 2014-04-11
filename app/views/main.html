@@ -2,11 +2,11 @@
 <html>
 	<head>
 		<title>OpenSeedbox - #{get "title" /}</title>
-		<link rel="stylesheet" href="#{asset.url '/stylesheets/bootstrap.min.css' /}">		
+		<link rel="stylesheet" href="#{asset.url '/stylesheets/bootstrap.min.css' /}">
 		<link rel="shortcut icon" href="#{asset.url '/images/favicon.ico' /}" />
-		#{get "moreStyles" /}				
+		#{get "moreStyles" /}
 		<script src="#{asset.url '/javascripts/jquery.min.js' /}" type="text/javascript"></script>
-		<script src="#{asset.url '/javascripts/bootstrap.min.js' /}" type="text/javascript"></script>		
+		<script src="#{asset.url '/javascripts/bootstrap.min.js' /}" type="text/javascript"></script>
 		#{get "moreScripts" /}
 	</head>
 	<body style="padding-top:50px;">
@@ -20,7 +20,7 @@
 						#{/if}
 					</ul>
 					<ul class="nav pull-right">
-						#{if (currentUser)}						
+						#{if (currentUser)}
 							<li>
 								<a href="@{Account.index}"><img id="avatar" src="${currentUser.avatarUrl}" /></a>
 							</li>
@@ -51,7 +51,7 @@
 				<span class="flash-message-content">
 					${flash.warning}
 				</span>
-			</div>				
+			</div>
 			#{/if}
 			#{if (flash.message)}
 			<div id="flash-message" class="alert alert-success">
@@ -66,7 +66,7 @@
 			#{doLayout /}
 		</div>
 		<div id="footer" class="container">
-			<h6><small>Page: ${System.currentTimeMillis() - request.args.startTime}ms, Load: ${request.args.loadAverage}, Server: ${request.args.host}</small></h6>
+
 		</div>
 		#{if mode != "dev"}
 			<script type="text/javascript">
@@ -81,7 +81,7 @@
 			})();
 			</script>
 		#{/if}
-		<style type="text/css">			
+		<style type="text/css">
 			#main-menu .nav a {
 				line-height: 41px;
 			}
@@ -101,7 +101,7 @@
 				-webkit-user-select: none;
 				-ms-user-select: none;
 				user-select: none;
-			}			
+			}
 		</style>
 	</body>
 </html>
