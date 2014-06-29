@@ -52,6 +52,30 @@ This is the hard part and really needs to be refined. Note: it is recommended to
 ** Installing the Frontend **
 
 1. Install openjdk1.6, [Play 1.2.5](http://downloads.typesafe.com/releases/play-1.2.5.zip) and mysql-server
+	openjdk1.6
+	-----------
+	'sudo apt-get install openjdk-6-jdk'
+
+	Play
+	--------
+	1.1 Download Play framework to Downloads folder
+	'cd ~/Downloads'
+	'wget http://download.playframework.org/releases/play-1.2.5.zip'
+	
+	1.2 Unzip the archive and move the contents to '/usr/local' folder
+	'unzip play-1.2.5.zip'
+	'sudo mv play-1.2.5 /usr/local/'
+	
+	1.3 Configure access to framework via link
+	'sudo ln -s /usr/local/play-1.2.5/ /usr/local/play'
+	
+	1.4 Create links in '/usr/local/bin' so that play command will be available in terminal
+	'sudo ln -s /usr/local/play/play /usr/local/bin/play'
+	
+	MySql server
+	------------
+	'sudo apt-get install mysql-server'
+	
 2. Verify Play! is working by running `play` and checking the version number
 3. Checkout the source for *openseedbox-common* and *openseedbox* to a common location (I use */src*):
 	
