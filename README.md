@@ -95,7 +95,7 @@ This is the hard part and really needs to be refined. Note: it is recommended to
 4. Create a mysql database, I call mine `openseedbox`
 5. Rename application.conf.default to application.conf, eg:
 
-	`mv /src/openseedbox/application.conf.default /src/openseedbox/application.conf`
+	`mv /src/openseedbox/conf/application.conf.default /src/openseedbox/conf/application.conf`
 6. Edit the newly created application.conf with your database settings (look at the db.* lines)
 
 	See the configuration reference below for more information on the openseedbox-specific options
