@@ -177,7 +177,11 @@ public class Admin extends Base {
 	
 	public static void nodeStatus(long id) {
 		Node n = Node.findById(id);
-		result(n.getNodeStatus());
+		try {
+			result(n.getNodeStatus());
+		} catch (Exception ex) {
+			resultError(ex.getMessage());
+		}
 	}
 	
 	public static void jobs() {
