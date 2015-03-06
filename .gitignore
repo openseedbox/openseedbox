@@ -3,3 +3,4 @@ lib/
 logs/
 modules/
 nbproject/
+tmp/
