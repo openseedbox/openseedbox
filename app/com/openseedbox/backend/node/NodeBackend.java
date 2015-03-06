@@ -34,9 +34,9 @@ import play.libs.WS.WSRequest;
  * @author Erin Drummond
  */
 public class NodeBackend implements ITorrentBackend {
-	
+
 	private Node node;
-	
+
 	public NodeBackend(Node node) {
 		this.node = node;
 	}
@@ -53,9 +53,9 @@ public class NodeBackend implements ITorrentBackend {
 		return "0.1";
 	}
 
-	public void start() {		
+	public void start() {
 		HttpResponse res = node.getWebService("/backend/start").get();
-		getResponseBodyOrError(res);		
+		getResponseBodyOrError(res);
 	}
 
 	public void stop() {
@@ -67,7 +67,7 @@ public class NodeBackend implements ITorrentBackend {
 		HttpResponse res = node.getWebService("/backend/restart").get();
 		getResponseBodyOrError(res);
 	}
-	
+
 	public void cleanup() {
 		HttpResponse res = node.getWebService("/backend/cleanup").get();
 		getResponseBodyOrError(res);
@@ -84,7 +84,7 @@ public class NodeBackend implements ITorrentBackend {
 	public ITorrent addTorrent(String urlOrMagnet) {
 		return add(null, urlOrMagnet);
 	}
-	
+
 	private ITorrent add(File file, String urlOrMagnet) {
 		WSRequest req = node.getWebService("/torrents/add");
 		req.timeout("1min"); //some torrents can take ages to add due to the encryption and having to be allocated
@@ -97,22 +97,22 @@ public class NodeBackend implements ITorrentBackend {
 			req.setParameter("url", urlOrMagnet);
 			res = req.get();
 		}
-		JsonObject ob = getResponseBodyOrError(res).getAsJsonObject();		
-		return Util.getGson().fromJson(ob.get("torrent"), NodeTorrent.class);		
+		JsonObject ob = getResponseBodyOrError(res).getAsJsonObject();
+		return Util.getGson().fromJson(ob.get("torrent"), NodeTorrent.class);
 	}
 
 	public void removeTorrent(String hash) {
-		WSRequest req = node.getWebService("/torrents/remove", hash);		
-		getResponseBodyOrError(req.get());		
+		WSRequest req = node.getWebService("/torrents/remove", hash);
+		getResponseBodyOrError(req.get());
 	}
 
 	public void removeTorrent(List<String> hashes) {
-		WSRequest req = node.getWebService("/torrents/remove", hashes);		
-		getResponseBodyOrError(req.get());			
+		WSRequest req = node.getWebService("/torrents/remove", hashes);
+		getResponseBodyOrError(req.get());
 	}
 
-	public void startTorrent(String hash) {		
-		WSRequest req = node.getWebService("/torrents/start", hash);		
+	public void startTorrent(String hash) {
+		WSRequest req = node.getWebService("/torrents/start", hash);
 		getResponseBodyOrError(req.get());
 		ITorrent status = getTorrentStatus(hash);
 		if (status.isSeeding()) {
@@ -125,8 +125,8 @@ public class NodeBackend implements ITorrentBackend {
 	}
 
 	public void startTorrent(List<String> hashes) {
-		WSRequest req = node.getWebService("/torrents/start", hashes);		
-		getResponseBodyOrError(req.get());	
+		WSRequest req = node.getWebService("/torrents/start", hashes);
+		getResponseBodyOrError(req.get());
 		List<ITorrent> status = getTorrentStatus(hashes);
 		List<String> metadataHashes = new ArrayList<String>();
 		List<String> normalHashes = new ArrayList<String>();
@@ -139,22 +139,22 @@ public class NodeBackend implements ITorrentBackend {
 				metadataHashes.add(hash);
 			} else {
 				normalHashes.add(hash);
-			}		
-		}	
+			}
+		}
 		updateDatabaseTorrent(metadataHashes, TorrentState.METADATA_DOWNLOADING);
 		updateDatabaseTorrent(normalHashes, TorrentState.DOWNLOADING);
 		updateDatabaseTorrent(seedingHashes, TorrentState.SEEDING);
 	}
 
 	public void stopTorrent(String hash) {
-		WSRequest req = node.getWebService("/torrents/stop", hash);		
+		WSRequest req = node.getWebService("/torrents/stop", hash);
 		getResponseBodyOrError(req.get());
 		updateDatabaseTorrent(hash, TorrentState.PAUSED);
 	}
 
 	public void stopTorrent(List<String> hashes) {
-		WSRequest req = node.getWebService("/torrents/stop", hashes);		
-		getResponseBodyOrError(req.get());	
+		WSRequest req = node.getWebService("/torrents/stop", hashes);
+		getResponseBodyOrError(req.get());
 		updateDatabaseTorrent(hashes, TorrentState.PAUSED);
 	}
 
@@ -165,9 +165,9 @@ public class NodeBackend implements ITorrentBackend {
 	}
 
 	public List<ITorrent> getTorrentStatus(List<String> hashes) {
-		WSRequest req = node.getWebService("/torrents/status", hashes);			
-		JsonObject body = getResponseBodyOrError(req.get()).getAsJsonObject();		
-		JsonArray list = body.getAsJsonArray("status");			
+		WSRequest req = node.getWebService("/torrents/status", hashes);
+		JsonObject body = getResponseBodyOrError(req.get()).getAsJsonObject();
+		JsonArray list = body.getAsJsonArray("status");
 		return parseToList(list);
 	}
 
@@ -192,7 +192,7 @@ public class NodeBackend implements ITorrentBackend {
 		JsonObject files = getResponseBodyOrError(req.get()).getAsJsonObject().getAsJsonObject("trackers");
 		java.lang.reflect.Type listType = new TypeToken<HashMap<String, ArrayList<NodeTracker>>>() {}.getType();
 		Map<String, List<ITracker>> ret = Util.getGson().fromJson(files, listType);
-		return ret;	
+		return ret;
 	}
 
 	public List<IFile> getTorrentFiles(String hash) {
@@ -208,10 +208,10 @@ public class NodeBackend implements ITorrentBackend {
 			List<IFile> li = ret.get(hash);
 			for (IFile f : li) {
 				NodeFile nf = (NodeFile) f;
-				nf.setNode(this.node);				
+				nf.setNode(this.node);
 			}
 		}
-		return ret;		
+		return ret;
 	}
 
 	public void modifyTorrentFiles(String hash, List<IFile> files) {
@@ -229,11 +229,11 @@ public class NodeBackend implements ITorrentBackend {
 	public List<ITorrent> listRecentlyActiveTorrents() {
 		return list(true);
 	}
-	
+
 	public ISessionStatistics getSessionStatistics() {
 		throw new UnsupportedOperationException("Not supported yet.");
-	}	
-	
+	}
+
 	private List<ITorrent> list(boolean recentlyActive) {
 		WSRequest req = node.getWebService("/torrents/list");
 		if (recentlyActive) {
@@ -242,14 +242,14 @@ public class NodeBackend implements ITorrentBackend {
 		JsonArray body = getResponseBodyOrError(req.get()).getAsJsonArray();
 		return parseToList(body);
 	}
-	
+
 	private List<ITorrent> parseToList(JsonArray list) {
 		java.lang.reflect.Type listType = new TypeToken<ArrayList<NodeTorrent>>() {}.getType();
 		List<NodeTorrent> ret = Util.getGson().fromJson(list, listType);
 		for (NodeTorrent nt : ret) {
 			nt.setNode(this.node);
 		}
-		return new ArrayList<ITorrent>(ret);			
+		return new ArrayList<ITorrent>(ret);
 	}
 
 	/* this exists so that the database (and therefore, the UI) is updated immediately when there is a state change
@@ -262,19 +262,19 @@ public class NodeBackend implements ITorrentBackend {
 		hashes.add(hash);
 		updateDatabaseTorrent(hashes, forceState);
 	}
-	
-	private void updateDatabaseTorrent(List<String> hashes, TorrentState forceState) {		
+
+	private void updateDatabaseTorrent(List<String> hashes, TorrentState forceState) {
 		List<Torrent> torrents = Torrent.getByHash(hashes);
-		for (Torrent t : torrents) {			
-			t.setStatus(forceState);									
+		for (Torrent t : torrents) {
+			t.setStatus(forceState);
 		}
 		Torrent.batch().update(torrents);
-	}	
-	
+	}
+
 	private JsonElement getResponseBodyOrError(HttpResponse res) {
 		return this.node.handleWebServiceResponse(res);
 		/*
-		if (res.success()) {							
+		if (res.success()) {
 			try {
 				JsonObject ob = res.getJson().getAsJsonObject();
 				if (ob.has("error")) {
@@ -287,5 +287,5 @@ public class NodeBackend implements ITorrentBackend {
 		}
 		throw new MessageException(res.getStatusText());*/
 	}
-	
+
 }

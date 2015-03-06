@@ -9,19 +9,11 @@
 #{/set}
 <br />
 <div>
-	<h2>Login to OpenSeedbox</h2>
-	<br />
-	<p>You can login using OpenID below.</p>
-	<br />
-	<div class="oauth-images">
-	<a href="@{Auth.authenticate()}?openid_url=https://www.google.com/accounts/o8/id"><img src="#{asset.url '/images/google.png' /}" /></a>
-	<a href="@{Auth.authenticate()}?openid_url=http://www.myopenid.com/server"><img src="#{asset.url '/images/myopenid.png' /}" style="margin-bottom: 10px;"/></a>
-	</div>
-	<br />
-	<strong>or use a Custom OpenID Url:</strong>
-	<br /><br />
-	<form class="form-horizontal" action="@{Auth.authenticate()}" method="post">
-		#{form.text name:"openid_url", value:request.params.openid_url, label:"Custom OpenID Url:" /}
-		#{form.actions buttons:["Login with Custom OpenID"] /}
-	</form>
+    <h2>Login to OpenSeedbox</h2>
+    <br />
+    <p>You can login using OpenID below.</p>
+    <br />
+    <div class="oauth-images">
+    <a href="@{Auth.authenticate()}?openid_url=https://www.google.com/accounts/o8/id"><img src="#{asset.url '/images/google.png' /}" /></a>
+    </div>
 </div>

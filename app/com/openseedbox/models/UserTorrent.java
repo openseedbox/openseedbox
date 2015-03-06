@@ -22,7 +22,7 @@ public class UserTorrent extends ModelBase {
 	@Column("user_id") private User user;
 	@Column("torrent_hash") private String torrentHash;
 	private transient Torrent torrent;
-	private boolean paused;	
+	private boolean paused;
 	private boolean running;
 
 	public static int getAverageTorrentsPerUser() {
@@ -47,7 +47,7 @@ public class UserTorrent extends ModelBase {
 		return UserTorrent.all().filter("user", u)
 				  .filter("torrentHash IN", hashes).fetch();
 	}
-	
+
 	public static List<UserTorrent> getByHash(String hash) {
 		return UserTorrent.all().filter("torrentHash", hash).fetch();
 	}
@@ -63,13 +63,13 @@ public class UserTorrent extends ModelBase {
 		}
 		UserTorrent.batch().update(list);
 	}
-	
+
 	public static boolean isTorrentStoppedByAllUsers(String hash) {
 		int count = UserTorrent.all().filter("torrentHash", hash).count();
 		int paused = UserTorrent.all().filter("torrentHash", hash).filter("paused", true).count();
 		return (count == paused);
 	}
-	
+
 	public static boolean isTorrentStartedByAUser(String hash) {
 		return UserTorrent.all().filter("torrentHash", hash).filter("paused", false).count() >= 1;
 	}
@@ -79,8 +79,8 @@ public class UserTorrent extends ModelBase {
 		TorrentState ts = this.getTorrent().getStatus();
 		if (this.isPaused()) {
 			return "Paused";
-		} else if (running && ts == TorrentState.PAUSED) {			
-			return "Running";			
+		} else if (running && ts == TorrentState.PAUSED) {
+			return "Running";
 		}
 		switch (ts) {
 			case DOWNLOADING:
@@ -132,12 +132,12 @@ public class UserTorrent extends ModelBase {
 		}
 		return ret;
 	}
-	
+
 	public String getNiceTotalSize() {
 		String ts = getStats().getTotalSize();
 		return (!ts.equals("N/A")) ? ts : "Unknown";
 	}
-	
+
 	@SerializedAccessorName("nice-stats")
 	public NiceStats getStats() {
 		return new NiceStats(this.getTorrent());
@@ -200,7 +200,7 @@ public class UserTorrent extends ModelBase {
 	public void setGroupName(String groupName) {
 		this.groupName = groupName;
 	}
-	
+
 	public User getUser() {
 		return user;
 	}
@@ -248,7 +248,7 @@ public class UserTorrent extends ModelBase {
 	public void setRunning(boolean running) {
 		this.running = running;
 	}
-	
+
 	/* End Getters and Setters */
 	@UseAccessor
 	public class TreeNode extends AbstractFile implements Comparable {
@@ -303,7 +303,7 @@ public class UserTorrent extends ModelBase {
 			return complete;
 		}
 
-		@SerializedAccessorName("total-size-bytes")		
+		@SerializedAccessorName("total-size-bytes")
 		public long getTotalSize() {
 			long total = 0l;
 			if (this.file != null) {
@@ -315,15 +315,15 @@ public class UserTorrent extends ModelBase {
 			}
 			return total;
 		}
-				
+
 		public String getDownloadLink() {
 			if (this.file != null) {
 				return this.file.getDownloadLink();
 			}
 			return null;
 		}
-		
-		/* Getters and Setters */								
+
+		/* Getters and Setters */
 		public String getName() {
 			return name;
 		}
@@ -356,7 +356,7 @@ public class UserTorrent extends ModelBase {
 		public void setLevel(int level) {
 			this.level = level;
 		}
-		
+
 		public String getFullPath() {
 			return fullPath;
 		}
@@ -364,7 +364,7 @@ public class UserTorrent extends ModelBase {
 		public void setFullPath(String fullPath) {
 			this.fullPath = fullPath;
 		}
-		
+
 		public String getId() {
 			if (file != null) {
 				return file.getId();
@@ -411,23 +411,23 @@ public class UserTorrent extends ModelBase {
 			}
 			return super.getPercentComplete();
 		}
-		
+
 		@Override
 		public boolean isCompleted() {
 			return !isAnyChildIncomplete();
-		}				
+		}
 		/* End Getters and Setters */
 	}
-	
+
 	@UseAccessor
 	public class NiceStats {
-		
+
 		private ITorrent t;
-		
+
 		public NiceStats(ITorrent t) {
 			this.t = t;
 		}
-		
+
 		@SerializedAccessorName("total-size")
 		public String getTotalSize() {
 			if (!t.isMetadataDownloading()) {
@@ -435,7 +435,7 @@ public class UserTorrent extends ModelBase {
 			}
 			return "N/A";
 		}
-		
+
 		@SerializedAccessorName("download-speed")
 		public String getDownloadSpeed() {
 			if (!t.isMetadataDownloading()) {
@@ -443,31 +443,31 @@ public class UserTorrent extends ModelBase {
 			}
 			return "N/A";
 		}
-		
+
 		@SerializedAccessorName("upload-speed")
 		public String getUploadSpeed() {
 			if (!t.isMetadataDownloading()) {
 				return Util.getBestRate(t.getUploadSpeedBytes());
 			}
-			return "N/A";			
+			return "N/A";
 		}
-		
+
 		@SerializedAccessorName("amount-downloaded")
 		public String getAmountDownloaded() {
 			if (!t.isMetadataDownloading()) {
 				return Util.getBestRate(t.getDownloadedBytes());
 			}
-			return "N/A";			
+			return "N/A";
 		}
-		
+
 		@SerializedAccessorName("amount-uploaded")
 		public String getAmountUploaded() {
 			if (!t.isMetadataDownloading()) {
 				return Util.getBestRate(t.getUploadedBytes());
 			}
-			return "N/A";			
+			return "N/A";
 		}
-		
+
 		@SerializedAccessorName("ratio")
 		public String getRatio() {
 			if (!t.isMetadataDownloading()) {
@@ -475,12 +475,12 @@ public class UserTorrent extends ModelBase {
 			}
 			return "N/A";
 		}
-		
+
 		@SerializedAccessorName("percent-complete")
 		public String getPercentComplete() {
 			return Util.formatPercentage(t.getPercentComplete() * 100) + "%";
 		}
-		
+
 		@SerializedAccessorName("metadata-percent-complete")
 		public String getMetadataPercentComplete() {
 			return Util.formatPercentage(t.getMetadataPercentComplete() * 100) + "%";
