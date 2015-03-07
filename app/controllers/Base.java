@@ -7,12 +7,12 @@ import play.cache.Cache;
 import play.mvc.Before;
 
 public class Base extends BaseController {
-	
+
 	@Before
 	protected static void before() {
 		User u = getCurrentUser();
 		renderArgs.put("currentUser", u);
-		
+
 		String mode = Play.configuration.getProperty("application.mode");
 		if (StringUtils.isEmpty(mode)) {
 			mode = "dev";

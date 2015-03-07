@@ -38,8 +38,9 @@ public class Client extends Base {
 	@Before(unless={"newUser"})
 	public static void checkPlan() {
 		User u = getCurrentUser();
-		//check that a plan has been purchased		
-		if (u.getPlan() == null) {
+		//check that a plan has been purchased
+
+		if (u != null && u.getPlan() == null) {
 			newUser();
 		}
 	}
