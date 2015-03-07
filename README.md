@@ -49,6 +49,14 @@ Installation
 ------------
 This is the hard part and really needs to be refined. Note: it is recommended to use HTTPS everywhere to stop ISP's prying on yours/your users traffic, and also specifying an encrypted location for *openseedbox.base.path* on the backend to stop server providers scanning the hard drive and finding files that they can use as an excuse to terminate your server.
 
+** Setting up an application in the Google Developers Console **
+Openseedbox uses google logins. In order for this to work, you need to create a project in the Google Developers Console and add the URL to your app as an allowed origin.
+
+1. Go to the [Google Developers Console](https://console.developers.google.com/project) and create a new project for your Openseedbox instance. Go to the project.
+2. Go to "APIs & auth" => "APIs" and change the status of the "Google+ API" to "On"
+3. Under "APIs & auth" => "Credentials", click "Create new Client ID". Set "Application Type" to "Web Application" and in "Authorized Javascript Origins" add the domain for your install of Openseedbox (eg, "http://localhost:9000/" or "https://my.public.openseedbox.domain/")
+4. Click "Create Client ID" and make a note of the "Client ID" value for later use.
+
 ** Installing the Frontend **
 
 1. Install openjdk1.6, [Play 1.2.5](http://downloads.typesafe.com/releases/play-1.2.5.zip) and mysql-server
@@ -65,6 +73,7 @@ This is the hard part and really needs to be refined. Note: it is recommended to
 
 	`mv /src/openseedbox/application.conf.default /src/openseedbox/application.conf`
 6. Edit the newly created application.conf with your database settings (look at the db.* lines)
+	You will also need to set the `google.clientid` parameter to to the ClientID you generated above.
 
 	See the configuration reference below for more information on the openseedbox-specific options
 7. Run `play deps` to fetch the dependencies, eg:
@@ -134,6 +143,7 @@ NGINX sample configuration is in `openseedbox/conf/openseedbox.nginx.conf`
 
 Configuration is in `openseedbox/conf/application.conf`
 
+* `google.clientid` - The ClientID of your app in the Google Developer Console. Used to enable logins.
 * `openseedbox.node.access` - 'http' or 'https'. If you're using SSL on your backend nodes, use https, otherwise use http.
 * `openseedbox.errors.mailto` - an email address. Errors will get sent here.
 * `openseedbox.errors.mailfrom` - the From address in the error emails

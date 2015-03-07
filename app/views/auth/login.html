@@ -13,7 +13,30 @@
     <br />
     <p>You can login using OpenID below.</p>
     <br />
-    <div class="oauth-images">
-    <a href="@{Auth.authenticate()}?openid_url=https://www.google.com/accounts/o8/id"><img src="#{asset.url '/images/google.png' /}" /></a>
+    <div class="signin">
+        <span id="signinButton">
+            <span
+              class="g-signin"
+              data-callback="signinCallback"
+              data-clientid="${clientId}"
+              data-cookiepolicy="single_host_origin"
+              data-openidrealm="http://localhost:9000/"
+              data-scope="openid email profile">
+            </span>
+        </span>
     </div>
 </div>
+<script type="text/javascript">
+    function signinCallback(authResult) {
+        if (authResult['status']['signed_in'] && signinClicked) {
+            var id_token = authResult["id_token"];
+            document.location.href = "@{Auth.authenticate()}?id_token=" + id_token;
+        } else {
+            console.log("Unable to sign in: ", authResult["error"]);
+        }
+    }
+
+    $("#signinButton").click(function() {
+       signinClicked = true;
+    });
+</script>

@@ -20,6 +20,9 @@ application.session.maxAge=3d
 #%prod.memcached=enabled
 #%prod.memcached.host=127.0.0.1:11211
 
+#Paste your google ClientID here. See the README for setting up the app in the Google Developers console
+google.clientid=
+
 %prod.mail.smtp.host=smtp.openseedbox.com
 %prod.mail.smtp.user=admin@openseedbox.com
 %prod.mail.smtp.pass=pass
