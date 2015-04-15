@@ -50,24 +50,24 @@ public class Admin extends Base {
 		List<Node> nodes = Node.all().fetch();
 		renderTemplate("admin/nodes.html", active, nodes);
 	}
-	
+
 	public static void createNode() {
 		String active = "nodes";
 		renderTemplate("admin/node-edit.html", active);
 	}
 
-	public static void editNode(long id) {		
+	public static void editNode(long id) {
 		String active = "nodes";
-		Node node = Node.findById(id);		
+		Node node = Node.findById(id);
 		renderTemplate("admin/node-edit.html", active, node);
 	}
 
 	public static void updateNode(@Valid Node node) {
-		if (!Validation.hasErrors()) {			
+		if (!Validation.hasErrors()) {
 			node.insertOrUpdate();
 			setGeneralMessage("Node '" + node.getName() + "' created/updated successfully.");
 			nodes();
-		}				
+		}
 		Validation.keep();
 		params.flash();
 		if (node.isNew()) {
@@ -88,7 +88,7 @@ public class Admin extends Base {
 		List<Plan> plans = Plan.all().order("monthlyCost").fetch();
 		renderTemplate("admin/plans.html", active, plans);
 	}
-	
+
 	public static void createPlan() {
 		String active = "plans";
 		renderTemplate("admin/plan-edit.html", active);
@@ -114,20 +114,20 @@ public class Admin extends Base {
 		editPlan(plan.getId());
 	}
 
-	public static void deletePlan(long id) {		
+	public static void deletePlan(long id) {
 		 Plan p = Plan.findById(id);
 		 p.delete();
 		 setGeneralMessage("Plan '" + p.getName() + "' deleted successfully.");
 		 plans();
 	}
-	
-	public static void users() {		
-		 String active = "users";
-		 List<User> users = User.all().fetch();	 
-		 renderTemplate("admin/users.html", active, users);
-	}	
 
-	public static void editUser(long id) {		
+	public static void users() {
+		 String active = "users";
+		 List<User> users = User.all().fetch();
+		 renderTemplate("admin/users.html", active, users);
+	}
+
+	public static void editUser(long id) {
 		 String active = "users";
 		 User user = User.findById(id);
 		 List<Plan> all_plans = Plan.all().filter("visible", true).fetch();
@@ -135,7 +135,7 @@ public class Admin extends Base {
 		 List<ISelectListItem> plans = new ArrayList<ISelectListItem>();
 		 List<ISelectListItem> nodes = new ArrayList<ISelectListItem>();
 		 plans.add(new SelectItem("None", "", false));
-		 plans.addAll(Util.toSelectItems(all_plans, "id", "name"));		 
+		 plans.addAll(Util.toSelectItems(all_plans, "id", "name"));
 		 nodes.add(new SelectItem("None", "", false));
 		 nodes.addAll(Util.toSelectItems(all_nodes, "id", "name"));
 		 renderTemplate("admin/user-edit.html", active, user, plans, nodes);
@@ -151,7 +151,7 @@ public class Admin extends Base {
 		params.flash();
 		editUser(user.getId());
 	}
-	
+
 	public static void deleteUser(long id) {
 		User u = User.findById(id);
 		u.delete();
@@ -163,7 +163,7 @@ public class Admin extends Base {
 		setGeneralMessage("User '" + u.getEmailAddress() + "' deleted.");
 		users();
 	}
-	
+
 	public static void restartBackend(long id) {
 		try {
 			Node n = Node.getByKey(id);
@@ -174,7 +174,7 @@ public class Admin extends Base {
 		}
 		nodes();
 	}
-	
+
 	public static void nodeStatus(long id) {
 		Node n = Node.findById(id);
 		try {
@@ -183,7 +183,7 @@ public class Admin extends Base {
 			resultError(ex.getMessage());
 		}
 	}
-	
+
 	public static void jobs() {
 		renderArgs.put("active", "jobs");
 		List<JobEvent> pollerJobs = JobEvent.getLast(NodePollerJob.class, 5);
@@ -191,7 +191,7 @@ public class Admin extends Base {
 		List<JobEvent> cleanupJobs = JobEvent.getLast(CleanupJob.class, 5);
 		render("admin/jobs.html", pollerJobs, healthCheckJobs, cleanupJobs);
 	}
-	
+
 	public static void runJobManually(String type) {
 		if (type.equals("poller")) {
 			new NodePollerJob().now();
