@@ -43,6 +43,10 @@ public class Auth extends Base {
                     u.setLastAccess(new Date());
                     u.setAdmin(false);
                     u.save();
+
+                    // reload user and signin automatically
+                    u = User.findByEmailAddress(emailAddress);
+                    session.put("currentUserId", u.getId());
                 } else {
                     //login user
                     u.setLastAccess(new Date());
