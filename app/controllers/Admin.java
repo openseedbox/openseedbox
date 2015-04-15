@@ -130,7 +130,7 @@ public class Admin extends Base {
 	public static void editUser(long id) {
 		 String active = "users";
 		 User user = User.findById(id);
-		 List<Plan> all_plans = Plan.all().filter("visible", true).fetch();
+		 List<Plan> all_plans = Plan.all().fetch();
 		 List<Node> all_nodes = Node.getActiveNodes();
 		 List<ISelectListItem> plans = new ArrayList<ISelectListItem>();
 		 List<ISelectListItem> nodes = new ArrayList<ISelectListItem>();
