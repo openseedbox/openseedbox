@@ -38,6 +38,8 @@ public class Auth extends Base {
                     //create new user
                     u = new User();
                     u.setEmailAddress(emailAddress);
+                    // also set displayname, as it's required (fixes /admin/edituser)
+                    u.setDisplayName(emailAddress);
                     u.setAvatarUrl(String.format("https://www.gravatar.com/avatar/%s",
                                     DigestUtils.md5Hex(u.getEmailAddress())));
                     u.setLastAccess(new Date());
