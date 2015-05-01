@@ -150,9 +150,9 @@ Once you login successfully, you will need to manually edit the User table in th
 
 	`cd /src/openseedbox-server && play start --%prod`
 	
-9. Try going to http://localhost:9001 in your browser
+9. Try going to http://localhost:9001 in your browser to verify its running.
 
-10. Set up NGINX or Apache as a reverse proxy (sample config for nginx in `conf/openseedbox-server.nginx.conf`). I really recommend NGINX here as it is absolutely required to use the ZIP file functionality.
+10. Set up NGINX or Apache as a reverse proxy (sample config for nginx in `conf/openseedbox-server.nginx.conf`). I really recommend NGINX here as it is absolutely required to use the ZIP file functionality. *You MUST do this step or you will not be able to download any files through the web interface!* This is because the file download mechanism relies on sending an `X-Sendfile` (for Apache) or `X-Accel-Redirect` (for nginx) header which gets picked up by the reverse proxy which serves the file, *not* the Play! webserver.
 
 **Compiling NGINX**
 
