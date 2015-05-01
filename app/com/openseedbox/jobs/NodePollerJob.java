@@ -15,17 +15,15 @@ public class NodePollerJob extends LoggedJob {
 	protected Object doGenericJob() {
 		List<Node> nodes = Node.getActiveNodes();
 		for (Node n : nodes) {	
-			if (n.isReachable()) {
-				List<ITorrent> torrents = n.getNodeBackend().listTorrents();
-				List<Torrent> fromDb = Torrent.getByHash(getHashStrings(torrents));
-				for (Torrent db : fromDb) {
-					ITorrent match = findMatching(db, torrents);
-					if (match != null) {
-						db.merge(match);
-					}
+			List<ITorrent> torrents = n.getNodeBackend().listTorrents();
+			List<Torrent> fromDb = Torrent.getByHash(getHashStrings(torrents));
+			for (Torrent db : fromDb) {
+				ITorrent match = findMatching(db, torrents);
+				if (match != null) {
+					db.merge(match);
 				}
-				Torrent.batch().update(fromDb);	
 			}
+			Torrent.batch().update(fromDb);
 		}	
 		return null;
 	}
