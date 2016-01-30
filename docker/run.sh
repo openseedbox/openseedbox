@@ -11,5 +11,24 @@ if [ "$GOOGLE_CLIENTID" == "" ]; then
 	exit 1
 fi
 
+#add any nodes defined in environment variables
+if [ "$OPENSEEDBOX_NODES" != "" ]; then
+	for NODE in $OPENSEEDBOX_NODES; do
+		HOST=`echo $NODE | cut -d ":" -f 1`
+		PORT=`echo $NODE | cut -d ":" -f 2`
+		API_KEY="$HOST"
+
+		MYSQL_CMD="mysql -u'$MYSQL_USER' -p'$MYSQL_PASS'"
+
+		echo "Adding node $NODE"
+		$NODE_EXISTS = `$MYSQL_CMD -e "SELECT * FROM node WHERE ip_address='$HOST'" $OPENSEEDBOX_DATABASE_NAME`
+		if [ $NODE_EXISTS == "" ]; then
+			$MYSQL_CMD -e "INSERT INTO node (name,ip_address,scheme,api_key,active) VALUES ('$HOST','$HOST:$PORT','http','$HOST',1)" $OPENSEEDBOX_DATABASE_NAME
+		else
+			echo "Node $NODE already added; not adding again"
+		fi
+	done
+fi
+
 echo "Starting play"
 exec /play/play run
