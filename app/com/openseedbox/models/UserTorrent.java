@@ -1,16 +1,14 @@
 package com.openseedbox.models;
 
-import com.openseedbox.backend.AbstractFile;
-import com.openseedbox.backend.IFile;
-import com.openseedbox.backend.ITorrent;
-import com.openseedbox.backend.TorrentState;
+import java.util.*;
+
+import org.apache.commons.lang.StringUtils;
+
+import com.openseedbox.backend.*;
 import com.openseedbox.code.Util;
 import com.openseedbox.gson.SerializedAccessorName;
 import com.openseedbox.gson.UseAccessor;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import org.apache.commons.lang.StringUtils;
+
 import siena.Column;
 import siena.Table;
 
@@ -263,8 +261,7 @@ public class UserTorrent extends ModelBase {
 		public String toString() {
 			return String.format("TreeNode, name: %s, children:%s", name, children.size());
 		}
-
-		@Override
+		
 		public int compareTo(Object t) {
 			if (t instanceof TreeNode) {
 				TreeNode tn = (TreeNode) t;

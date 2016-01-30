@@ -8,3 +8,8 @@ precompiled/
 server.pid
 test-result/
 conf/application.conf
+
+
+.classpath
+.project
+.settings/

@@ -1,11 +1,13 @@
 package controllers;
 
+import java.util.Date;
+
+import org.apache.commons.codec.digest.DigestUtils;
+
 import com.google.gson.JsonObject;
 import com.openseedbox.Config;
-import java.util.Date;
 import com.openseedbox.models.User;
-import net.sf.oval.internal.Log;
-import org.apache.commons.codec.digest.DigestUtils;
+
 import play.cache.Cache;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
@@ -41,7 +43,11 @@ public class Auth extends Base {
                     u.setAvatarUrl(String.format("https://www.gravatar.com/avatar/%s",
                                     DigestUtils.md5Hex(u.getEmailAddress())));
                     u.setLastAccess(new Date());
-                    u.setAdmin(false);
+                    
+                    //if this is the very first user, set them as admin
+                    boolean isFirstUser = User.count() == 0;
+                    u.setAdmin(isFirstUser);
+                    
                     u.save();
                 } else {
                     //login user
