@@ -14,10 +14,14 @@ EXPOSE 443
 # Install play
 RUN wget -q -O play.zip "https://downloads.typesafe.com/play/1.2.7.2/play-1.2.7.2.zip" \
 	&& unzip -q play.zip \
-	&& mv /play-1.2.7.2 /play
+	&& mv /play-1.2.7.2 /play \
+	&& rm play.zip
+
+# Install other needed packages
 RUN apt-get -qq update \
 	&& apt-get install -qq -y git procps python supervisor build-essential openssl libpcre3-dev libssl-dev \
-	&& apt-get -y clean
+	&& apt-get -y clean \
+	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 WORKDIR /src
 
