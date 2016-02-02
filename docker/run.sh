@@ -11,7 +11,8 @@ if [ "$GOOGLE_CLIENTID" == "" ]; then
 	exit 1
 fi
 
-#add any nodes defined in environment variables
+#add any nodes defined in the OPENSEEDBOX_NODES environment variable.
+#format is: "node1:port node2:port". Typically node1 and node2 would be the name of linked Docker containers.
 if [ "$OPENSEEDBOX_NODES" != "" ]; then
 	for NODE in $OPENSEEDBOX_NODES; do
 		HOST=`echo $NODE | cut -d ":" -f 1`

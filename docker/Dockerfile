@@ -9,7 +9,6 @@ ENV MYSQL_PORT=3306
 ENV MYSQL_USER=openseedbox
 ENV MYSQL_PASS=openseedbox
 
-EXPOSE 80
 EXPOSE 443
 
 # Install play
@@ -24,12 +23,13 @@ WORKDIR /src
 
 # Check out code we rely on
 RUN git clone -q https://github.com/erindru/openseedbox-common.git \
-	&& git clone -q https://github.com/erindru/openseedbox-server \
-	&& git clone -q https://github.com/erindru/openseedbox \
-	&& git clone -q https://github.com/evanmiller/mod_zip \
-	&& git clone -q https://github.com/agentzh/headers-more-nginx-module
+	&& git clone --depth=1 -q https://github.com/erindru/openseedbox-server \
+	&& git clone --depth=1 -q https://github.com/erindru/openseedbox \
+	&& git clone --depth=1 -q https://github.com/evanmiller/mod_zip \
+	&& git clone --depth=1 -q https://github.com/agentzh/headers-more-nginx-module
 
 # Install openseedbox dependencies
+RUN cd openseedbox-common && /play/play deps
 RUN cd openseedbox && /play/play deps
 RUN cd openseedbox-server && /play/play deps
 
@@ -48,7 +48,7 @@ RUN wget -q -O nginx.tar.gz http://nginx.org/download/nginx-1.9.9.tar.gz \
 	&& rm -fr nginx* mod_zip headers-more-nginx-module
 
 #specify persistent volumes
-VOLUME /src/openseedbox/conf
+#VOLUME /src/openseedbox/conf
 
 #create SSL keys
 RUN openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/C=US/ST=None/L=None/O=None/CN=openseedbox" \
