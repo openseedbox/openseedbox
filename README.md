@@ -49,11 +49,11 @@ Installation
 ------------
 Installation consists of:
 
-	1. Obtaining a Google ClientID so you can use google logins (the only type of login)
-	1. Setting up the frontend
-	1. Setting up 1 or more backends
-	1. Telling the frontend about the backends
-	1. Configuring some plans and users
+1. Obtaining a Google ClientID so you can use google logins (the only type of login)
+1. Setting up the frontend
+1. Setting up 1 or more backends
+1. Telling the frontend about the backends
+1. Configuring some plans and users
 
 It is recommended to mount an encrypted volume to `/media/openseedbox` on each backend node to stop server providers scanning the hard drive and finding files that they can use as an excuse to terminate your server. However it is not required in order for Openseedbox to function.
 
@@ -84,7 +84,7 @@ The only supported installation method of Openseedbox is to use the Docker image
 
 1. The following command will start an openseedbox container and map it to port 443 on your host:
 
-	`docker run --name openseedbox --link openseedbox-mysql:mysql -p443:443 -e GOOGLE_CLIENTID=<the google clientid you got above> -d openseedbox/openseedbox
+	`docker run --name openseedbox --link openseedbox-mysql:mysql -p443:443 -e GOOGLE_CLIENTID=<the google clientid you got above> -d openseedbox/openseedbox`
 
 	If you arent using the 'quick n dirty' MySQL server above, then you'll need to run something like:
 
@@ -146,14 +146,12 @@ These users should now be able to start torrents via the Web UI if they log out 
 
 You'll quickly discover that the provided SSL certs are self-signed and will show as invalid in every browser. If you want to use your own certs, run the `openseedbox` and `openseedbox-server` containers with the following options:
 
-	`-v /path/to/your/host.key:/src/openseedbox/conf/host.key -v /path/to/your/host.cert:/src/openseedbox/host.cert`
+	-v /path/to/your/host.key:/src/openseedbox/conf/host.key -v /path/to/your/host.cert:/src/openseedbox/host.cert
 	
 Configuration Reference
 -----------------------
 
 **Frontend**
-
-NGINX sample configuration is in `openseedbox/conf/openseedbox.nginx.conf`
 
 Configuration is in `openseedbox/conf/application.conf`
 
@@ -167,8 +165,6 @@ Configuration is in `openseedbox/conf/application.conf`
 * `openseedbox.assets.prefix` - Used as the prefix to all asset URLs. This is so you can upload all the assets (the /public directory) to something like Amazon S3 and have them served from there.
 
 **Backend**
-
-NGINX sample configuration is in `openseedbox-server/conf/openseedbox-server.nginx.conf`
 
 Configuration is in `openseedbox-server/conf/application.conf`
 
