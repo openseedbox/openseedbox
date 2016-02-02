@@ -1,5 +1,6 @@
 application.name=openseedbox
 application.mode=dev
+%prod.application.mode=prod
 application.secret=isnONYuAmgrglqEEiCujUnm0xtGHYkUspt8FzHQ6h4GDVoZ7KyxhPwH50itwFVvd
 date.format=yyyy-MM-dd
 
@@ -11,24 +12,13 @@ db.user=user
 db.pass=pass
 
 siena.ddl=update
-#siena.jpa.disable=false
 
 #Note: nginx does the SSL in production so no https port required
 http.port=9000
 application.session.maxAge=3d
 
-#%prod.memcached=enabled
-#%prod.memcached.host=127.0.0.1:11211
-
 #Paste your google ClientID here. See the README for setting up the app in the Google Developers console
 google.clientid=
-
-%prod.mail.smtp.host=smtp.openseedbox.com
-%prod.mail.smtp.user=admin@openseedbox.com
-%prod.mail.smtp.pass=pass
-%prod.mail.smtp.channel=ssl
-mail.debug=true
-%prod.mail.debug=false
 
 #OpenSeedbox-specific config
 openseedbox.node.access=http
@@ -39,5 +29,4 @@ openseedbox.multizip=false
 openseedbox.zip.path=/rdr
 openseedbox.zip.manifestonly=false
 openseedbox.assets.prefix=/public
-%prod.openseedbox.assets.prefix=https://s3.amazonaws.com/cdn.openseedbox.com/public/
 
