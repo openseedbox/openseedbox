@@ -16,7 +16,7 @@ RUN wget -q -O play.zip "https://downloads.typesafe.com/play/1.2.7.2/play-1.2.7.
 	&& unzip -q play.zip \
 	&& mv /play-1.2.7.2 /play
 RUN apt-get -qq update \
-	&& apt-get install -qq -y git python supervisor build-essential openssl libpcre3-dev libssl-dev \
+	&& apt-get install -qq -y git procps python supervisor build-essential openssl libpcre3-dev libssl-dev \
 	&& apt-get -y clean
 
 WORKDIR /src
@@ -46,9 +46,6 @@ RUN wget -q -O nginx.tar.gz http://nginx.org/download/nginx-1.9.9.tar.gz \
 	&& make -s install \
 	&& cd .. \
 	&& rm -fr nginx* mod_zip headers-more-nginx-module
-
-#specify persistent volumes
-#VOLUME /src/openseedbox/conf
 
 #create SSL keys
 RUN openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/C=US/ST=None/L=None/O=None/CN=openseedbox" \

@@ -47,125 +47,106 @@ This is also a Play! framework application and is responsible for delegating req
 
 Installation
 ------------
-This is the hard part and really needs to be refined. Note: it is recommended to use HTTPS everywhere to stop ISP's prying on yours/your users traffic, and also specifying an encrypted location for *openseedbox.base.path* on the backend to stop server providers scanning the hard drive and finding files that they can use as an excuse to terminate your server.
+Installation consists of:
+
+	1. Obtaining a Google ClientID so you can use google logins (the only type of login)
+	1. Setting up the frontend
+	1. Setting up 1 or more backends
+	1. Telling the frontend about the backends
+	1. Configuring some plans and users
+
+It is recommended to mount an encrypted volume to `/media/openseedbox` on each backend node to stop server providers scanning the hard drive and finding files that they can use as an excuse to terminate your server. However it is not required in order for Openseedbox to function.
 
 **Setting up an application in the Google Developers Console**
 
 Openseedbox uses google logins. In order for this to work, you need to create a project in the Google Developers Console and add the URL to your app as an allowed origin.
 
 1. Go to the [Google Developers Console](https://console.developers.google.com/project) and create a new project for your Openseedbox instance. Go to the project.
-2. Go to "APIs & auth" => "APIs" and change the status of the "Google+ API" to "On"
-3. Under "APIs & auth" => "Credentials", click "Create new Client ID". Set "Application Type" to "Web Application" and in "Authorized Javascript Origins" add the domain for your install of Openseedbox (eg, "http://localhost:9000/" or "https://my.public.openseedbox.domain/")
-4. Click "Create Client ID" and make a note of the "Client ID" value for later use.
+2. Go to "Dashboard" => "Enable and manage APIs", and enter "Google+" in the search field. Click the "Google+ API" result and click the "Enable API" button.
+3. On the left, click "Credentials" => "New credentials" => "OAuth Client ID". Choose "Web Application" and in "Authorized Javascript Origins" add the domain for your install of Openseedbox (eg, "https://localhost/" or "https://my.public.openseedbox.domain/")
+4. Click "Create" and make a note of the "Client ID" value for later use.
+
+**Docker**
+
+The only supported installation method of Openseedbox is to use the Docker images. This guide assumes you have a working Docker daemon. If you do not, please see [here](https://docs.docker.com/engine/installation/) in order to get it installed.
+
+*Note:* Docker does not work on OpenVZ VPS's, so if you have a VPS on which you want to run Openseedbox, you need a KVM VPS.
+
+**MySQL**
+
+1. OpenSeedbox needs a MySQL server available. If you have one running somewhere then you can set the OPENSEEDBOX_DATABASE_NAME, MYSQL_HOST, MYSQL_PORT, MYSQL_USERNAME and MYSQL_PASSWORD environment variables to tell Openseedbox how to connect to it. If you dont have one running somewhere, then you can easily start one:
+
+	`docker run --name openseedbox-mysql -e MYSQL_ROOT_PASSWORD=password -e MYSQL_USER=openseedbox -e MYSQL_PASSWORD=openseedbox -e MYSQL_DATABASE=openseedbox -d mysql`
+
+*Note* if you change the username/password from the defaults, then you'll need to specify them as environment variables below.
 
 **Installing the Frontend**
 
-1. Install openjdk1.6, [Play 1.2.5](http://downloads.typesafe.com/releases/play-1.2.5.zip) and mysql-server
-	
-	Openjdk1.6
+1. The following command will start an openseedbox container and map it to port 443 on your host:
 
-	`sudo apt-get install openjdk-6-jdk`
+	`docker run --name openseedbox --link openseedbox-mysql:mysql -p443:443 -e GOOGLE_CLIENTID=<the google clientid you got above> -d openseedbox/openseedbox
 
-	Play
-	
-	1.1 Download Play framework to Downloads folder.
-	
-	`cd ~/Downloads`
-	
-	`wget http://download.playframework.org/releases/play-1.2.5.zip`
-	
-	1.2 Unzip the archive and move the contents to `/usr/local` folder.
-	
-	`unzip play-1.2.5.zip`
-	
-	`sudo mv play-1.2.5 /usr/local/`
-	
-	1.3 Configure access to framework via link
-	
-	`sudo ln -s /usr/local/play-1.2.5/ /usr/local/play`
-	
-	1.4 Create links in `/usr/local/bin` so that play command will be available in terminal
-	
-	`sudo ln -s /usr/local/play/play /usr/local/bin/play`
-	
-	
-	MySql server
-	
-	`sudo apt-get install mysql-server`
-	
-2. Verify Play! is working by running `play` and checking the version number
-3. Checkout the source for *openseedbox-common* and *openseedbox* to a common location (I use */src*):
-	
-	`cd /src`
-	
-	`git clone https://github.com/erindru/openseedbox.git`
-	
-	`git clone https://github.com/erindru/openseedbox-common.git`	
-4. Create a mysql database, I call mine `openseedbox`
-5. Rename application.conf.default to application.conf, eg:
+	If you arent using the 'quick n dirty' MySQL server above, then you'll need to run something like:
 
-	`mv /src/openseedbox/conf/application.conf.default /src/openseedbox/conf/application.conf`
-6. Edit the newly created application.conf with your database settings (look at the db.* lines)
-	You will also need to set the `google.clientid` parameter to to the ClientID you generated above.
+	`docker run --name openseedbox -p443:443 -e MYSQL_HOST=<mysql host> -e MYSQL_PORT=<mysql port> -e MYSQL_USERNAME=<mysql username> -e MYSQL_PASSWORD=<mysql password> -e GOOGLE_CLIENTID=<the google clientid you got above> -d openseedbox/openseedbox`
 
-	See the configuration reference below for more information on the openseedbox-specific options
-7. Run `play deps` to fetch the dependencies, eg:
-
-	`cd /src/openseedbox-common && play deps`
-	
-	`cd /src/openseedbox && play deps`
-8. Start the app in production mode (youll need to wait a bit till everything compiled)
-
-	`cd /src/openseedbox && play start --%prod`
-	
-9. Try going to http://localhost:9000 in your browser
-
-10. Set up NGINX or Apache as a reverse proxy (sample config for nginx in `conf/openseedbox.nginx.conf`)
-
-Once you login successfully, you will need to manually edit the User table in the database and set is_admin=1 for your user or you wont be able to add any nodes. Note: You need to install the backend on the nodes *before* you add them in the web UI.
+You should now be able to browse to Openseedbox via `https://hostname-or-ip-of-docker-host`
 
 **Installing the Backend**
 
-1. Install openjdk1.6 and [Play 1.2.5](http://downloads.typesafe.com/releases/play-1.2.5.zip)
-2. Verify Play! is working by running `play` and checking the version number
-3. Checkout the source for *openseedbox-common* and *openseedbox-server* to a common location (I use */src*):
+Note: this can be on the same or a different server than the frontend. If its on the same server, you *need* to map it to a different port.
+
+1. Create a folder on your host to store the openseedbox data, eg:
+
+	`mkdir /home/user/openseedbox-data`
 	
-	`cd /src`
-	
-	`git clone https://github.com/erindru/openseedbox-server.git`
-	
-	`git clone https://github.com/erindru/openseedbox-common.git`	
-4. Rename application.conf.default to application.conf, eg:
+	I would recommend this to be in an encrypted location, however this is not required.
 
-	`mv /src/openseedbox-server/conf/application.conf.default /src/openseedbox-server/conf/application.conf`
-	
-5. Edit the newly created application.conf with your node-specific backend settings (see the Configuration reference below). Take special note of the `backend.base.api_key` you set.
+	*Note* If you have multiple backeds running on the same host, do *not* point them to the same data directory. They will clobber each other.
 
-6. Run `play deps` to fetch the dependencies, eg:
+1. The following command will start an openseedbox-server container and map it to port 444 on your host. It will also mount the `openseedbox-data` folder you just created into the container. This is so that your data will persist between container restarts. Take note of OPENSEEDBOX_API_KEY as you'll need this value when adding the node to the frontend:
 
-	`cd /src/openseedbox-common && play deps`
-		
-	`cd /src/openseedbox-server && play deps`	
-7. Start the app in production mode (youll need to wait a bit till everything compiled)
+	`docker run -v /home/user/openseedbox-data:/media/openseedbox --name openseedbox-node1 -p444:443 -e OPENSEEDBOX_API_KEY=node1 -d openseedbox/openseedbox-server`
 
-	`cd /src/openseedbox-server && play start --%prod`
-	
-9. Try going to http://localhost:9001 in your browser to verify its running.
+**Telling the frontend about the backend**
 
-10. Set up NGINX or Apache as a reverse proxy (sample config for nginx in `conf/openseedbox-server.nginx.conf`). I really recommend NGINX here as it is absolutely required to use the ZIP file functionality. *You MUST do this step or you will not be able to download any files through the web interface!* This is because the file download mechanism relies on sending an `X-Sendfile` (for Apache) or `X-Accel-Redirect` (for nginx) header which gets picked up by the reverse proxy which serves the file, *not* the Play! webserver.
+1. Browse to the frontend and login. The first user will be automatically created as an admin user.
+1. Click "Admin" up the top and then go to the Nodes tab.
+1. Click "Create new Node"
+1. Fill out the form.
+	Name - Whatever you want, its just used in the UI
+	Scheme - Set to "https" since thats what the docker container uses
+	Host / IP Address - Use the *publically accessible* hostname / ip address of the Docker host running the backend container. You also need to include the port. eg `192.168.1.50:444` if `192.168.1.50` is the IP address of the machine running the backend container and its exposed on port 444. Its important to use the public IP address so that your browser can access the node in order to download the files.
+	Webservice API Key: The value of `OPENSEEDBOX_API_KEY` you started the backend container with above
+	Active: Tick this box
+1. Click "Create new Node". You should see the uptime, available space etc. Click "Restart Backend" in order to start transmission-daemon.
 
-**Compiling NGINX**
+**Setting up Plans and Users**
 
-If you're going to use a custom version of nginx (recommended if you want ZIP to work), I do the following (in */src*)
+There are two ways to do this. The first is to set up some plans and let the users choose them when they first log in. The second is to set up a "dummy" plan and add users to it manually via the web interface. I'll detail the second option here.
 
-1. Get the [NGINX source](http://nginx.org/download/nginx-1.2.6.tar.gz), [mod_zip source](https://github.com/evanmiller/mod_zip) and [headers_more](https://github.com/agentzh/headers-more-nginx-module) source and put them in */src*
-2. Use the following command to configure nginx:
+1. Go to "Admin" => "Plans". Click "Create new Plan"
+1. Fill out the form to set the plan limits. Note that "Monthly Cost" doesnt do anything as the whole Invoicing thing has not been implemented and should probably be removed.
+	Plan Name - What to call your plan, eg "Plan 1"
+	Max. Diskspace (GB) - How much diskspace users on this plan can consume, eg "100"
+	Max. Active Torrents - How many active torrents users on this plan can have running at once, eg "5", or "-1" for unlimited
+	Monthly Cost - just put 0 in this field
+	Total Slots Available - How many users can assign themselves to this plan. eg if you had 500GB of diskspace and you set the Max. Diskspace on the plan to 100GB, then you could support 5 users. Set this to "10" for example
+	Visible to Customers - Whether or not users will see this plan in the list of plans after they log in.
+1. Click "Create new Plan"
+1. Get your users to log in in order for their accounts to be created in the system.
+1. Browse to "Admin" => "Users".
+1. Click the "Edit" button next to each user and do the following:
+	- Assign them to the plan you just created
+	- Set a "Dedicated" node if desired. Using a dedicated node means that every torrent they start will go to the same node, instead of the next node available with enough free space.
 
-	`./configure --with-http_ssl_module --add-module=/src/mod_zip/ --prefix=/etc/nginx --conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --pid-path=/var/run/nginx.pid --http-log-path=/var/log/nginx/access.log --lock-path=/var/lock/nginx.lock --sbin-path=/usr/sbin/nginx --add-module=/src/headers-more-nginx-module`
+These users should now be able to start torrents via the Web UI if they log out / log back in again.
 
-3. Finish the install
+**Using your own SSL certs**
 
-	`make && make install`
+You'll quickly discover that the provided SSL certs are self-signed and will show as invalid in every browser. If you want to use your own certs, run the `openseedbox` and `openseedbox-server` containers with the following options:
+
+	`-v /path/to/your/host.key:/src/openseedbox/conf/host.key -v /path/to/your/host.cert:/src/openseedbox/host.cert`
 	
 Configuration Reference
 -----------------------
