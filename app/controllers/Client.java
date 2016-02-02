@@ -1,5 +1,12 @@
 package controllers;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.openseedbox.Config;
@@ -7,24 +14,13 @@ import com.openseedbox.code.MessageException;
 import com.openseedbox.code.Util;
 import com.openseedbox.jobs.GenericJob;
 import com.openseedbox.jobs.GenericJobResult;
-import com.openseedbox.jobs.torrent.AddTorrentJob;
-import com.openseedbox.jobs.torrent.RemoveTorrentJob;
-import com.openseedbox.jobs.torrent.StartStopTorrentJob;
-import com.openseedbox.models.Node;
+import com.openseedbox.jobs.torrent.*;
+import com.openseedbox.models.*;
+import com.openseedbox.models.TorrentEvent.TorrentEventType;
 import com.openseedbox.plugins.OpenseedboxPlugin;
 import com.openseedbox.plugins.OpenseedboxPlugin.PluginSearchResult;
 import com.openseedbox.plugins.PluginManager;
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import com.openseedbox.models.Torrent;
-import com.openseedbox.models.TorrentEvent;
-import com.openseedbox.models.TorrentEvent.TorrentEventType;
-import com.openseedbox.models.User;
-import com.openseedbox.models.UserMessage;
-import com.openseedbox.models.UserTorrent;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+
 import play.Logger;
 import play.cache.Cache;
 import play.data.binding.As;
@@ -118,12 +114,6 @@ public class Client extends Base {
 		} else {					
 			int count = 0;
 			User user = getCurrentUser();
-			if (user.hasDedicatedNode()) {
-				if (!user.getDedicatedNode().isReachable()) {
-					setGeneralErrorMessage("Your dedicated node is down. Please try again later.");
-					index(null);
-				}
-			}
 			if (urlOrMagnet != null) {
 				for (String s : urlOrMagnet) {					
 					new AddTorrentJob(s, null, user.getId(), getCurrentGroupName()).now();

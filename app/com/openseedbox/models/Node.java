@@ -1,16 +1,16 @@
 package com.openseedbox.models;
 
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.openseedbox.backend.INodeStatus;
-import com.openseedbox.backend.ITorrentBackend;
-import com.openseedbox.backend.NodeStatus;
+import com.openseedbox.backend.*;
 import com.openseedbox.backend.node.NodeBackend;
 import com.openseedbox.code.MessageException;
 import com.openseedbox.code.Util;
-import java.net.InetAddress;
-import java.util.List;
-import org.apache.commons.lang.StringUtils;
+
 import play.data.validation.Required;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
@@ -114,14 +114,6 @@ public class Node extends ModelBase {
 	
 	public ITorrentBackend getNodeBackend() {
 		return new NodeBackend(this);
-	}
-	
-	public boolean isReachable() {
-		try {
-			return InetAddress.getByName(this.ipAddress).isReachable(10000);
-		} catch (Exception ex) {
-			return false;
-		}
 	}	
 	
 	public WSRequest getWebService(String action) {		
