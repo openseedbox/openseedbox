@@ -1,21 +1,16 @@
 package controllers;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.openseedbox.code.MessageException;
 import com.openseedbox.code.Util;
 import com.openseedbox.code.Util.SelectItem;
-import com.openseedbox.jobs.CleanupJob;
-import com.openseedbox.jobs.HealthCheckJob;
 import com.openseedbox.jobs.NodePollerJob;
 import com.openseedbox.jobs.torrent.RemoveTorrentJob;
-import com.openseedbox.models.JobEvent;
-import com.openseedbox.models.Node;
-import com.openseedbox.models.Plan;
-import com.openseedbox.models.Torrent;
-import com.openseedbox.models.User;
-import com.openseedbox.models.UserTorrent;
+import com.openseedbox.models.*;
 import com.openseedbox.mvc.ISelectListItem;
-import java.util.ArrayList;
-import java.util.List;
+
 import play.data.validation.Valid;
 import play.data.validation.Validation;
 import play.mvc.Before;
@@ -186,19 +181,13 @@ public class Admin extends Base {
 
 	public static void jobs() {
 		renderArgs.put("active", "jobs");
-		List<JobEvent> pollerJobs = JobEvent.getLast(NodePollerJob.class, 5);
-		List<JobEvent> healthCheckJobs = JobEvent.getLast(HealthCheckJob.class, 5);
-		List<JobEvent> cleanupJobs = JobEvent.getLast(CleanupJob.class, 5);
-		render("admin/jobs.html", pollerJobs, healthCheckJobs, cleanupJobs);
+		List<JobEvent> pollerJobs = JobEvent.getLast(NodePollerJob.class, 5);			
+		render("admin/jobs.html", pollerJobs);
 	}
 
 	public static void runJobManually(String type) {
 		if (type.equals("poller")) {
 			new NodePollerJob().now();
-		} else if (type.equals("healthcheck")) {
-			new HealthCheckJob().now();
-		} else if (type.equals("cleanup")) {
-			new CleanupJob().now();
 		}
 		setGeneralMessage("Job started.");
 		jobs();
