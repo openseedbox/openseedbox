@@ -153,8 +153,6 @@ Configuration Reference
 
 **Frontend**
 
-NGINX sample configuration is in `openseedbox/conf/openseedbox.nginx.conf`
-
 Configuration is in `openseedbox/conf/application.conf`
 
 * `google.clientid` - The ClientID of your app in the Google Developer Console. Used to enable logins.
@@ -167,8 +165,6 @@ Configuration is in `openseedbox/conf/application.conf`
 * `openseedbox.assets.prefix` - Used as the prefix to all asset URLs. This is so you can upload all the assets (the /public directory) to something like Amazon S3 and have them served from there.
 
 **Backend**
-
-NGINX sample configuration is in `openseedbox-server/conf/openseedbox-server.nginx.conf`
 
 Configuration is in `openseedbox-server/conf/application.conf`
 
