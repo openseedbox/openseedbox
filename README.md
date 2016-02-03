@@ -146,7 +146,7 @@ These users should now be able to start torrents via the Web UI if they log out 
 
 You'll quickly discover that the provided SSL certs are self-signed and will show as invalid in every browser. If you want to use your own certs, run the `openseedbox` and `openseedbox-server` containers with the following options:
 
-	-v /path/to/your/host.key:/src/openseedbox/conf/host.key -v /path/to/your/host.cert:/src/openseedbox/host.cert
+	-v /path/to/your/host.key:/src/openseedbox/conf/host.key -v /path/to/your/host.cert:/src/openseedbox/conf/host.cert
 	
 Configuration Reference
 -----------------------
