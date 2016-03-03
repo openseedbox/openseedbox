@@ -12,9 +12,9 @@ ENV MYSQL_PASS=openseedbox
 EXPOSE 443
 
 # Install play
-RUN wget -q -O play.zip "https://downloads.typesafe.com/play/1.2.7.2/play-1.2.7.2.zip" \
+RUN wget -q -O play.zip "https://downloads.typesafe.com/play/1.2.5.6/play-1.2.5.6.zip" \
 	&& unzip -q play.zip \
-	&& mv /play-1.2.7.2 /play \
+	&& mv /play-1.2.5.6 /play \
 	&& rm play.zip
 
 # Install other needed packages

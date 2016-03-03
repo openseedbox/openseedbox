@@ -1,7 +1,7 @@
 # Application dependencies
 
 require:
-    - play 1.2.7
+    - play 1.2.5
     - play -> siena 2.0.7
     - openseedbox-common -> openseedbox-common
     - commons-codec -> commons-codec 1.7
