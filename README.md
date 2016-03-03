@@ -114,11 +114,11 @@ Note: this can be on the same or a different server than the frontend. If its on
 1. Click "Admin" up the top and then go to the Nodes tab.
 1. Click "Create new Node"
 1. Fill out the form.
-	Name - Whatever you want, its just used in the UI
-	Scheme - Set to "https" since thats what the docker container uses
-	Host / IP Address - Use the *publically accessible* hostname / ip address of the Docker host running the backend container. You also need to include the port. eg `192.168.1.50:444` if `192.168.1.50` is the IP address of the machine running the backend container and its exposed on port 444. Its important to use the public IP address so that your browser can access the node in order to download the files.
-	Webservice API Key: The value of `OPENSEEDBOX_API_KEY` you started the backend container with above
-	Active: Tick this box
+   - Name - Whatever you want, its just used in the UI
+   - Scheme - Set to "https" since thats what the docker container uses
+   - Host / IP Address - Use the *publically accessible* hostname / ip address of the Docker host running the backend container. You also need to include the port. eg `192.168.1.50:444` if `192.168.1.50` is the IP address of the machine running the backend container and its exposed on port 444. Its important to use the public IP address so that your browser can access the node in order to download the files.
+   - Webservice API Key: The value of `OPENSEEDBOX_API_KEY` you started the backend container with above
+   - Active: Tick this box
 1. Click "Create new Node". You should see the uptime, available space etc. Click "Restart Backend" in order to start transmission-daemon.
 
 **Setting up Plans and Users**
@@ -127,18 +127,18 @@ There are two ways to do this. The first is to set up some plans and let the use
 
 1. Go to "Admin" => "Plans". Click "Create new Plan"
 1. Fill out the form to set the plan limits. Note that "Monthly Cost" doesnt do anything as the whole Invoicing thing has not been implemented and should probably be removed.
-	Plan Name - What to call your plan, eg "Plan 1"
-	Max. Diskspace (GB) - How much diskspace users on this plan can consume, eg "100"
-	Max. Active Torrents - How many active torrents users on this plan can have running at once, eg "5", or "-1" for unlimited
-	Monthly Cost - just put 0 in this field
-	Total Slots Available - How many users can assign themselves to this plan. eg if you had 500GB of diskspace and you set the Max. Diskspace on the plan to 100GB, then you could support 5 users. Set this to "10" for example
-	Visible to Customers - Whether or not users will see this plan in the list of plans after they log in.
+   - Plan Name - What to call your plan, eg "Plan 1"
+   - Max. Diskspace (GB) - How much diskspace users on this plan can consume, eg "100"
+   - Max. Active Torrents - How many active torrents users on this plan can have running at once, eg "5", or "-1" for unlimited
+   - Monthly Cost - just put 0 in this field
+   - Total Slots Available - How many users can assign themselves to this plan. eg if you had 500GB of diskspace and you set the Max. Diskspace on the plan to 100GB, then you could support 5 users. Set this to "10" for example
+   - Visible to Customers - Whether or not users will see this plan in the list of plans after they log in.
 1. Click "Create new Plan"
 1. Get your users to log in in order for their accounts to be created in the system.
 1. Browse to "Admin" => "Users".
 1. Click the "Edit" button next to each user and do the following:
-	- Assign them to the plan you just created
-	- Set a "Dedicated" node if desired. Using a dedicated node means that every torrent they start will go to the same node, instead of the next node available with enough free space.
+   - Assign them to the plan you just created
+   - Set a "Dedicated" node if desired. Using a dedicated node means that every torrent they start will go to the same node, instead of the next node available with enough free space.
 
 These users should now be able to start torrents via the Web UI if they log out / log back in again.
 
