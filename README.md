@@ -106,7 +106,7 @@ Note: this can be on the same or a different server than the frontend. If its on
 
 1. The following command will start an openseedbox-server container and map it to port 444 on your host. It will also mount the `openseedbox-data` folder you just created into the container. This is so that your data will persist between container restarts. Take note of OPENSEEDBOX_API_KEY as you'll need this value when adding the node to the frontend:
 
-	`docker run -v /home/user/openseedbox-data:/media/openseedbox --name openseedbox-node1 -p444:443 -e OPENSEEDBOX_API_KEY=node1 -d openseedbox/server`
+	`docker run -v /home/user/openseedbox-data:/media/openseedbox --name openseedbox-node1 -p 444:443 -e OPENSEEDBOX_API_KEY=node1 -d openseedbox/server`
 
 **Telling the frontend about the backend**
 
