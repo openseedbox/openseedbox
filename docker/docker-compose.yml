@@ -1,0 +1,25 @@
+openseedbox-mysql:
+  image: mysql
+  volumes:
+    - /var/lib/mysql
+  environment:
+    - MYSQL_USER=openseedbox
+    - MYSQL_PASSWORD=openseedbox
+    - MYSQL_DATABASE=openseedbox
+    - MYSQL_ROOT_PASSWORD=openseedbox
+
+openseedbox:
+  image: openseedbox/openseedbox
+  links:
+    - openseedbox-mysql:mysql
+  ports:
+    - "443:443"
+  environment:
+    - GOOGLE_CLIENTID
+
+openseedbox-server:
+  image: openseedbox/openseedbox-server
+  volumes:
+    - /media/openseedbox
+  ports:
+    - "444:443"
