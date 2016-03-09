@@ -84,11 +84,11 @@ The only supported installation method of Openseedbox is to use the Docker image
 
 1. The following command will start an openseedbox container and map it to port 443 on your host:
 
-	`docker run --name openseedbox --link openseedbox-mysql:mysql -p443:443 -e GOOGLE_CLIENTID=<the google clientid you got above> -d openseedbox/openseedbox`
+	`docker run --name openseedbox --link openseedbox-mysql:mysql -p 443:443 -e GOOGLE_CLIENTID=<the google clientid you got above> -d openseedbox/client`
 
 	If you arent using the 'quick n dirty' MySQL server above, then you'll need to run something like:
 
-	`docker run --name openseedbox -p443:443 -e MYSQL_HOST=<mysql host> -e MYSQL_PORT=<mysql port> -e MYSQL_USERNAME=<mysql username> -e MYSQL_PASSWORD=<mysql password> -e GOOGLE_CLIENTID=<the google clientid you got above> -d openseedbox/openseedbox`
+	`docker run --name openseedbox -p 443:443 -e MYSQL_HOST=<mysql host> -e MYSQL_PORT=<mysql port> -e MYSQL_USERNAME=<mysql username> -e MYSQL_PASSWORD=<mysql password> -e GOOGLE_CLIENTID=<the google clientid you got above> -d openseedbox/client`
 
 You should now be able to browse to Openseedbox via `https://hostname-or-ip-of-docker-host`
 
@@ -106,7 +106,7 @@ Note: this can be on the same or a different server than the frontend. If its on
 
 1. The following command will start an openseedbox-server container and map it to port 444 on your host. It will also mount the `openseedbox-data` folder you just created into the container. This is so that your data will persist between container restarts. Take note of OPENSEEDBOX_API_KEY as you'll need this value when adding the node to the frontend:
 
-	`docker run -v /home/user/openseedbox-data:/media/openseedbox --name openseedbox-node1 -p444:443 -e OPENSEEDBOX_API_KEY=node1 -d openseedbox/openseedbox-server`
+	`docker run -v /home/user/openseedbox-data:/media/openseedbox --name openseedbox-node1 -p444:443 -e OPENSEEDBOX_API_KEY=node1 -d openseedbox/server`
 
 **Telling the frontend about the backend**
 
