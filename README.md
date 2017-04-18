@@ -80,6 +80,13 @@ The only supported installation method of Openseedbox is to use the Docker image
 
 *Note* if you change the username/password from the defaults, then you'll need to specify them as environment variables below.
 
+**PostgreSQL**
+1. OpenSeedbox also supports PostgreSQL as database server. Here is a `docker` command to start one:
+
+	`docker run --name openseedbox-postgres -e POSTGRES_USER=openseedbox -e POSTGRES_PASSWORD=openseedbox -e POSTGRES_DB=openseedbox -d postgres`
+
+*Note:* You should configure the Frontend manually to connect to the PostgreSQL database!
+
 **Installing the Frontend**
 
 1. The following command will start an openseedbox container and map it to port 443 on your host:
