@@ -1,6 +1,6 @@
 #{extends "admin/index.html" /}
 %{ def renderTable = { items -> }%
-	#{if items.size > 0}
+	#{if items?.size > 0}
 	<table class="table table-condensed">
 		<tr>
 			<th style="width:15%">Title</th>
