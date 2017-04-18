@@ -44,10 +44,6 @@
 <span class="pull-right">Time: ${new Date()}</span>
 <h2>Poller Jobs <small><a href="@{Admin.runJobManually('poller')}">Run</a></small></h2>
 ${renderTable(pollerJobs)}
-<h2>Health Check Jobs <small><a href="@{Admin.runJobManually('healthcheck')}">Run</a></small></h2>
-${renderTable(healthCheckJobs)}
-<h2>Cleanup Jobs <small><a href="@{Admin.runJobManually('cleanup')}">Run</a></small></h2>
-${renderTable(cleanupJobs)}
 <script type="text/javascript">
 	$(document).ready(function() {
 		$("a.show-stack-trace").click(function() {
