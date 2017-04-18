@@ -8,6 +8,9 @@ application.log=DEBUG
 
 db.url=jdbc:mysql://localhost/openseedbox
 db.driver=com.mysql.jdbc.Driver
+#Database configuration for Postgres: url and driver
+#db.url=jdbc:postgresql://localhost/openseedbox
+#db.driver=org.postgresql.Driver
 db.user=user
 db.pass=pass
 
