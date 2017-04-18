@@ -26,13 +26,8 @@ public class Base extends BaseController {
 		if (fromCache != null) {
 			return fromCache;
 		}
-		long currentUserId = 0l;
 		if (session.contains("currentUserId")) {
-			String s = session.get("currentUserId");
-			currentUserId = Long.parseLong(s);
-		}
-		if (currentUserId > 0) {
-			fromCache = User.findById(currentUserId);
+			fromCache = User.findById(Long.parseLong(session.get("currentUserId")));
 			Cache.set(getCurrentUserCacheKey(), fromCache, "10mn");
 		}
 		return fromCache;
