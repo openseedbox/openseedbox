@@ -49,18 +49,14 @@ public class Client extends Base {
 		}
 
 		//check that limits have not been exceeded. if they have, pause all the torrents and notify user		
-		try {
-			if (u.hasExceededLimits()) {
-				List<UserTorrent> running = u.getRunningTorrents();
-				for (UserTorrent ut : running) {
-					new StartStopTorrentJob(ut.getTorrentHash(), TorrentAction.STOP, u.getId()).now();	
-					ut.setPaused(true);
-				}
-				UserTorrent.batch().update(running);
-				setGeneralErrorMessage("You have exceeded your plan limits! All your torrents will be paused until you free up some space.");
+		if (u.hasExceededLimits()) {
+			List<UserTorrent> running = u.getRunningTorrents();
+			for (UserTorrent ut : running) {
+				new StartStopTorrentJob(ut.getTorrentHash(), TorrentAction.STOP, u.getId()).now();
+				ut.setPaused(true);
 			}
-		} catch (Exception ex) {			
-			setGeneralErrorMessage(ex.toString());
+			UserTorrent.batch().update(running);
+			setGeneralErrorMessage("You have exceeded your plan limits! All your torrents will be paused until you free up some space.");
 		}
 	}
 	
