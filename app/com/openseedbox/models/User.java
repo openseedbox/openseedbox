@@ -18,7 +18,7 @@ import siena.Table;
 import siena.Unique;
 import siena.embed.Embedded;
 
-@Table("user")
+@Table("users")
 public class User extends ModelBase {
 	
 	@Email @Required @Column("email_address")

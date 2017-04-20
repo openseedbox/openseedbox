@@ -14,7 +14,7 @@ import siena.jdbc.JdbcPersistenceManager;
 public abstract class ModelBase extends EnhancedModel {
 	
 	@Id(Generator.AUTO_INCREMENT)
-	protected long id;
+	protected long id = Long.MAX_VALUE;
 
 	public long getId() {
 		return id;
@@ -25,7 +25,7 @@ public abstract class ModelBase extends EnhancedModel {
 	}
 	
 	public boolean isNew() {
-		return id == 0;
+		return id != Long.MAX_VALUE;
 	}
 	
 	public void insertOrUpdate() {
@@ -46,7 +46,7 @@ public abstract class ModelBase extends EnhancedModel {
 				try {
 					c = (Connection) me.invoke(m);
 				} catch (Exception ex) {
-					if (ex instanceof SQLException) {						
+					if (ex instanceof SQLException) {
 						throw (SQLException) ex;
 					}
 					Logger.error("Error: %s", ex);
@@ -54,6 +54,14 @@ public abstract class ModelBase extends EnhancedModel {
 			}
 		}
 		return c.createStatement().executeQuery(query);		
-	}	
-	
+	}
+
+	/**
+	 * siena.Model.save() is not auto increment safe with PostgreSQL! Use insertOrUpdate() instead!
+	 */
+	@Override
+	@Deprecated
+	public void save() {
+		insertOrUpdate();
+	}
 }
