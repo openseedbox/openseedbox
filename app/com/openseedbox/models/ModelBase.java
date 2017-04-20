@@ -25,7 +25,7 @@ public abstract class ModelBase extends EnhancedModel {
 	}
 	
 	public boolean isNew() {
-		return id != Long.MAX_VALUE;
+		return id == Long.MAX_VALUE;
 	}
 	
 	public void insertOrUpdate() {
