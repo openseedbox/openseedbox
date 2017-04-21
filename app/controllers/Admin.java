@@ -9,6 +9,7 @@ import com.openseedbox.code.Util.SelectItem;
 import com.openseedbox.jobs.NodePollerJob;
 import com.openseedbox.jobs.torrent.RemoveTorrentJob;
 import com.openseedbox.models.*;
+import com.openseedbox.models.util.SafeDeleteBase;
 import com.openseedbox.mvc.ISelectListItem;
 
 import play.data.validation.Valid;
@@ -72,10 +73,16 @@ public class Admin extends Base {
 	}
 
 	public static void deleteNode(long id) {
-		Node n = Node.findById(id);
-		n.delete();
-		setGeneralMessage("Node '" + n.getName() + "' deleted successfully.");
-		nodes();
+		safelyDeleteById(new SafeDeleteBase<Node>() {
+			@Override
+			public Node apply() { return new Node(); }
+			@Override
+			public Node findById(long id) { return Node.findById(id); }
+			@Override
+			public String nameInsteadId(Node d) { return d.getName(); }
+			@Override
+			public void afterFinish() { nodes(); }
+		}, id);
 	}
 
 	public static void plans() {
@@ -110,10 +117,16 @@ public class Admin extends Base {
 	}
 
 	public static void deletePlan(long id) {
-		 Plan p = Plan.findById(id);
-		 p.delete();
-		 setGeneralMessage("Plan '" + p.getName() + "' deleted successfully.");
-		 plans();
+		safelyDeleteById(new SafeDeleteBase<Plan>() {
+			@Override
+			public Plan apply() { return new Plan(); }
+			@Override
+			public Plan findById(long id) { return Plan.findById(id); }
+			@Override
+			public String nameInsteadId(Plan d) { return d.getName(); }
+			@Override
+			public void afterFinish() { plans(); }
+		}, id);
 	}
 
 	public static void users() {
@@ -148,15 +161,45 @@ public class Admin extends Base {
 	}
 
 	public static void deleteUser(long id) {
-		User u = User.findById(id);
-		u.delete();
-		//TODO: delete all UserTorrents and invoices and shit
-		List<UserTorrent> uts = u.getTorrents();
-		for (UserTorrent ut : uts) {
-			new RemoveTorrentJob(ut.getTorrentHash(), u.getId()).now();
+		safelyDeleteById(new SafeDeleteBase<User>() {
+			@Override
+			public User apply() { return new User(); }
+			@Override
+			public User findById(long id) { return User.findById(id); }
+			@Override
+			public boolean vetoFilter(User d) { return getCurrentUser().equals(d); }
+			@Override
+			public void afterVeto() {
+				setGeneralErrorMessage("Ask another admin to delete your account!");
+			}
+			@Override
+			public void afterDelete(User d) {
+				//TODO: delete all UserTorrents and invoices and shit
+				List<UserTorrent> uts = d.getTorrents();
+				for (UserTorrent ut : uts) {
+					new RemoveTorrentJob(ut.getTorrentHash(), d.getId()).now();
+				}
+			}
+			@Override
+			public String nameInsteadId(User d) { return d.getEmailAddress(); }
+			@Override
+			public void afterFinish() { users(); }
+		}, id);
+	}
+
+	private static void safelyDeleteById(SafeDeleteBase stages, long id) {
+		ModelBase c = stages.apply();
+		ModelBase d = stages.findById(id);
+		if (stages.vetoFilter(d)) {
+			stages.afterVeto();
+		} else if (d != null) {
+			d.delete();
+			stages.afterDelete(d);
+			setGeneralMessage(c.getClass().getSimpleName() + " '" + stages.nameInsteadId(d) + "' deleted successfully.");
+		} else {
+			setGeneralErrorMessage("No " + c.getClass().getSimpleName() + " found with id " + id + "!");
 		}
-		setGeneralMessage("User '" + u.getEmailAddress() + "' deleted.");
-		users();
+		stages.afterFinish();
 	}
 
 	public static void restartBackend(long id) {

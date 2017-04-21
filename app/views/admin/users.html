@@ -43,7 +43,9 @@
 		<td>${user.usedSpace}</td>
 		<td>
 			<a class="btn btn-small" href="@{Admin.editUser(user.id)}"><i class="icon-edit"></i></a>
+			#{if user != currentUser}
 			<a class="btn btn-danger btn-small" href="@{Admin.deleteUser(user.id)}"><i class="icon-remove"></i></a>
+			#{/if}
 		</td>
 	</tr>
 	#{/list}	
