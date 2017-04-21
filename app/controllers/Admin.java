@@ -153,6 +153,9 @@ public class Admin extends Base {
 		if (!Validation.hasErrors()) {
 			user.save();
 			setGeneralMessage("User updated successfully.");
+			if (user.equals(getCurrentUser())) {
+				Account.uncacheUser();
+			}
 			users();
 		}
 		Validation.keep();
