@@ -7,6 +7,8 @@ import java.util.List;
 import com.openseedbox.code.MessageException;
 import com.openseedbox.code.Util;
 import com.openseedbox.code.Util.SelectItem;
+import com.openseedbox.jobs.GenericJob;
+import com.openseedbox.jobs.GenericJobResult;
 import com.openseedbox.jobs.NodePollerJob;
 import com.openseedbox.jobs.torrent.RemoveTorrentJob;
 import com.openseedbox.models.*;
@@ -15,6 +17,7 @@ import com.openseedbox.mvc.ISelectListItem;
 
 import play.data.validation.Valid;
 import play.data.validation.Validation;
+import play.libs.F;
 import play.mvc.Before;
 
 public class Admin extends Base {
@@ -218,12 +221,18 @@ public class Admin extends Base {
 	}
 
 	public static void nodeStatus(long id) {
-		Node n = Node.findById(id);
-		try {
-			result(n.getNodeStatus());
-		} catch (Exception ex) {
-			resultError(ex.getMessage());
+		final Node n = Node.findById(id);
+		F.Promise<GenericJobResult> p = new GenericJob() {
+			@Override
+			public Object doGenericJob() {
+				return n.getNodeStatus();
+			}
+		}.now();
+		GenericJobResult res = await(p);
+		if (res.hasError()) {
+			resultError(res.getError().getMessage());
 		}
+		result(res.getResult());
 	}
 
 	public static void jobs() {
