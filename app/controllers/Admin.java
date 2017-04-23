@@ -1,6 +1,7 @@
 package controllers;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.openseedbox.code.MessageException;
@@ -227,7 +228,8 @@ public class Admin extends Base {
 
 	public static void jobs() {
 		renderArgs.put("active", "jobs");
-		List<JobEvent> pollerJobs = JobEvent.getLast(NodePollerJob.class, 5);			
+		List<JobEvent> pollerJobs = JobEvent.getLastList(Arrays.asList(
+				NodePollerJob.class, NodePollerJob.NodePollerWorker.class), 30);
 		render("admin/jobs.html", pollerJobs);
 	}
 

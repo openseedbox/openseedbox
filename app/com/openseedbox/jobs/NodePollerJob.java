@@ -14,7 +14,22 @@ public class NodePollerJob extends LoggedJob {
 	@Override
 	protected Object doGenericJob() {
 		List<Node> nodes = Node.getActiveNodes();
-		for (Node n : nodes) {	
+		for (Node n : nodes) {
+			new NodePollerWorker(n).now();
+		}
+		return null;
+	}
+
+	@JobName("Node Poller Worker")
+	public class NodePollerWorker extends LoggedJob {
+		Node n;
+
+		public NodePollerWorker(Node node) {
+			this.n = node;
+		}
+
+		@Override
+		protected Object doGenericJob() throws Exception {
 			List<ITorrent> torrents = n.getNodeBackend().listTorrents();
 			List<Torrent> fromDb = Torrent.getByHash(getHashStrings(torrents));
 			for (Torrent db : fromDb) {
@@ -24,10 +39,10 @@ public class NodePollerJob extends LoggedJob {
 				}
 			}
 			Torrent.batch().update(fromDb);
-		}	
-		return null;
+			return null;
+		}
 	}
-	
+
 	private List<String> getHashStrings(List<ITorrent> torrents) {
 		List<String> ret = new ArrayList<String>();
 		for (ITorrent t : torrents) {

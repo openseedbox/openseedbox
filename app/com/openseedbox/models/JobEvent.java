@@ -2,8 +2,9 @@ package com.openseedbox.models;
 
 import com.openseedbox.jobs.JobName;
 import com.openseedbox.jobs.LoggedJob;
-import java.util.Date;
-import java.util.List;
+
+import java.util.*;
+
 import siena.Column;
 import siena.Table;
 
@@ -25,11 +26,21 @@ public class JobEvent extends EventBase {
 		return JobEvent.all().order("-startDate").limit(30).fetch();
 	}
 	
-	public static List<JobEvent> getLast(Class jobClass, int limit) {
-		return JobEvent.all().filter("jobClass", jobClass.getName())
-				  .order("-startDate").limit(limit).fetch();
+	public static List<JobEvent> getLast(Class<? extends LoggedJob> jobClass, int limit) {
+		List<Class<? extends LoggedJob>> oneList = new ArrayList<Class<? extends LoggedJob>>();
+		oneList.add(jobClass);
+		return getLastList(oneList, limit);
 	}
-	
+
+	public static List<JobEvent> getLastList(List<Class<? extends LoggedJob>> jobClasses, int limit) {
+		List<String> jobClassNames = new ArrayList<String>();
+		for (Class jobClass: jobClasses) {
+			jobClassNames.add(jobClass.getName());
+		}
+		return JobEvent.all().filter("jobClass IN", jobClassNames)
+				.order("-startDate").limit(limit).fetch();
+	}
+
 	public static void deleteOlderThan(Date date) {
 		JobEvent.all().filter("startDate <", date).delete();
 	}

@@ -31,6 +31,7 @@
 			<tr class="hide full-stack-trace">
 				<td colspan="4">
 					<pre class="text-error">${job.stackTrace}</pre>
+					<a href="#" style="font-size: 70%" class="pull-right hide-stack-trace">Show less</a>
 				</td>
 			</tr>
 			#{/if}	
@@ -52,7 +53,11 @@ ${renderTable(pollerJobs)}
 			$(this).parents("tr:first").next(".full-stack-trace").show();
 			return false;
 		});
-	});
+		$("a.hide-stack-trace").click(function() {
+			$(this).parents("tr:first").hide();
+			$(this).parents("tr").prev().children("td:last").children().show();
+			return false;
+		});	});
 </script>
 <style type="text/css">
 	.full-stack-trace td {
