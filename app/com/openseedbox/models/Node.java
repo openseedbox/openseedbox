@@ -12,6 +12,7 @@ import com.openseedbox.code.MessageException;
 import com.openseedbox.code.Util;
 
 import play.data.validation.Required;
+import play.jobs.Job;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
 import play.libs.WS.WSRequest;
@@ -85,7 +86,14 @@ public class Node extends ModelBase {
 		HttpResponse res = getWebService("/status").get();
 		if (res.success()) {
 			JsonObject fullResponse = handleWebServiceResponse(res).getAsJsonObject();
-			return Util.getGson().fromJson(fullResponse, NodeStatus.class);			
+			status = Util.getGson().fromJson(fullResponse, NodeStatus.class);
+			new Job() {
+				@Override
+				public void doJob() throws Exception {
+					update();
+				}
+			}.now();
+			return status;
 		} else {
 			throw new MessageException("Node returned status: " + res.getStatus() + ". Probably java isnt running.");
 		}
