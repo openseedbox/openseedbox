@@ -20,8 +20,16 @@
 	</tr>
 #{list items:nodes, as:"node"}
 	<tr class="node-line" data-node-id="${node.id}">
-		<td><a href="${node.scheme}://${node.ipAddress}/" target="_blank">${node.name}</a></td>
-		<td>${node.ipAddress}</td>
+		<td><a href="${node.downloadScheme}://${node.downloadIpAddress}/" target="_blank">${node.name}</a></td>
+		<td>
+			#{if node.ipAddress == node.downloadIpAddress }
+				${node.ipAddress}
+			#{/if}
+			#{else}
+				<div>${node.ipAddress}</div>
+				<div>${node.downloadIpAddress}</div>
+			#{/else}
+		</td>
 		<td class="node-uptime"><img src="#{asset.ajax /}" /></td>
 		<td class="node-free-space"></td>
 		<td class="node-used-space"></td>

@@ -123,10 +123,23 @@ Note: this can be on the same or a different server than the frontend. If its on
 1. Fill out the form.
    - Name - Whatever you want, its just used in the UI
    - Scheme - Set to "https" since thats what the docker container uses
-   - Host / IP Address - Use the *publically accessible* hostname / ip address of the Docker host running the backend container. You also need to include the port. eg `192.168.1.50:444` if `192.168.1.50` is the IP address of the machine running the backend container and its exposed on port 444. Its important to use the public IP address so that your browser can access the node in order to download the files.
+   - Host / IP Address _For Communication_ - Use the hostname / ip address of the backend Docker container. Must be accessible from the frontend. You also need to include the port. eg `localhost:9001` if the backend runs on port `9001` on the same server where the frontend.
+   - Host / IP Address _For Downloads_ - Use the *publically accessible* hostname / ip address of the Docker host running the backend container. You also need to include the port. eg `192.168.1.50:444` if `192.168.1.50` is the IP address of the machine running the backend container and its exposed on port 444. Its important to use the public IP address so that your browser can access the node in order to download the files.
    - Webservice API Key: The value of `OPENSEEDBOX_API_KEY` you started the backend container with above
    - Active: Tick this box
 1. Click "Create new Node". You should see the uptime, available space etc. Click "Restart Backend" in order to start transmission-daemon.
+
+Docker [cheatseet](https://docs.docker.com/engine/reference/commandline/inspect/#get-an-instances-ip-address) for the ip address:
+```
+$ docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' openseedbox-node1
+172.17.0.3
+```
+Docker [cheatseet](https://docs.docker.com/engine/reference/commandline/inspect/#list-all-port-bindings) for the exposed ports:
+```
+docker inspect --format='{{range $p, $conf := .NetworkSettings.Ports}} {{$p}} -> {{(index $conf 0).HostPort}} {{end}}' openseedbox-node1
+443/tcp -> 444 
+```
+_Note_: The exposed source port is 443 in the above example, so the `scheme` should be `https`!
 
 **Setting up Plans and Users**
 

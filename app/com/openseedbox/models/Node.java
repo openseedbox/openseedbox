@@ -23,11 +23,13 @@ import siena.embed.Embedded;
 @Table("node")
 public class Node extends ModelBase {
 
-	@Required private String name;	
-	@Required @Column("ip_address") private String ipAddress;	
-	@Required private String scheme;			
-	@Required @Column("api_key") private String apiKey;	
-	private boolean down;			
+	@Required private String name;
+	@Required @Column("ip_address") private String ipAddress;
+	@Required private String scheme;
+	@Column("download_ip_address") private String downloadIpAddress;
+	@Column("download_scheme") private String downloadScheme;
+	@Required @Column("api_key") private String apiKey;
+	private boolean down;
 	private boolean active;
 	@Embedded private NodeStatus status;
 	
@@ -149,7 +151,11 @@ public class Node extends ModelBase {
 	public String getNodeUrl() {
 		return String.format("%s://%s", getScheme(), getIpAddress());
 	}
-	
+
+	public String getNodeDownloadUrl() {
+		return String.format("%s://%s", getDownloadScheme(), getDownloadIpAddress());
+	}
+
 	/* Getters and Setters */
 
 	public String getName() {
@@ -206,6 +212,22 @@ public class Node extends ModelBase {
 	public void setNodeStatus(NodeStatus status) {
 		this.status = status;
 	}
-	
-	/* End Getters and Setters */	
+
+	public String getDownloadIpAddress() {
+		return downloadIpAddress == null ? ipAddress : downloadIpAddress;
+	}
+
+	public void setDownloadIpAddress(String downloadIpAddress) {
+		this.downloadIpAddress = downloadIpAddress;
+	}
+
+	public String getDownloadScheme() {
+		return downloadScheme == null ? scheme : downloadScheme;
+	}
+
+	public void setDownloadScheme(String downloadScheme) {
+		this.downloadScheme = downloadScheme;
+	}
+
+	/* End Getters and Setters */
 }

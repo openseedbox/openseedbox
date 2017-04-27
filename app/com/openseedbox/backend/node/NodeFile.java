@@ -79,7 +79,7 @@ public class NodeFile extends AbstractFile {
 		if (node == null) {
 			throw new IllegalArgumentException("You need to call setNode() first");
 		}				
-		return node.getNodeUrl() + downloadLink;
+		return node.getNodeDownloadUrl() + downloadLink;
 	}
 	
 	public void setDownloadLink(String downloadLink) {

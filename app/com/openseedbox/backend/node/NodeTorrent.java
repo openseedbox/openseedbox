@@ -147,7 +147,7 @@ public class NodeTorrent extends AbstractTorrent {
 
 	public String getZipDownloadLink() {
 		return String.format("%s%s",
-				 node.getNodeUrl(), zipDownloadLink);
+				 node.getNodeDownloadUrl(), zipDownloadLink);
 	}	
 	
 	public void setZipDownloadLink(String link) {
