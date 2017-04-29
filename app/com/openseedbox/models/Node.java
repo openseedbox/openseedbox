@@ -214,7 +214,7 @@ public class Node extends ModelBase {
 	}
 
 	public String getDownloadIpAddress() {
-		return downloadIpAddress == null ? ipAddress : downloadIpAddress;
+		return StringUtils.isBlank(downloadIpAddress) ? ipAddress : downloadIpAddress;
 	}
 
 	public void setDownloadIpAddress(String downloadIpAddress) {
@@ -222,7 +222,7 @@ public class Node extends ModelBase {
 	}
 
 	public String getDownloadScheme() {
-		return downloadScheme == null ? scheme : downloadScheme;
+		return StringUtils.isBlank(downloadScheme) ? scheme : downloadScheme;
 	}
 
 	public void setDownloadScheme(String downloadScheme) {
