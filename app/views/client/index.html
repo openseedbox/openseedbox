@@ -49,7 +49,7 @@
 				<li class="group #{if currentGroup == group}active#{/if}" data-group-name="${group}">
 					<a href="@{Client.index(group)}">
 						#{if group == "Ungrouped" && groups.size == 1}
-							All
+							Ungrouped
 						#{/if}
 						#{else}
 							${group.length() > 15 ? group.substring(0, 15) : group}

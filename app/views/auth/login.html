@@ -26,6 +26,7 @@
     </div>
 </div>
 <script type="text/javascript">
+    var signinClicked = false;
     function signinCallback(authResult) {
         if (authResult['status']['signed_in'] && signinClicked) {
             var id_token = authResult["id_token"];
