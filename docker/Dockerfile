@@ -25,17 +25,13 @@ RUN apt-get -qq update \
 
 WORKDIR /src
 
-# Check out code we rely on
-RUN git clone -q https://github.com/erindru/openseedbox-common.git \
-	&& git clone --depth=1 -q https://github.com/erindru/openseedbox-server \
-	&& git clone --depth=1 -q https://github.com/erindru/openseedbox \
+# Check out code we rely on and install play! dependencies
+RUN git clone -q https://github.com/openseedbox/openseedbox-common \
+	&& git clone --depth=1 -q https://github.com/openseedbox/openseedbox \
 	&& git clone --depth=1 -q https://github.com/evanmiller/mod_zip \
-	&& git clone --depth=1 -q https://github.com/agentzh/headers-more-nginx-module
-
-# Install openseedbox dependencies
-RUN cd openseedbox-common && /play/play deps
-RUN cd openseedbox && /play/play deps
-RUN cd openseedbox-server && /play/play deps
+	&& git clone --depth=1 -q https://github.com/agentzh/headers-more-nginx-module \
+	&& /play/play deps openseedbox-common --sync \
+	&& /play/play deps openseedbox --sync
 
 # Download and compile nginx
 RUN wget -q -O nginx.tar.gz http://nginx.org/download/nginx-1.9.9.tar.gz \
