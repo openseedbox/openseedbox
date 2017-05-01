@@ -23,6 +23,11 @@ RUN apt-get -qq update \
 	&& apt-get -y clean \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# Install siena module to play
+RUN /play/play install siena-2.0.7 || echo "Downloading directly ... " \
+	&& curl -S -s -L -o siena-2.0.7.zip "https://www.playframework.com/modules/siena-2.0.7.zip" \
+	&& for zipfile in *.zip; do module="${zipfile%.zip}"; unzip -d /play/modules/"$module" "$zipfile"; rm "$zipfile"; done;
+
 WORKDIR /src
 
 # Check out code we rely on and install play! dependencies
