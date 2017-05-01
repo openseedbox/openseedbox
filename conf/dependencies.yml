@@ -2,7 +2,7 @@
 
 require:
     - play [1.2.5,1.3[
-    - playOffline -> siena 2.0.7
+    - play -> siena 2.0.7
     - openseedbox-common -> openseedbox-common latest.integration
     - org.postgresql -> postgresql 42.0.0.jre6: # PostgreSQL 9.6 server is too new for PostgreSQL 9.0 client shipped with Play 1.2.x, and the ".jre6" suffix is required to be compatible with JDK6
         force: true
@@ -13,8 +13,3 @@ repositories:
        artifact: ${application.path}/../[module]
        contains:
           - openseedbox-common
-    - offlinePlayRepo:
-       type: local
-       artifact: ${application.path}/play-offline/[module]-[revision].zip
-       contains:
-          - playOffline
