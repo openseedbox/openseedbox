@@ -242,6 +242,7 @@ public class Client extends Base {
 				groups.add(group);
 				user.setGroups(groups);
 				user.save();
+				Account.uncacheUser();
 			}
 		} else {
 			setGeneralErrorMessage("Please enter a group name.");
@@ -253,7 +254,8 @@ public class Client extends Base {
 		if (!StringUtils.isBlank(group)) {
 			User user = getCurrentUser();
 			user.removeTorrentGroup(group);
-			UserTorrent.blankOutGroup(user, group);			
+			UserTorrent.blankOutGroup(user, group);
+			Account.uncacheUser();
 		} else {
 			setGeneralErrorMessage("Please enter a group to remove.");
 		}
@@ -274,14 +276,17 @@ public class Client extends Base {
 			user.addTorrentGroup(new_group);
 		}
 		String groupName = (!StringUtils.isEmpty(new_group)) ? new_group : group;
-		for (UserTorrent ut : uts) {
-			if (groupName.equals(User.TORRENT_GROUP_UNGROUPED)) {
-				ut.setGroupName(null);
-			} else {
-				ut.setGroupName(groupName);
+		if (!getCurrentGroupName().equals(groupName)) {
+			for (UserTorrent ut : uts) {
+				if (groupName.equals(User.TORRENT_GROUP_UNGROUPED)) {
+					ut.setGroupName(null);
+				} else {
+					ut.setGroupName(groupName);
+				}
 			}
+			UserTorrent.batch().update(uts);
+			Account.uncacheUser();
 		}
-		UserTorrent.batch().update(uts);
 		index(groupName);
 	}
 	
@@ -408,6 +413,7 @@ public class Client extends Base {
 			User u = getCurrentUser();
 			u.setGroups(newOrder);
 			u.save();
+			Account.uncacheUser();
 		}
 		result(Util.convertToMap(new Object[] {
 			"success", true
