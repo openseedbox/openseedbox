@@ -72,30 +72,27 @@ The only supported installation method of Openseedbox is to use the Docker image
 
 *Note:* Docker does not work on OpenVZ VPS's, so if you have a VPS on which you want to run Openseedbox, you need a KVM VPS.
 
-**MySQL**
+**Database**
 
-1. OpenSeedbox needs a MySQL server available. If you have one running somewhere then you can set the OPENSEEDBOX_DATABASE_NAME, MYSQL_HOST, MYSQL_PORT, MYSQL_USERNAME and MYSQL_PASSWORD environment variables to tell Openseedbox how to connect to it. If you dont have one running somewhere, then you can easily start one:
+1. OpenSeedbox needs a database server available. MySQL and PostgreSQL are supported. If you have one running somewhere then you can set the `OPENSEEDBOX_JDBC_URL`, `OPENSEEDBOX_JDBC_DRIVER`, `OPENSEEDBOX_JDBC_USER` and `OPENSEEDBOX_JDBC_PASS` environment variables to tell Openseedbox how to connect to it.
 
-	`docker run --name openseedbox-mysql -e MYSQL_ROOT_PASSWORD=password -e MYSQL_USER=openseedbox -e MYSQL_PASSWORD=openseedbox -e MYSQL_DATABASE=openseedbox -d mysql`
-
-*Note* if you change the username/password from the defaults, then you'll need to specify them as environment variables below.
-
-**PostgreSQL**
-1. OpenSeedbox also supports PostgreSQL as database server. Here is a `docker` command to start one:
+1. If you dont have one running somewhere, then you can easily start one:
 
 	`docker run --name openseedbox-postgres -e POSTGRES_USER=openseedbox -e POSTGRES_PASSWORD=openseedbox -e POSTGRES_DB=openseedbox -d postgres`
 
-*Note:* You should configure the Frontend manually to connect to the PostgreSQL database!
+*Note* notice the container name: `openseedbox-postgres`.
 
 **Installing the Frontend**
 
-1. The following command will start an openseedbox container and map it to port 443 on your host:
+1. The following command will start an openseedbox container, link to the freshly created `openseedbox-postgres` database server container and map it to port 443 on your host:
 
-	`docker run --name openseedbox --link openseedbox-mysql:mysql -p 443:443 -e GOOGLE_CLIENTID=<the google clientid you got above> -d openseedbox/client`
+	`docker run --name openseedbox --link openseedbox-postgres:openseedboxdb -p 443:443 -e GOOGLE_CLIENTID=<the google clientid you got above> -d openseedbox/client`
 
-	If you arent using the 'quick n dirty' MySQL server above, then you'll need to run something like:
+	If you arent using the 'quick n dirty' PostgreSQL server above, then you'll need to run something like:
 
-	`docker run --name openseedbox -p 443:443 -e MYSQL_HOST=<mysql host> -e MYSQL_PORT=<mysql port> -e MYSQL_USERNAME=<mysql username> -e MYSQL_PASSWORD=<mysql password> -e GOOGLE_CLIENTID=<the google clientid you got above> -d openseedbox/client`
+	`docker run --name openseedbox -p 443:443 -e OPENSEEDBOX_JDBC_URL=<database jdbc url> -e OPENSEEDBOX_JDBC_DRIVER=<database jdbc driver> -e OPENSEEDBOX_JDBC_USER=<database username> -e OPENSEEDBOX_JDBC_PASS=<database password> -e GOOGLE_CLIENTID=<the google clientid you got above> -d openseedbox/client`
+
+The `OPENSEEDBOX_JDBC_DRIVER` will be either ` com.mysql.jdbc.Driver` or `org.postgresql.Driver`, depends on how the JDBC URL starts: `jdbc:mysql://....` or `jdbc:postgresql://....`.
 
 You should now be able to browse to Openseedbox via `https://hostname-or-ip-of-docker-host`
 

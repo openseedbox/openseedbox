@@ -3,11 +3,10 @@ FROM java:6-jre
 ENTRYPOINT /usr/bin/supervisord
 
 # Default values for config environment variables
-ENV OPENSEEDBOX_DATABASE_NAME=openseedbox
-ENV MYSQL_HOST=mysql
-ENV MYSQL_PORT=3306
-ENV MYSQL_USER=openseedbox
-ENV MYSQL_PASS=openseedbox
+ENV OPENSEEDBOX_JDBC_URL=jdbc:postgresql://openseedboxdb/openseedbox
+ENV OPENSEEDBOX_JDBC_DRIVER=org.postgresql.Driver
+ENV OPENSEEDBOX_JDBC_USER=openseedbox
+ENV OPENSEEDBOX_JDBC_PASS=openseedbox
 
 EXPOSE 443
 
