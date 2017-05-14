@@ -1,4 +1,4 @@
-FROM resin/amd64-debian:jessie
+FROM resin/aarch64-debian:jessie
 
 ENTRYPOINT /usr/bin/supervisord
 

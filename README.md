@@ -112,6 +112,12 @@ Note: this can be on the same or a different server than the frontend. If its on
 
 	`docker run -v /home/user/openseedbox-data:/media/openseedbox --name openseedbox-node1 -p 444:443 -e OPENSEEDBOX_API_KEY=node1 -d openseedbox/server`
 
+**OpenSeedbox on ARM**
+
+OpenSeedbox Docker repositories (`openseedbox/client`, `openseedbox/server`) has `armv7hf` and `aarch64` tags, so you could run the full OpenSeedbox stack e.g. on a Rasperry Pi 3.
+
+For the PostgreSQL backend you could use `aarch64/postgres` and `armhf/postgres` repositories!
+
 **Telling the frontend about the backend**
 
 1. Browse to the frontend and login. The first user will be automatically created as an admin user.
