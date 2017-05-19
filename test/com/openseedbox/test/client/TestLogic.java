@@ -35,7 +35,7 @@ public class TestLogic extends UnitTest {
 		assertEquals(us.getTotalDownloadRate(), "1.2 MB");
 		assertEquals(us.getTotalUploadRate(), "256 KB");
 	}
-	
+
 	class CustomUser extends User {
 
 		@Override
@@ -53,6 +53,7 @@ public class TestLogic extends UnitTest {
 			nt.setUploadSpeedBytes(two_mbps_in_bs);
 			nt.setTotalSizeBytes(bytes_in_85gb);
 			nt.setUploadedBytes(bytes_in_60gb);
+			nt.setHashString("");
 			ut.setTorrent(nt);
 			return Arrays.asList(new UserTorrent[] { ut });
 		}				
