@@ -23,9 +23,9 @@ RUN apt-get -qq update \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install play
-RUN wget -q -O play.zip "https://downloads.typesafe.com/play/1.2.7.2/play-1.2.7.2.zip" \
+RUN wget -q -O play.zip "https://downloads.typesafe.com/play/1.3.4/play-1.3.4.zip" \
 	&& unzip -q play.zip \
-	&& mv /play-1.2.7.2 /play \
+	&& mv /play-1.3.4 /play \
 	&& rm play.zip
 
 # Install siena module to play

@@ -29,7 +29,7 @@ Dependencies
 OpenSeedbox only runs in a Linux environment at this time due to linux-specific commands being executed within it
 
 * openjdk 1.6 (1.7 causes issues and 1.5 is too old)
-* playframework 1.2.5
+* playframework 1.3.4
 * transmission-daemon 2.51 or greater (backend only)
 * nginx compiled with mod_zip and headers_more module (if you want zip support), otherwise Apache will work too (youll need X-Sendfile support if you use Apache)
 
