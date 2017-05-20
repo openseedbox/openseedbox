@@ -1,0 +1,74 @@
+sudo: required
+services:
+  - docker
+  - postgresql
+dist: trusty
+language: java
+env:
+  global:
+    - DOCKER_CONTEXT=docker
+    - OPENSEEDBOX_JDBC_USER=postgres
+    - OPENSEEDBOX_JDBC_PASS=""
+    - OPENSEEDBOX_JDBC_URL=jdbc:postgresql://localhost/travis_ci_test
+    - OPENSEEDBOX_JDBC_DRIVER=org.postgresql.Driver
+    - GOOGLE_CLIENTID=googleclientid
+before_install:
+  - env|grep TRAVIS
+  - psql -c 'create database travis_ci_test;' -U postgres
+#aliases
+aliases:
+  - &testInstall
+    - jdk_switcher use $JDK
+    - wget -q -O play.zip "https://downloads.typesafe.com/play/$PLAY_VERSION/play-$PLAY_VERSION.zip";
+    - unzip -q play.zip;
+    - mv play-$PLAY_VERSION play;
+    - rm play.zip;
+    - cp docker/application.conf conf/;
+    - play/play secret;
+    - play/play install siena-2.0.7; if [ $? -ne 0 ]; then echo "Downloading directly ... "; curl -S -s -L -o siena-2.0.7.zip "https://www.playframework.com/modules/siena-2.0.7.zip"; for zipfile in *.zip; do module="${zipfile%.zip}"; unzip -q -d play/modules/"$module" "$zipfile"; rm "$zipfile"; done; fi;
+    - git clone --depth=1 -q https://github.com/openseedbox/openseedbox-common ../openseedbox-common;
+    - play/play deps ../openseedbox-common;
+    - play/play deps;
+  - &dockerInstall
+    - travis_retry sudo apt-get -qq update
+    - travis_retry sudo apt-get -qq install -y --no-install-recommends qemu-user-static binfmt-support
+    - sudo update-binfmts --display qemu-arm
+    - sudo update-binfmts --display qemu-aarch64
+  - &dockerBuildAndTest
+    - if [ ! -z "$DOCKER_REPO" -a ! -z "$DOCKER_TAG" ]; then export DOCKER_FILE=$DOCKER_CONTEXT/$DOCKER_TAG.Dockerfile ; fi
+    - if [ ! -z "$DOCKER_FILE" -a -f "$DOCKER_FILE" ]; then  set -e; set -o pipefail; docker build -f $DOCKER_FILE -t $DOCKER_REPO:$DOCKER_TAG $DOCKER_CONTEXT; export DOCKER_BUILD_SUCCESS=$? ; else echo "Skipping build of Dockerfile $DOCKER_FILE"; fi;
+    - if [ ! -z "$DOCKER_BUILD_SUCCESS" -a -z "$DOCKER_SKIP_TEST" ]; then  set -e; set -o pipefail; docker run --rm -ti --net=host -e OPENSEEDBOX_JDBC_URL -e OPENSEEDBOX_JDBC_USER -e GOOGLE_CLIENTID --entrypoint /play/play $DOCKER_REPO:$DOCKER_TAG auto-test /src/openseedbox/ ; export DOCKER_TEST_SUCCESS=$?; else echo "Not testing Docker image"; fi;
+  - &dockerPush
+    - if [ "$TRAVIS_PULL_REQUEST" == "false" -a "$TRAVIS_BRANCH" == "master" -a ! -z "$DOCKER_USERNAME" -a ! -z "$DOCKER_PASSWORD" ]; then docker login -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD; export DOCKER_LOGIN_SUCCESS=$?; else echo "Not logging in"; fi;
+    - if [ "$DOCKER_BUILD_SUCCESS" == "0" -a "$DOCKER_LOGIN_SUCCESS" == "0" -a -z "$DOCKER_SKIP_PUSH" ]; then docker push $DOCKER_REPO:$DOCKER_TAG; else echo "Not pushing Docker image"; fi;
+# define build stages
+jobs:
+  include:
+    - &play-test
+      stage: play test
+      env:
+        - PLAY_VERSION=1.3.4 JDK=openjdk7
+      install: *testInstall
+      script: play/play autotest
+    - <<: *play-test
+      env:
+        - PLAY_VERSION=1.3.4 JDK=openjdk8
+    - <<: *play-test
+      env:
+        - PLAY_VERSION=1.4.4 JDK=openjdk7
+    - <<: *play-test
+      env:
+        - PLAY_VERSION=1.4.4 JDK=openjdk8
+    - &docker-build
+      stage: docker build and run
+      env:
+        - DOCKER_TAG=armv7hf
+        - DOCKER_SKIP_TEST=skipit
+      install: *dockerInstall
+      before_script: *dockerBuildAndTest
+      script: *dockerPush
+    - <<: *docker-build
+      env:
+        - DOCKER_TAG=aarch64
+after_failure:
+  - cat ./test-result/*.failed.html
