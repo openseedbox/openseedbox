@@ -16,8 +16,9 @@
     <div class="signin">
         <span id="signinButton">
             <span
-              class="g-signin"
-              data-callback="signinCallback"
+              class="g-signin2"
+              data-onsuccess="onSignIn"
+              data-onfailure="onSignInFailure"
               data-clientid="${clientId}"
               data-cookiepolicy="single_host_origin"
               data-scope="openid email profile">
@@ -27,13 +28,19 @@
 </div>
 <script type="text/javascript">
     var signinClicked = false;
-    function signinCallback(authResult) {
-        if (authResult['status']['signed_in'] && signinClicked) {
-            var id_token = authResult["id_token"];
+    function onSignIn(googleUser) {
+        if (googleUser.isSignedIn() && signinClicked) {
+            var id_token = googleUser.getAuthResponse().id_token;
             document.location.href = "@{Auth.authenticate()}?id_token=" + id_token;
-        } else {
-            console.log("Unable to sign in: ", authResult["error"]);
+        } else if (googleUser.isSignedIn()) {
+            gapi.auth2.getAuthInstance().signOut().then(function () {
+                console.log('User signed out.');
+            });
         }
+    }
+
+    function onSignInFailure() {
+        console.log("Unable to sign in!");
     }
 
     $("#signinButton").click(function() {
