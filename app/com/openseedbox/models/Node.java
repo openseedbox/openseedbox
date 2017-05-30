@@ -34,11 +34,15 @@ public class Node extends ModelBase {
 	@Embedded private EmbeddableNodeStatus status;
 	
 	public static Node getBestForNewTorrent(User u) {
-		//TODO: work this out properly. For now, just use the first one
 		if (u.hasDedicatedNode()) {
 			return u.getDedicatedNode();
 		}
-		return Node.all().limit(1).get();
+		//TODO: work this out properly. For now, just use the first one
+		Node node = Node.all().filter("active", true).limit(1).get();
+		if (node == null) {
+			throw new IllegalStateException("No available Node was found for you!");
+		}
+		return node;
 	}
 	
 	public static List<Node> getActiveNodes() {
