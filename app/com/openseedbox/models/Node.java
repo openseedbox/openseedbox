@@ -1,16 +1,14 @@
 package com.openseedbox.models;
 
-import java.util.List;
-
-import org.apache.commons.lang.StringUtils;
-
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.openseedbox.backend.*;
+import com.openseedbox.backend.INodeStatus;
+import com.openseedbox.backend.ITorrentBackend;
 import com.openseedbox.backend.node.NodeBackend;
 import com.openseedbox.code.MessageException;
 import com.openseedbox.code.Util;
-
+import com.openseedbox.models.util.EmbeddableNodeStatus;
+import org.apache.commons.lang.StringUtils;
 import play.data.validation.Required;
 import play.jobs.Job;
 import play.libs.WS;
@@ -19,6 +17,8 @@ import play.libs.WS.WSRequest;
 import siena.Column;
 import siena.Table;
 import siena.embed.Embedded;
+
+import java.util.List;
 
 @Table("node")
 public class Node extends ModelBase {
@@ -31,7 +31,7 @@ public class Node extends ModelBase {
 	@Required @Column("api_key") private String apiKey;
 	private boolean down;
 	private boolean active;
-	@Embedded private NodeStatus status;
+	@Embedded private EmbeddableNodeStatus status;
 	
 	public static Node getBestForNewTorrent(User u) {
 		//TODO: work this out properly. For now, just use the first one
@@ -88,7 +88,7 @@ public class Node extends ModelBase {
 		HttpResponse res = getWebService("/status").get();
 		if (res.success()) {
 			JsonObject fullResponse = handleWebServiceResponse(res).getAsJsonObject();
-			status = Util.getGson().fromJson(fullResponse, NodeStatus.class);
+			status = Util.getGson().fromJson(fullResponse, EmbeddableNodeStatus.class);
 			new Job() {
 				@Override
 				public void doJob() throws Exception {
@@ -209,7 +209,7 @@ public class Node extends ModelBase {
 		this.scheme = scheme;
 	}
 	
-	public void setNodeStatus(NodeStatus status) {
+	public void setNodeStatus(EmbeddableNodeStatus status) {
 		this.status = status;
 	}
 
