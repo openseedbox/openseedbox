@@ -13,5 +13,24 @@ if [ "$GOOGLE_CLIENTID" == "" ]; then
 	exit 1
 fi
 
-echo "Starting play"
-exec /play/play run
+echo "Starting play in $PWD"
+
+DOCKER_CGROUP=`basename $(head -n1 /proc/self/cgroup)`
+VOLUME_CGROUP_FILES=`ls /cgroup 2>/dev/null`
+SYSFS_CGROUP_FILES=`ls /sys/fs/cgroup 2>/dev/null`
+CGROUP_MOUNT="'-v /sys/fs/cgroup/:/cgroup:ro'"
+if [ -z "$SYSFS_CGROUP_FILES" ]; then
+	if [ -n "$VOLUME_CGROUP_FILES" ]; then
+		for cgroup_line in `find /cgroup -wholename *$DOCKER_CGROUP -type d` ;
+		do
+			cgroup_type=`echo $cgroup_line|cut -d/ -f3`
+			echo Setting cgroup limit: $cgroup_type
+			ln -s $cgroup_line /sys/fs/cgroup/$cgroup_type
+		done;
+	else
+		echo "WARNING: Could not enforce automatically cgroup memory limit to container"
+		echo "WARNING: Try running the container with $CGROUP_MOUNT option"
+	fi;
+fi;
+
+exec /play/play run -XshowSettings:vm -XX:+UseSerialGC -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
