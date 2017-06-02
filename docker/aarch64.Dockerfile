@@ -69,3 +69,5 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 #copy run script
 COPY run.sh /run.sh
+
+WORKDIR /src/openseedbox
