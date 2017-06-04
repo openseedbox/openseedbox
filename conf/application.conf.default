@@ -24,6 +24,7 @@ siena.ddl=update
 #Note: nginx does the SSL in production so no https port required
 http.port=9000
 application.session.maxAge=3d
+application.session.cookie=PLAY_OPENSEEDBOX
 
 #Paste your google ClientID here. See the README for setting up the app in the Google Developers console
 google.clientid=
