@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 import siena.Column;
 import siena.Table;
+import siena.Text;
 
 @Table("user_message")
 public class UserMessage extends ModelBase {
@@ -14,7 +15,7 @@ public class UserMessage extends ModelBase {
 	
 	private State state;			
 	private String heading;	
-	private String message;	
+	@Text private String message;
 	@Column("user_id") private User user;		
 	@Column("create_date") private Date createDate;	
 	private boolean retrieved;
