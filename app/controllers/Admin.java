@@ -215,7 +215,7 @@ public class Admin extends Base {
 			n.getNodeBackend().restart();
 			setGeneralMessage("Restart request sent successfully!");
 		} catch (MessageException ex) {
-			setGeneralErrorMessage(ex.getMessage());
+			setGeneralErrorMessage(ex);
 		}
 		nodes();
 	}
@@ -230,7 +230,7 @@ public class Admin extends Base {
 		}.now();
 		GenericJobResult res = await(p);
 		if (res.hasError()) {
-			resultError(res.getError().getMessage());
+			resultError(res.getError());
 		}
 		result(res.getResult());
 	}

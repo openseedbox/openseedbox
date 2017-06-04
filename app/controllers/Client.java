@@ -180,7 +180,7 @@ public class Client extends Base {
 		}.now();
 		GenericJobResult res = await(p);
 		if (res.hasError()) {
-			resultError(res.getError().getMessage());
+			resultError(res.getError());
 		}
 		UserTorrent torrent = (UserTorrent) res.getResult();
 		renderTemplate("client/torrent-info.html", torrent);
@@ -209,7 +209,7 @@ public class Client extends Base {
 			}.now();
 			GenericJobResult res = await(p);
 			if (res.hasError()) {
-				resultError(res.getError().getMessage());
+				resultError(res.getError());
 			}
 			result(res.getResult());
 		} else {
@@ -222,7 +222,7 @@ public class Client extends Base {
 			}.now();
 			GenericJobResult res = await(p);
 			if (res.hasError()) {
-				resultError(res.getError().getMessage());
+				resultError(res.getError());
 			}
 			UserTorrent torrent = (UserTorrent) res.getResult();
 			renderTemplate("client/torrent-download.html", torrent);
@@ -352,7 +352,7 @@ public class Client extends Base {
 		if (res == null) { return null; }
 		if (res.hasError()) {
 			if (res.getError() instanceof MessageException) {
-				setGeneralErrorMessage(res.getError().getMessage());
+				setGeneralErrorMessage(res.getError());
 				return null;
 			}
 			if (StringUtils.contains(res.getError().getMessage(), "Connection refused")) {

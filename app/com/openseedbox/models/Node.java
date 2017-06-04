@@ -122,7 +122,7 @@ public class Node extends ModelBase {
 			} else if (ex.getMessage().contains("No route to host")) {
 				throw new MessageException("Unable to contact node at all! No route to host.");
 			}
-			throw new MessageException(ex.getMessage());
+			throw new MessageException(Util.getStackTrace(ex));
 		}		
 	}
 	

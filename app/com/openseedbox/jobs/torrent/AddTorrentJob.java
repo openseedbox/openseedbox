@@ -3,6 +3,7 @@ package com.openseedbox.jobs.torrent;
 import com.openseedbox.Config;
 import com.openseedbox.backend.ITorrent;
 import com.openseedbox.backend.ITorrentBackend;
+import com.openseedbox.code.Util;
 import com.openseedbox.jobs.LoggedJob;
 import com.openseedbox.models.Node;
 import com.openseedbox.models.Torrent;
@@ -75,7 +76,7 @@ public class AddTorrentJob extends LoggedJob<TorrentEvent> {
 		UserMessage um = new UserMessage();		
 		um.setUser(user);
 		um.setHeading("An error occured adding a torrent!");
-		um.setMessage("The following error occured: " + ex.getMessage());
+		um.setMessage(Util.getStackTrace(ex));
 		um.insert();
 	}		
 	
