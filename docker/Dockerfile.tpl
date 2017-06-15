@@ -14,11 +14,11 @@ EXPOSE 443
 # "Errors installing OpenJDK due to unexistent man pages directory"
 RUN for i in 1 2 3 4 5 6 7 8; do mkdir -p /usr/share/man/man$i; done;
 
-# Install needed packages
+# Install runtime packages
 RUN apt-get -qq update \
 	&& apt-get -qq install -y \
-		curl wget unzip git openjdk-7-jre-headless\
-		procps python supervisor build-essential openssl libpcre3-dev libssl-dev \
+		curl wget unzip git openjdk-7-jre-headless \
+		python supervisor \
 	&& apt-get -y clean \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -38,13 +38,18 @@ WORKDIR /src
 # Check out code we rely on and install play! dependencies
 RUN git clone -q https://github.com/openseedbox/openseedbox-common \
 	&& git clone --depth=1 -q https://github.com/openseedbox/openseedbox \
-	&& git clone --depth=1 -q https://github.com/evanmiller/mod_zip \
-	&& git clone --depth=1 -q https://github.com/agentzh/headers-more-nginx-module \
 	&& /play/play deps openseedbox-common --sync \
 	&& /play/play deps openseedbox --sync
 
 # Download and compile nginx
-RUN wget -q -O nginx.tar.gz http://nginx.org/download/nginx-1.9.9.tar.gz \
+RUN apt-get -qq update \
+	&& apt-get -qq install -y \
+		#{BUILD_DEPS} \
+	&& apt-get -y clean \
+	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+	&& git clone --depth=1 -q https://github.com/evanmiller/mod_zip \
+	&& git clone --depth=1 -q https://github.com/agentzh/headers-more-nginx-module \
+	&& wget -q -O nginx.tar.gz http://nginx.org/download/nginx-1.9.9.tar.gz \
 	&& tar -xf nginx.tar.gz \
 	&& cd nginx* \
 	&& ./configure --with-http_ssl_module --add-module=/src/mod_zip/ \
@@ -55,7 +60,12 @@ RUN wget -q -O nginx.tar.gz http://nginx.org/download/nginx-1.9.9.tar.gz \
 	&& make -s \
 	&& make -s install \
 	&& cd .. \
-	&& rm -fr nginx* mod_zip headers-more-nginx-module
+	&& rm -fr nginx* mod_zip headers-more-nginx-module \
+	&& apt-get -qq purge -y \
+		#{BUILD_DEPS} \
+	&& apt-get -y autoremove \
+	&& apt-get -y clean \
+	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 #create SSL keys
 RUN openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/C=US/ST=None/L=None/O=None/CN=openseedbox" \
