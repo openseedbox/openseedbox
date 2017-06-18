@@ -14,6 +14,8 @@ EXPOSE 443
 # "Errors installing OpenJDK due to unexistent man pages directory"
 RUN for i in 1 2 3 4 5 6 7 8; do mkdir -p /usr/share/man/man$i; done;
 
+#{CUSTOM_QEMU}
+
 # Install runtime packages
 RUN apt-get -qq update \
 	&& apt-get -qq install -y \
