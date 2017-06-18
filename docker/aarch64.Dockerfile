@@ -14,6 +14,11 @@ EXPOSE 443
 # "Errors installing OpenJDK due to unexistent man pages directory"
 RUN for i in 1 2 3 4 5 6 7 8; do mkdir -p /usr/share/man/man$i; done;
 
+RUN qemu-aarch64-static -version && sha256sum -b /usr/bin/qemu-aarch64-static
+ADD https://github.com/resin-io-library/base-images/raw/80a6c74407a90beb5a2b517119a823e776a052c7/debian/aarch64/jessie/qemu-aarch64-static /tmp/qemu-aarch64-static
+RUN chmod +x /tmp/qemu-aarch64-static && mv /tmp/qemu-aarch64-static /usr/bin/qemu-aarch64-static
+RUN qemu-aarch64-static -version && sha256sum -b /usr/bin/qemu-aarch64-static
+
 # Install runtime packages
 RUN apt-get -qq update \
 	&& apt-get -qq install -y \
