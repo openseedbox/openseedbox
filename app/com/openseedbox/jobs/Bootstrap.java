@@ -1,9 +1,10 @@
 package com.openseedbox.jobs;
 
-import java.util.List;
 import com.openseedbox.models.Node;
 import play.jobs.Job;
 import play.jobs.OnApplicationStart;
+
+import java.util.List;
 
 @OnApplicationStart
 public class Bootstrap extends Job {
@@ -16,6 +17,9 @@ public class Bootstrap extends Job {
 			n.setDown(false);				
 		}
 		Node.batch().update(nodes);
-	}		
+
+		//apply custom certificates
+		Node.reloadSSLContext();
+	}
 	
 }

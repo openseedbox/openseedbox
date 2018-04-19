@@ -5,10 +5,13 @@ import com.google.gson.JsonObject;
 import com.openseedbox.backend.INodeStatus;
 import com.openseedbox.backend.ITorrentBackend;
 import com.openseedbox.backend.node.NodeBackend;
+import com.openseedbox.code.ws.CustomSSLContext;
 import com.openseedbox.code.MessageException;
 import com.openseedbox.code.Util;
 import com.openseedbox.models.util.EmbeddableNodeStatus;
+import com.openseedbox.mvc.validation.IsCertificateOrBlankString;
 import org.apache.commons.lang.StringUtils;
+import play.data.validation.CheckWith;
 import play.data.validation.Required;
 import play.jobs.Job;
 import play.libs.WS;
@@ -16,9 +19,14 @@ import play.libs.WS.HttpResponse;
 import play.libs.WS.WSRequest;
 import siena.Column;
 import siena.Table;
+import siena.Text;
 import siena.embed.Embedded;
 
+import javax.net.ssl.SSLContext;
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Table("node")
 public class Node extends ModelBase {
@@ -29,9 +37,19 @@ public class Node extends ModelBase {
 	@Column("download_ip_address") private String downloadIpAddress;
 	@Column("download_scheme") private String downloadScheme;
 	@Required @Column("api_key") private String apiKey;
+	@Text @CheckWith(IsCertificateOrBlankString.class)
+	@Column("certificates_to_trust") private String certificatesToTrust;
 	private boolean down;
 	private boolean active;
 	@Embedded private EmbeddableNodeStatus status;
+
+	@Override
+	public void insertOrUpdate() {
+		super.insertOrUpdate();
+
+		//reload SSLContext
+		reloadSSLContext();
+	}
 	
 	public static Node getBestForNewTorrent(User u) {
 		if (u.hasDedicatedNode()) {
@@ -48,7 +66,11 @@ public class Node extends ModelBase {
 	public static List<Node> getActiveNodes() {
 		return Node.all().filter("active", true).fetch();
 	}
-	
+
+	public static List<Node> getNodesWithCertificates() {
+		return Node.all().filter("certificatesToTrust !=", null).fetch();
+	}
+
 	/**
 	 * Returns the total space available from all the nodes in the system
 	 * @return The space, in bytes
@@ -80,7 +102,26 @@ public class Node extends ModelBase {
 		}
 		return space;		
 	}
-	
+
+	public static List<Map.Entry<String, String>> getAllUriWithCertificate(List<Node> nodes) {
+		StringBuilder certificatesStringBuilder = new StringBuilder();
+		List<Map.Entry<String, String>> entryList = new ArrayList<Map.Entry<String, String>>();
+		for (Node n : nodes) {
+			if (!StringUtils.isEmpty(StringUtils.trimToEmpty(n.getCertificatesToTrust()))) {
+				entryList.add(new AbstractMap.SimpleEntry<String, String>(n.getIpAddress(), n.getCertificatesToTrust()));
+			}
+		}
+		return entryList;
+	}
+
+	public static void reloadSSLContext() {
+		List<Map.Entry<String, String>> uriWithcertificatesToTrust = getAllUriWithCertificate(getNodesWithCertificates());
+		if (uriWithcertificatesToTrust.size() > 0) {
+			SSLContext customSslContext = CustomSSLContext.getSslContext(uriWithcertificatesToTrust);
+			SSLContext.setDefault(customSslContext);
+		}
+	}
+
 	public INodeStatus getNodeStatus() {
 		return getNodeStatus(false);
 	}
@@ -140,7 +181,7 @@ public class Node extends ModelBase {
 				  .setParameter("api_key", this.apiKey);
 	}
 	
-	public WSRequest getWebService(String action, String hash) {		
+	public WSRequest getWebService(String action, String hash) {
 		WSRequest req = getWebService(action);
 		req.setParameter("hash", hash);
 		return req;
@@ -231,6 +272,14 @@ public class Node extends ModelBase {
 
 	public void setDownloadScheme(String downloadScheme) {
 		this.downloadScheme = downloadScheme;
+	}
+
+	public String getCertificatesToTrust() {
+		return certificatesToTrust;
+	}
+
+	public void setCertificatesToTrust(String certificatesToTrust) {
+		this.certificatesToTrust = certificatesToTrust;
 	}
 
 	/* End Getters and Setters */

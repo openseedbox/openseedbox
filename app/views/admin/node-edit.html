@@ -15,7 +15,8 @@
 		#{form.text name:"node.ipAddress", value:node?.ipAddress, label:"Host / IP Address : Port For Communication", help: "e.g. localhost:9001<br/>should be accessible from the server" /}
 		#{form.text name:"node.downloadScheme", value: node?.scheme == node?.downloadScheme ? null : node?.downloadScheme, label:"Scheme For Downloads", css_class:"input-mini", help:"optional, leave empty if it's the same" /}
 		#{form.text name:"node.downloadIpAddress", value: node?.ipAddress == node?.downloadIpAddress ? null : node?.downloadIpAddress, label:"Host / IP Address : Port For Downloads", help: "optional, leave empty if it's the same" /}
-		#{form.text name:"node.apiKey", value:node?.apiKey, label:"Webservice API Key" /}			
+		#{form.text name:"node.apiKey", value:node?.apiKey, label:"Webservice API Key" /}
+		#{form.textarea name:"node.certificatesToTrust", value:node?.certificatesToTrust, label:"Certificates To Trust", css_class: "span8", help: "e.g. self signed certificate" /}
 		#{form.checkbox name:"node.active", value:node?.active, label:"Active" /}
 		<div class="form-actions"> 
 			<a class="btn btn-danger pull-right" href="@{Admin.nodes()}">Cancel</a>
