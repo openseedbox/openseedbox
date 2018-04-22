@@ -2,9 +2,9 @@ OpenSeedbox - Open Source Seedbox UI - https://www.openseedbox.com
 
 Comprised of the following projects:
 
-* Common Code (openseedbox-common) : https://github.com/erindru/openseedbox-common
-* Frontend (openseedbox) : https://github.com/erindru/openseedbox
-* Backend (openseedbox-server) : https://github.com/erindru/openseedbox-server
+* Common Code (openseedbox-common) : https://github.com/openseedbox/openseedbox-common
+* Frontend (openseedbox) : https://github.com/openseedbox/openseedbox
+* Backend (openseedbox-server) : https://github.com/openseedbox/openseedbox-server
 
 Overview
 --------
