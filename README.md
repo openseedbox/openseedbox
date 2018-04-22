@@ -1,4 +1,4 @@
-OpenSeedbox - Open Source Seedbox UI - http://www.openseedbox.com
+OpenSeedbox - Open Source Seedbox UI - https://www.openseedbox.com
 
 Comprised of the following projects:
 
@@ -10,7 +10,6 @@ Overview
 --------
 OpenSeedbox is a web-based UI for bittorrent. It is designed to be multi-user and make use of existing bittorrent clients to do the actual downloading. Currently only transmission-daemon is supported as a backend but more can be implemented via the ITorrentBackend interface.
 
-**OpenSeedbox is still very experimental and really only intended for developers at the moment!**
 
 Features
 --------
@@ -28,10 +27,10 @@ Dependencies
 ------------
 OpenSeedbox only runs in a Linux environment at this time due to linux-specific commands being executed within it
 
-* openjdk 1.6 (1.7 causes issues and 1.5 is too old)
-* playframework 1.3.4
-* transmission-daemon 2.51 or greater (backend only)
-* nginx compiled with mod_zip and headers_more module (if you want zip support), otherwise Apache will work too (youll need X-Sendfile support if you use Apache)
+* OpenJDK >= 1.6 & < 1.9
+* Play! Framework >= 1.3.4 & < 1.5
+* transmission-daemon >= 2.51 (backend only)
+* Nginx compiled with mod_zip and headers_more module (if you want zip support), otherwise Apache will work too (youll need X-Sendfile support if you use Apache)
 
 [Architecture](https://github.com/gregorkistler/openseedbox/wiki/Architecture)  
 [Installation](https://github.com/gregorkistler/openseedbox/wiki/Installation)  
