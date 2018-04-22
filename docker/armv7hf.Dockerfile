@@ -49,7 +49,7 @@ RUN apt-get -qq update \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
 	&& git clone --depth=1 -q https://github.com/evanmiller/mod_zip \
 	&& git clone --depth=1 -q https://github.com/agentzh/headers-more-nginx-module \
-	&& wget -q -O nginx.tar.gz http://nginx.org/download/nginx-1.9.9.tar.gz \
+	&& wget -q -O nginx.tar.gz http://nginx.org/download/nginx-1.14.0.tar.gz \
 	&& tar -xf nginx.tar.gz \
 	&& cd nginx* \
 	&& ./configure --with-http_ssl_module --add-module=/src/mod_zip/ \
