@@ -32,6 +32,8 @@ OpenSeedbox only runs in a Linux environment at this time due to linux-specific 
 * transmission-daemon >= 2.51 (backend only)
 * Nginx compiled with mod_zip and headers_more module (if you want zip support), otherwise Apache will work too (youll need X-Sendfile support if you use Apache)
 
+Wiki pages
+----------
 [Architecture](https://github.com/gregorkistler/openseedbox/wiki/Architecture)  
 [Installation](https://github.com/gregorkistler/openseedbox/wiki/Installation)  
 [Configuration Reference](https://github.com/gregorkistler/openseedbox/wiki/Configuration-Reference)  
