@@ -1,4 +1,4 @@
-FROM resin/amd64-debian:jessie
+FROM balenalib/amd64-debian-node
 
 ENTRYPOINT /usr/bin/supervisord
 
@@ -17,10 +17,19 @@ RUN for i in 1 2 3 4 5 6 7 8; do mkdir -p /usr/share/man/man$i; done;
 # Install runtime packages
 RUN apt-get -qq update \
 	&& apt-get -qq install -y \
-		curl wget unzip git openjdk-7-jre-headless \
+		curl wget unzip git gnupg software-properties-common \
 		python supervisor \
 	&& apt-get -y clean \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+	
+# Install adoptopenjdk-8-hotspot
+RUN wget -qO - https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public | apt-key add - \
+	&& add-apt-repository --yes https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/ \
+	&& apt-get -qq update \
+	&& apt-get -qq install -y adoptopenjdk-8-hotspot
+
+# Add the java home environment varriable
+RUN export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/jre
 
 # Install play
 RUN wget -q -O play.zip "https://downloads.typesafe.com/play/1.3.4/play-1.3.4.zip" \
@@ -45,11 +54,12 @@ RUN git clone -q https://github.com/openseedbox/openseedbox-common \
 RUN apt-get -qq update \
 	&& apt-get -qq install -y \
 		build-essential libpcre3-dev libssl-dev \
+	&& apt-get -qq install -y --reinstall zlibc zlib1g zlib1g-dev \
 	&& apt-get -y clean \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
 	&& git clone --depth=1 -q https://github.com/evanmiller/mod_zip \
 	&& git clone --depth=1 -q https://github.com/agentzh/headers-more-nginx-module \
-	&& wget -q -O nginx.tar.gz http://nginx.org/download/nginx-1.14.0.tar.gz \
+	&& wget -q -O nginx.tar.gz http://nginx.org/download/nginx-1.14.2.tar.gz \
 	&& tar -xf nginx.tar.gz \
 	&& cd nginx* \
 	&& ./configure --with-http_ssl_module --add-module=/src/mod_zip/ \
