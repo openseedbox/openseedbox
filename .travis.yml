@@ -1,11 +1,5 @@
 services:
   - docker
-  - postgresql
-addons:
-  postgresql: "11"
-  apt:
-    packages:
-    - openjdk-8-jdk-headless
 dist: bionic
 language: java
 env:
@@ -18,7 +12,6 @@ env:
     - GOOGLE_CLIENTID=googleclientid
 before_install:
   - env|grep TRAVIS
-  - sudo -u postgres psql -c 'create database travis_ci_test;'
 #aliases
 aliases:
   - &testInstall
@@ -44,8 +37,17 @@ jobs:
   include:
     - &play-test
       stage: play test
+      services:
+        - postgresql
+      addons:
+        postgresql: "11"
+        apt:
+          packages:
+            - openjdk-8-jdk-headless
       env:
         - PLAY_VERSION=1.3.4
+      before_install:
+        - sudo -u postgres psql -c 'create database travis_ci_test;'
       install: *testInstall
       script: play/play autotest
     - <<: *play-test
