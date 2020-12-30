@@ -32,13 +32,8 @@ aliases:
     - git clone --depth=1 -q https://github.com/openseedbox/openseedbox-common ../openseedbox-common;
     - play/play deps ../openseedbox-common;
     - play/play deps;
-  - &dockerInstall
-    - travis_retry sudo apt-get -qq update
-    - travis_retry sudo apt-get -qq install -y --no-install-recommends qemu-user-static binfmt-support
-    - sudo update-binfmts --display qemu-arm
-    - sudo update-binfmts --display qemu-aarch64
   - &dockerBuildAndTest
-    - if [ ! -z "$DOCKER_REPO" -a ! -z "$DOCKER_TAG" ]; then export DOCKER_FILE=$DOCKER_CONTEXT/$DOCKER_TAG.Dockerfile ; fi
+    - if [ ! -z "$DOCKER_REPO" -a ! -z "$DOCKER_TAG" -a -z "$DOCKER_FILE" ]; then export DOCKER_FILE=$DOCKER_CONTEXT/$DOCKER_TAG.Dockerfile ; fi
     - if [ ! -z "$DOCKER_FILE" -a -f "$DOCKER_FILE" ]; then  set -e; set -o pipefail; docker build -f $DOCKER_FILE -t $DOCKER_REPO:$DOCKER_TAG $DOCKER_CONTEXT; export DOCKER_BUILD_SUCCESS=$? ; else echo "Skipping build of Dockerfile $DOCKER_FILE"; fi;
     - if [ ! -z "$DOCKER_BUILD_SUCCESS" -a -z "$DOCKER_SKIP_TEST" ]; then  set -e; set -o pipefail; docker run --rm -ti --net=host -e OPENSEEDBOX_JDBC_URL -e OPENSEEDBOX_JDBC_USER -e GOOGLE_CLIENTID --entrypoint /play/play $DOCKER_REPO:$DOCKER_TAG auto-test /src/openseedbox/ ; export DOCKER_TEST_SUCCESS=$?; else echo "Not testing Docker image"; fi;
   - &dockerPush
@@ -61,11 +56,17 @@ jobs:
       env:
         - DOCKER_TAG=armv7hf
         - DOCKER_SKIP_TEST=skipit
-      install: *dockerInstall
+      arch: arm64
       before_script: *dockerBuildAndTest
       script: *dockerPush
     - <<: *docker-build
       env:
         - DOCKER_TAG=aarch64
+      arch: arm64
+    - <<: *docker-build
+      env:
+        - DOCKER_TAG=latest
+        - DOCKER_FILE=$DOCKER_CONTEXT/amd64.Dockerfile
+      arch: amd64
 after_failure:
   - cat ./test-result/*.failed.html
