@@ -10,6 +10,7 @@ env:
     - OPENSEEDBOX_JDBC_URL=jdbc:postgresql://localhost/travis_ci_test
     - OPENSEEDBOX_JDBC_DRIVER=org.postgresql.Driver
     - GOOGLE_CLIENTID=googleclientid
+    - POSTGRESQL_VERSION=11
 before_install:
   - env|grep TRAVIS
 #aliases
@@ -26,10 +27,15 @@ aliases:
     - play/play deps ../openseedbox-common;
     - play/play deps;
   - &dockerBuildAndTest
-    - docker context ls
     - if [ ! -z "$DOCKER_REPO" -a ! -z "$DOCKER_TAG" -a -z "$DOCKER_FILE" ]; then export DOCKER_FILE=$DOCKER_FILE_CONTEXT/$DOCKER_TAG.Dockerfile ; fi
     - if [ ! -z "$DOCKER_FILE" -a -f "$DOCKER_FILE" ]; then  set -e; set -o pipefail; docker build -f $DOCKER_FILE -t $DOCKER_REPO:$DOCKER_TAG $DOCKER_FILE_CONTEXT; export DOCKER_BUILD_SUCCESS=$? ; else echo "Skipping build of Dockerfile $DOCKER_FILE"; fi;
-    - if [ ! -z "$DOCKER_BUILD_SUCCESS" -a -z "$DOCKER_SKIP_TEST" ]; then  set -e; set -o pipefail; docker run --rm -ti --net=host -e OPENSEEDBOX_JDBC_URL -e OPENSEEDBOX_JDBC_USER -e GOOGLE_CLIENTID --entrypoint /play/play $DOCKER_REPO:$DOCKER_TAG auto-test /src/openseedbox/ ; export DOCKER_TEST_SUCCESS=$?; else echo "Not testing Docker image"; fi;
+    - if [ ! -z "$DOCKER_BUILD_SUCCESS" -a -z "$DOCKER_SKIP_TEST" ]; then
+        set -e; set -o pipefail;
+        docker run --name openseedbox-postgres -e POSTGRES_USER=$OPENSEEDBOX_JDBC_USER -e POSTGRES_PASSWORD=openseedbox -e POSTGRES_DB=openseedbox -d postgres:$POSTGRESQL_VERSION-alpine;
+        docker run --rm -ti --link openseedbox-postgres:openseedboxdb -e OPENSEEDBOX_JDBC_URL=jdbc:postgresql://openseedboxdb/openseedbox -e OPENSEEDBOX_JDBC_USER -e OPENSEEDBOX_JDBC_PASS=openseedbox -e GOOGLE_CLIENTID --entrypoint /play/play $DOCKER_REPO:$DOCKER_TAG auto-test /src/openseedbox/ ;
+        export DOCKER_TEST_SUCCESS=$?; else echo "Not testing Docker image";
+        docker stop openseedbox-postgres;
+      fi;
   - &dockerPush
     - if [ "$TRAVIS_PULL_REQUEST" == "false" -a "$TRAVIS_BRANCH" == "master" -a ! -z "$DOCKER_USERNAME" -a ! -z "$DOCKER_PASSWORD" ]; then docker login -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD; export DOCKER_LOGIN_SUCCESS=$?; else echo "Not logging in"; fi;
     - if [ "$DOCKER_BUILD_SUCCESS" == "0" -a "$DOCKER_LOGIN_SUCCESS" == "0" -a -z "$DOCKER_SKIP_PUSH" ]; then docker push $DOCKER_REPO:$DOCKER_TAG; else echo "Not pushing Docker image"; fi;
@@ -38,19 +44,20 @@ jobs:
   include:
     - &play-test
       stage: play test
-      services:
-        - postgresql
       addons:
-        postgresql: "11"
         apt:
           packages:
             - openjdk-8-jdk-headless
       env:
         - PLAY_VERSION=1.3.4
       before_install:
-        - sudo -u postgres psql -c 'create database travis_ci_test;'
+        - docker run -d --name travis-postgres -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust postgres:$POSTGRESQL_VERSION-alpine
+        - while ! pg_isready -h localhost; do sleep 5; done;
+        - psql -c 'create database travis_ci_test;' -h localhost -U postgres
       install: *testInstall
       script: play/play autotest
+      after_script:
+        - docker stop travis-postgres
     - <<: *play-test
       env:
         - PLAY_VERSION=1.4.4
@@ -58,7 +65,6 @@ jobs:
       stage: docker build and run
       env:
         - DOCKER_TAG=armv7hf
-        - DOCKER_SKIP_TEST=skipit
       arch: arm64
       before_script: *dockerBuildAndTest
       script: *dockerPush
