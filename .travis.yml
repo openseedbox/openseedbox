@@ -4,7 +4,7 @@ dist: bionic
 language: java
 env:
   global:
-    - DOCKER_CONTEXT=docker
+    - DOCKER_FILE_CONTEXT=docker
     - OPENSEEDBOX_JDBC_USER=postgres
     - OPENSEEDBOX_JDBC_PASS=""
     - OPENSEEDBOX_JDBC_URL=jdbc:postgresql://localhost/travis_ci_test
@@ -26,8 +26,9 @@ aliases:
     - play/play deps ../openseedbox-common;
     - play/play deps;
   - &dockerBuildAndTest
-    - if [ ! -z "$DOCKER_REPO" -a ! -z "$DOCKER_TAG" -a -z "$DOCKER_FILE" ]; then export DOCKER_FILE=$DOCKER_CONTEXT/$DOCKER_TAG.Dockerfile ; fi
-    - if [ ! -z "$DOCKER_FILE" -a -f "$DOCKER_FILE" ]; then  set -e; set -o pipefail; docker build -f $DOCKER_FILE -t $DOCKER_REPO:$DOCKER_TAG $DOCKER_CONTEXT; export DOCKER_BUILD_SUCCESS=$? ; else echo "Skipping build of Dockerfile $DOCKER_FILE"; fi;
+    - docker context ls
+    - if [ ! -z "$DOCKER_REPO" -a ! -z "$DOCKER_TAG" -a -z "$DOCKER_FILE" ]; then export DOCKER_FILE=$DOCKER_FILE_CONTEXT/$DOCKER_TAG.Dockerfile ; fi
+    - if [ ! -z "$DOCKER_FILE" -a -f "$DOCKER_FILE" ]; then  set -e; set -o pipefail; docker build -f $DOCKER_FILE -t $DOCKER_REPO:$DOCKER_TAG $DOCKER_FILE_CONTEXT; export DOCKER_BUILD_SUCCESS=$? ; else echo "Skipping build of Dockerfile $DOCKER_FILE"; fi;
     - if [ ! -z "$DOCKER_BUILD_SUCCESS" -a -z "$DOCKER_SKIP_TEST" ]; then  set -e; set -o pipefail; docker run --rm -ti --net=host -e OPENSEEDBOX_JDBC_URL -e OPENSEEDBOX_JDBC_USER -e GOOGLE_CLIENTID --entrypoint /play/play $DOCKER_REPO:$DOCKER_TAG auto-test /src/openseedbox/ ; export DOCKER_TEST_SUCCESS=$?; else echo "Not testing Docker image"; fi;
   - &dockerPush
     - if [ "$TRAVIS_PULL_REQUEST" == "false" -a "$TRAVIS_BRANCH" == "master" -a ! -z "$DOCKER_USERNAME" -a ! -z "$DOCKER_PASSWORD" ]; then docker login -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD; export DOCKER_LOGIN_SUCCESS=$?; else echo "Not logging in"; fi;
@@ -68,7 +69,7 @@ jobs:
     - <<: *docker-build
       env:
         - DOCKER_TAG=latest
-        - DOCKER_FILE=$DOCKER_CONTEXT/amd64.Dockerfile
+        - DOCKER_FILE=$DOCKER_FILE_CONTEXT/amd64.Dockerfile
       arch: amd64
 after_failure:
   - cat ./test-result/*.failed.html
