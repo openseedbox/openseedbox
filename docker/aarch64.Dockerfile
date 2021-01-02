@@ -1,4 +1,4 @@
-FROM resin/aarch64-debian:jessie
+FROM balenalib/aarch64-debian:buster
 
 ENTRYPOINT /usr/bin/supervisord
 
@@ -12,19 +12,24 @@ EXPOSE 443
 
 # See https://github.com/resin-io-library/base-images/issues/273
 # "Errors installing OpenJDK due to unexistent man pages directory"
-RUN for i in 1 2 3 4 5 6 7 8; do mkdir -p /usr/share/man/man$i; done;
-
-RUN qemu-aarch64-static -version && sha256sum -b /usr/bin/qemu-aarch64-static
-ADD https://github.com/resin-io-library/base-images/raw/80a6c74407a90beb5a2b517119a823e776a052c7/debian/aarch64/jessie/qemu-aarch64-static /tmp/qemu-aarch64-static
-RUN chmod +x /tmp/qemu-aarch64-static && mv /tmp/qemu-aarch64-static /usr/bin/qemu-aarch64-static
-RUN qemu-aarch64-static -version && sha256sum -b /usr/bin/qemu-aarch64-static
+#RUN mkdir /usr/share/man/man1
 
 # Install runtime packages
 RUN apt-get -qq update \
 	&& apt-get -qq install -y \
-		curl wget unzip git openjdk-7-jre-headless \
+		curl wget unzip git \
 		python supervisor \
+		zlibc zlib1g \
 	&& apt-get -y clean \
+	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Install openjdk from AdoptOpenJDK
+RUN apt-get -qq update && apt-get -qq install -y gnupg \
+	&& wget -qO - https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public | apt-key add - \
+	&& echo deb https://adoptopenjdk.jfrog.io/adoptopenjdk/deb $(. /etc/os-release && echo $VERSION_CODENAME) main > /etc/apt/sources.list.d/adoptopenjdk.list \
+	&& apt-get -qq update \
+	&& apt-get -qq install -y adoptopenjdk-8-hotspot-jre libatomic1 \
+	&& apt-get -qq purge -y gnupg \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install play
@@ -49,12 +54,12 @@ RUN git clone -q https://github.com/openseedbox/openseedbox-common \
 # Download and compile nginx
 RUN apt-get -qq update \
 	&& apt-get -qq install -y \
-		build-essential libpcre3-dev libssl-dev \
+		build-essential libpcre3-dev libssl-dev zlib1g-dev \
 	&& apt-get -y clean \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
 	&& git clone --depth=1 -q https://github.com/evanmiller/mod_zip \
 	&& git clone --depth=1 -q https://github.com/agentzh/headers-more-nginx-module \
-	&& wget -q -O nginx.tar.gz http://nginx.org/download/nginx-1.14.0.tar.gz \
+	&& wget -q -O nginx.tar.gz http://nginx.org/download/nginx-1.14.2.tar.gz \
 	&& tar -xf nginx.tar.gz \
 	&& cd nginx* \
 	&& ./configure --with-http_ssl_module --add-module=/src/mod_zip/ \
@@ -62,12 +67,12 @@ RUN apt-get -qq update \
 		--error-log-path=/var/log/nginx/error.log --pid-path=/var/run/nginx.pid \
 		--http-log-path=/var/log/nginx/access.log --lock-path=/var/lock/nginx.lock \
 		--sbin-path=/usr/sbin/nginx --add-module=/src/headers-more-nginx-module \
-	&& make -s \
+	&& make \
 	&& make -s install \
 	&& cd .. \
 	&& rm -fr nginx* mod_zip headers-more-nginx-module \
 	&& apt-get -qq purge -y \
-		build-essential libpcre3-dev libssl-dev \
+		build-essential libpcre3-dev libssl-dev zlib1g-dev \
 	&& apt-get -y autoremove \
 	&& apt-get -y clean \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
