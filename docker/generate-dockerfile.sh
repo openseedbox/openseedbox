@@ -3,25 +3,31 @@ set -e
 set -o pipefail
 
 archs='aarch64 amd64 armv7hf'
-suite='jessie'
-buildDeps='build-essential libpcre3-dev libssl-dev'
+suite='buster'
+buildDeps='build-essential libpcre3-dev libssl-dev zlib1g-dev'
 for arch in $archs; do
-	baseImage='resin/'$arch'-debian'
-	case $arch in
-		"aarch64")
-			customQemu='RUN qemu-aarch64-static -version \&\& sha256sum -b /usr/bin/qemu-aarch64-static\
-ADD https://github.com/resin-io-library/base-images/raw/80a6c74407a90beb5a2b517119a823e776a052c7/debian/aarch64/jessie/qemu-aarch64-static /tmp/qemu-aarch64-static\
-RUN chmod +x /tmp/qemu-aarch64-static \&\& mv /tmp/qemu-aarch64-static /usr/bin/qemu-aarch64-static\
-RUN qemu-aarch64-static -version \&\& sha256sum -b /usr/bin/qemu-aarch64-static'
+	baseImage='balenalib/'$arch'-debian'
+	case "$arch" in
+		aarch64)
+			# Not needed on Travis CI (but https://github.com/openseedbox/openseedbox/issues/70 exists)
+			#balenaCrossBuildBegin='RUN [ "cross-build-start" ]'
+			#balenaCrossBuildEnd='RUN [ "cross-build-end" ]'
+			;;
+		armv7hf)
+			# It's still needed, as armv7hf is still bogous on Travis CI
+			balenaCrossBuildBegin='RUN [ "cross-build-start" ]'
+			balenaCrossBuildEnd='RUN [ "cross-build-end" ]'
 			;;
 		*)
-			customQemu=''
+			balenaCrossBuildBegin=''
+			balenaCrossBuildEnd=''
 	esac;
 
 	dockerfile=$arch.Dockerfile
 	sed -e s~#{FROM}~$baseImage:$suite~g \
 		-e s~#{BUILD_DEPS}~"$buildDeps"~g \
-		-e s~#{CUSTOM_QEMU}~"$customQemu"~g \
+		-e s~#{BALENA_CROSSBUILD_BEGIN}~"$balenaCrossBuildBegin"~g \
+		-e s~#{BALENA_CROSSBUILD_END}~"$balenaCrossBuildEnd"~g \
 		-e '/./,/^$/!d' \
 		Dockerfile.tpl > $dockerfile
 
