@@ -63,7 +63,7 @@ jobs:
         - docker stop travis-postgres
     - <<: *play-test
       env:
-        - PLAY_VERSION=1.4.4
+        - PLAY_VERSION=1.4.6
     - &docker-build
       stage: docker build and run
       env:
