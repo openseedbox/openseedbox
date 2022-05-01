@@ -10,6 +10,8 @@ ENV OPENSEEDBOX_JDBC_PASS=openseedbox
 
 EXPOSE 443
 
+ENV JAVA_HOME=/java
+
 #{BALENA_CROSSBUILD_BEGIN}
 
 # See https://github.com/resin-io-library/base-images/issues/273
@@ -18,20 +20,21 @@ EXPOSE 443
 
 # Install runtime packages
 RUN apt-get -qq update \
-	&& apt-get -qq install -y \
+	&& apt-get -qq install -y --no-install-recommends \
 		curl wget unzip git \
 		python supervisor \
 		zlibc zlib1g \
 	&& apt-get -y clean \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Install openjdk from AdoptOpenJDK
+# Install Temurin JDK from Adoptium
 RUN apt-get -qq update && apt-get -qq install -y gnupg \
-	&& wget -qO - https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public | apt-key add - \
-	&& echo deb https://adoptopenjdk.jfrog.io/adoptopenjdk/deb $(. /etc/os-release && echo $VERSION_CODENAME) main > /etc/apt/sources.list.d/adoptopenjdk.list \
+	&& wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | apt-key add - \
+	&& echo "deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | tee /etc/apt/sources.list.d/adoptium.list \
 	&& apt-get -qq update \
-	&& apt-get -qq install -y adoptopenjdk-8-hotspot-jre libatomic1 \
-	&& apt-get -qq purge -y gnupg \
+	&& apt-get -qq install -y temurin-11-jdk \
+	&& jlink --add-modules ALL-MODULE-PATH --output /java/ --strip-debug --no-man-pages --compress=2 \
+	&& apt-get -qq purge -y gnupg temurin-11-jdk \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install play
