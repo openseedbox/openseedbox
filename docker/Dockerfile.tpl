@@ -38,10 +38,11 @@ RUN apt-get -qq update && apt-get -qq install -y gnupg \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install play
-RUN wget -q -O play.zip "https://downloads.typesafe.com/play/1.3.4/play-1.3.4.zip" \
-	&& unzip -q play.zip \
-	&& mv /play-1.3.4 /play \
-	&& rm play.zip
+ENV PLAY_VERSION=1.3.4
+RUN wget -q "https://downloads.typesafe.com/play/${PLAY_VERSION}/play-${PLAY_VERSION}.zip" \
+	&& unzip -q play-${PLAY_VERSION}.zip \
+	&& mv /play-${PLAY_VERSION} /play \
+	&& rm play-${PLAY_VERSION}.zip
 
 # Install siena module to play
 RUN /play/play install siena-2.0.7 || echo "Downloading directly ... " \
