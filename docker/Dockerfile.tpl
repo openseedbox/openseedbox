@@ -1,4 +1,4 @@
-FROM #{FROM}
+FROM balenalib/#{ARCH}-debian:buster
 
 ENTRYPOINT /usr/bin/supervisord
 
