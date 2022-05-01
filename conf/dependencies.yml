@@ -5,7 +5,7 @@ require:
     - play -> siena 2.0.7:
         transitive: false
     - openseedbox-common -> openseedbox-common latest.integration
-    - org.postgresql -> postgresql 42.2.2.jre6: # PostgreSQL 9.6 server is too new for PostgreSQL 9.0 client shipped with Play 1.2.x, and the ".jre6" suffix is required to be compatible with JDK6
+    - org.postgresql -> postgresql 42.3.4:
         force: true
 
 repositories:
