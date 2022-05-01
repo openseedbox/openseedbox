@@ -42,4 +42,4 @@ if [ -z "$SYSFS_CGROUP_FILES" ]; then
 	fi;
 fi;
 
-exec /play/play run -XshowSettings:vm -XX:+UseSerialGC -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
+exec /play/play run -XshowSettings:vm
