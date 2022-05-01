@@ -40,7 +40,7 @@ RUN apt-get -qq update && apt-get -qq install -y gnupg \
 # Install play
 ENV PLAY_VERSION=1.3.4
 RUN wget -q "https://downloads.typesafe.com/play/${PLAY_VERSION}/play-${PLAY_VERSION}.zip" \
-	&& unzip -q play-${PLAY_VERSION}.zip \
+	&& unzip -q play-${PLAY_VERSION}.zip -x play-${PLAY_VERSION}/documentation/* play-${PLAY_VERSION}/samples-and-tests/* \
 	&& mv /play-${PLAY_VERSION} /play \
 	&& rm play-${PLAY_VERSION}.zip
 
