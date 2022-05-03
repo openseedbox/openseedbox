@@ -1,6 +1,6 @@
 FROM balenalib/#{ARCH}-debian:buster
 
-ENTRYPOINT /usr/bin/supervisord
+ENTRYPOINT [ "/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf" ]
 
 # Default values for config environment variables
 ENV OPENSEEDBOX_JDBC_URL=jdbc:postgresql://openseedboxdb/openseedbox
