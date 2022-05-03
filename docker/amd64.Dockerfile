@@ -1,6 +1,6 @@
 FROM balenalib/amd64-debian:buster
 
-ENTRYPOINT /usr/bin/supervisord
+ENTRYPOINT [ "/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf" ]
 
 # Default values for config environment variables
 ENV OPENSEEDBOX_JDBC_URL=jdbc:postgresql://openseedboxdb/openseedbox
@@ -10,36 +10,40 @@ ENV OPENSEEDBOX_JDBC_PASS=openseedbox
 
 EXPOSE 443
 
+ENV JAVA_HOME=/java
+
 # See https://github.com/resin-io-library/base-images/issues/273
 # "Errors installing OpenJDK due to unexistent man pages directory"
 #RUN mkdir /usr/share/man/man1
 
 # Install runtime packages
 RUN apt-get -qq update \
-	&& apt-get -qq install -y \
+	&& apt-get -qq install -y --no-install-recommends \
 		curl wget unzip git \
 		python supervisor \
 		zlibc zlib1g \
 	&& apt-get -y clean \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Install openjdk from AdoptOpenJDK
+# Install Temurin JDK from Adoptium
 RUN apt-get -qq update && apt-get -qq install -y gnupg \
-	&& wget -qO - https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public | apt-key add - \
-	&& echo deb https://adoptopenjdk.jfrog.io/adoptopenjdk/deb $(. /etc/os-release && echo $VERSION_CODENAME) main > /etc/apt/sources.list.d/adoptopenjdk.list \
+	&& wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | apt-key add - \
+	&& echo "deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | tee /etc/apt/sources.list.d/adoptium.list \
 	&& apt-get -qq update \
-	&& apt-get -qq install -y adoptopenjdk-8-hotspot-jre libatomic1 \
-	&& apt-get -qq purge -y gnupg \
+	&& apt-get -qq install -y temurin-11-jdk \
+	&& jlink --add-modules ALL-MODULE-PATH --output /java/ --strip-debug --no-man-pages --compress=2 \
+	&& apt-get -qq purge -y gnupg temurin-11-jdk \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install play
-RUN wget -q -O play.zip "https://downloads.typesafe.com/play/1.3.4/play-1.3.4.zip" \
-	&& unzip -q play.zip \
-	&& mv /play-1.3.4 /play \
-	&& rm play.zip
+ENV PLAY_VERSION=1.4.6
+RUN wget -q "https://downloads.typesafe.com/play/${PLAY_VERSION}/play-${PLAY_VERSION}.zip" \
+	&& unzip -q play-${PLAY_VERSION}.zip -x play-${PLAY_VERSION}/documentation/* play-${PLAY_VERSION}/samples-and-tests/* \
+	&& mv /play-${PLAY_VERSION} /play \
+	&& rm play-${PLAY_VERSION}.zip
 
 # Install siena module to play
-RUN /play/play install siena-2.0.7 || echo "Downloading directly ... " \
+RUN echo y | /play/play install siena-2.0.7 || echo "Downloading directly ... " \
 	&& curl -S -s -L -o siena-2.0.7.zip "https://www.playframework.com/modules/siena-2.0.7.zip" \
 	&& for zipfile in *.zip; do module="${zipfile%.zip}"; unzip -d /play/modules/"$module" "$zipfile"; rm "$zipfile"; done;
 
@@ -59,7 +63,7 @@ RUN apt-get -qq update \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
 	&& git clone --depth=1 -q https://github.com/evanmiller/mod_zip \
 	&& git clone --depth=1 -q https://github.com/agentzh/headers-more-nginx-module \
-	&& wget -q -O nginx.tar.gz http://nginx.org/download/nginx-1.14.2.tar.gz \
+	&& wget -q -O nginx.tar.gz http://nginx.org/download/nginx-1.20.2.tar.gz \
 	&& tar -xf nginx.tar.gz \
 	&& cd nginx* \
 	&& ./configure --with-http_ssl_module --add-module=/src/mod_zip/ \
@@ -87,7 +91,8 @@ COPY application.conf /src/openseedbox/conf/application.conf
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-#copy run script
+#copy run scripts
 COPY run.sh /run.sh
+COPY stop-supervisord.sh /
 
 WORKDIR /src/openseedbox
