@@ -31,7 +31,7 @@ RUN apt-get -qq update && apt-get -qq install -y gnupg \
 	&& echo "deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | tee /etc/apt/sources.list.d/adoptium.list \
 	&& apt-get -qq update \
 	&& apt-get -qq install -y temurin-11-jdk \
-	&& jlink --add-modules ALL-MODULE-PATH --output /java/ --strip-debug --no-man-pages --compress=2 \
+	&& jlink --add-modules java.base,java.compiler,java.datatransfer,java.desktop,java.instrument,java.logging,java.management,java.management.rmi,java.naming,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.sql.rowset,java.transaction.xa,java.xml,jdk.crypto.cryptoki,jdk.jdi,jdk.management,jdk.unsupported --output /java/ --strip-debug --no-man-pages --compress=2 \
 	&& apt-get -qq purge -y gnupg temurin-11-jdk \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
