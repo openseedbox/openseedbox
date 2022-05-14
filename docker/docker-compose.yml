@@ -1,27 +1,28 @@
-openseedbox-postgres:
-  image: postgres
-  volumes:
-    - /var/lib/pgsql
-  environment:
-    - POSTGRES_USER=openseedbox
-    - POSTGRES_PASSWORD=openseedbox
-    - POSTGRES_DB=openseedbox
+services:
+  openseedbox-postgres:
+    image: postgres
+    volumes:
+      - /var/lib/pgsql
+    environment:
+      - POSTGRES_USER=openseedbox
+      - POSTGRES_PASSWORD=openseedbox
+      - POSTGRES_DB=openseedbox
 
-openseedbox-node1:
-  image: openseedbox/server
-  volumes:
-    - /media/openseedbox
-  ports:
-    - "444:443"
-  environment:
-    - OPENSEEDBOX_API_KEY
+  openseedbox-node1:
+    image: openseedbox/server
+    volumes:
+      - /media/openseedbox
+    ports:
+      - "444:443"
+    environment:
+      - OPENSEEDBOX_API_KEY
 
-openseedbox:
-  image: openseedbox/client
-  links:
-    - openseedbox-postgres:openseedboxdb
-    - openseedbox-node1:node1
-  ports:
-    - "443:443"
-  environment:
-    - GOOGLE_CLIENTID
+  openseedbox:
+    image: openseedbox/client
+    links:
+      - openseedbox-postgres:openseedboxdb
+      - openseedbox-node1:node1
+    ports:
+      - "443:443"
+    environment:
+      - GOOGLE_CLIENTID
