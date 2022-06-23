@@ -42,4 +42,4 @@ if [ -z "$SYSFS_CGROUP_FILES" ]; then
 	fi;
 fi;
 
-exec /play/play run -XshowSettings:vm
+$JAVA_HOME/bin/java -XshowSettings -cp $(/play/play cp --silent|grep '^\[.*\]$'|sed -e "s/', '/:/g;s/\['//;s/'\]//") -Dapplication.path=. play.server.Server
