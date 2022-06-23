@@ -26,12 +26,12 @@ public class Admin extends Base {
 	public static void checkAdmin() {
 		User u = getCurrentUser();
 		if (u == null || !u.isAdmin()) {
-			redirect("/auth/logout");
+			redirect("Auth.logout");
 		}
 	}
 
 	public static void index() {
-		redirect("/admin/stats");
+		redirect("Admin.stats");
 	}
 
 	public static void stats() {

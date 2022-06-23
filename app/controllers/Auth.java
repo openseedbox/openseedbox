@@ -75,7 +75,7 @@ public class Auth extends Base {
 				u.save();
 				session.put("currentUserId", u.getId());
 			}
-			redirect("/client");
+			redirect("Client.index");
 		} else if (body.has("error")) {
 			String errorAsString = body.get("error").getAsString();
 			Logger.warn("Got error from Google! Error: %s, token: %s", errorAsString, id_token);
