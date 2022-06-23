@@ -38,5 +38,6 @@ openseedbox.zip=true
 openseedbox.multizip=false
 openseedbox.zip.path=/rdr
 openseedbox.zip.manifestonly=false
-openseedbox.assets.prefix=/public
+openseedbox.context.path=
+openseedbox.assets.prefix=${openseedbox.context.path}/public
 

@@ -195,6 +195,7 @@ Configuration is in `openseedbox/conf/application.conf`
 * `openseedbox.zip` - 'true' or 'false'. If 'false', no zip options are shown in the UI
 * `openseedbox.zip.path` - the internal NGINX path for multi-torrent zips. Is '/rdr' in the default nginx config.
 * `openseedbox.zip.manifestonly` - 'true' or 'false'. Only set to 'true' for debugging multi-torrent zips.
+* `openseedbox.context.path` - The context root where the application run. Default empty, but configurable with `OPENSEEDBOX_CONTEXT_PATH` environment variable in the Docker image.
 * `openseedbox.assets.prefix` - Used as the prefix to all asset URLs. This is so you can upload all the assets (the /public directory) to something like Amazon S3 and have them served from there.
 
 **Backend**

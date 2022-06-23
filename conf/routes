@@ -1,45 +1,46 @@
 # Routes
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
+%{ contextPath = play.configuration.getProperty('openseedbox.context.path', '') }%
 
 # Ignore favicon requests
-GET /favicon.ico										404
+GET ${contextPath}/favicon.ico										404
 
 
 # Static assets
-GET /public/											staticDir:public
+GET ${contextPath}/public/											staticDir:public
 
 # Auth
-* /auth/?												Auth.login
-* /auth/{action}										Auth.{action}
+* ${contextPath}/auth/?												Auth.login
+* ${contextPath}/auth/{action}										Auth.{action}
 
 # Admin screens
-* /admin/?												Admin.index
-* /admin/{action}										Admin.{action}
+* ${contextPath}/admin/?												Admin.index
+* ${contextPath}/admin/{action}										Admin.{action}
 
 #Account screens
-* /account/?											Account.index
-* /account/{action}									Account.{action}
+* ${contextPath}/account/?											Account.index
+* ${contextPath}/account/{action}									Account.{action}
 
 #API
-* /api/?													api.Api.index
-* /api/{sub}											api.Api{sub}.index
-* /api/{sub}/{action}								api.Api{sub}.{action}
+* ${contextPath}/api/?													api.Api.index
+* ${contextPath}/api/{sub}											api.Api{sub}.index
+* ${contextPath}/api/{sub}/{action}								api.Api{sub}.{action}
 
 #Torrent client	
-* /client/?												Client.index
-* /client/files/?										ClientFiles.index
-* /client/files/{action}							ClientFiles.{action}
-* /client/settings/?									ClientSettings.index
-* /client/settings/{action}						ClientSettings.{action}
-* /client/{action}									Client.{action}
+* ${contextPath}/client/?												Client.index
+* ${contextPath}/client/files/?										ClientFiles.index
+* ${contextPath}/client/files/{action}							ClientFiles.{action}
+* ${contextPath}/client/settings/?									ClientSettings.index
+* ${contextPath}/client/settings/{action}						ClientSettings.{action}
+* ${contextPath}/client/{action}									Client.{action}
 
 # Main
-* /														Main.index
-* /main/?												Main.index
-* /main/{action}										Main.{action}
+* ${contextPath}/?														Main.index
+* ${contextPath}/main/?												Main.index
+* ${contextPath}/main/{action}										Main.{action}
 
 # Catch all
-* /{controller}/?										{controller}.index
-* /{controller}/{action}							{controller}.{action}
+* ${contextPath}/{controller}/?										{controller}.index
+* ${contextPath}/{controller}/{action}							{controller}.{action}
 
