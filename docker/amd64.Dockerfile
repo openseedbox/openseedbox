@@ -7,6 +7,7 @@ ENV OPENSEEDBOX_JDBC_URL=jdbc:postgresql://openseedboxdb/openseedbox
 ENV OPENSEEDBOX_JDBC_DRIVER=org.postgresql.Driver
 ENV OPENSEEDBOX_JDBC_USER=openseedbox
 ENV OPENSEEDBOX_JDBC_PASS=openseedbox
+ENV OPENSEEDBOX_CONTEXT_PATH=
 
 EXPOSE 443
 
