@@ -260,7 +260,7 @@ a.download-link, a.download-link:hover {
 			if (activeAjaxRequest && force) {
 				activeAjaxRequest.abort();
 			}
-			activeAjaxRequest = $.getJSON("/client/update", {"group" : activeGroup, "ext" :"json" }, function(data) {
+			activeAjaxRequest = $.getJSON("@{Client.update}", {"group" : activeGroup, "ext" :"json" }, function(data) {
 				
 				if (!data) { return; }
 				data = data.data;
@@ -416,7 +416,7 @@ a.download-link, a.download-link:hover {
 		}).on("click", "a.show-torrent-info", function() {
 			var self = this;
 			$(self).loading();
-			$.post("/client/torrentInfo", {
+			$.post("@{Client.torrentInfo}", {
 				"hash" : $(this).data("torrent-hash")
 			}, function(data) {
 				$(self).loading();
