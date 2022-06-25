@@ -35,6 +35,7 @@ FROM debian:bullseye-slim
 # Copy Java
 COPY --from=builder /java /java
 ENV JAVA_HOME=/java
+ENV PATH $JAVA_HOME/bin:$PATH
 
 
 # Mimic Tomcat image (copy-paste from https://github.com/docker-library/tomcat)
@@ -65,6 +66,9 @@ RUN set -eux; \
 
 EXPOSE 8080
 CMD ["catalina.sh", "run"]
+
+RUN test -s HealthCheck.class
+HEALTHCHECK --start-period=3s CMD [ "java", "-cp", ".", "HealthCheck", "8080", "||", "exit", "1" ]
 
 # Default values for config environment variables
 ENV OPENSEEDBOX_JDBC_URL=jdbc:postgresql://openseedboxdb/openseedbox
