@@ -31,6 +31,14 @@ ENV PATH $JAVA_HOME/bin:$PATH
 RUN javax2jakarta war jakarta-war; rm -rf war; mv -v jakarta-war war
 
 
+FROM builder as tester
+# Autotest OpenSeedbox
+WORKDIR /src/openseedbox
+# sync again but without --forProd to include openseedbox-common tests
+RUN /play/play deps --sync
+RUN /play/play autotest
+
+
 FROM debian:bullseye-slim
 # Copy Java
 COPY --from=builder /java /java
