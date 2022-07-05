@@ -9,6 +9,7 @@ RUN bash -c "for repo in openseedbox{-common,}; do echo updating git for \$repo;
 RUN bash -c "for repo in openseedbox{-common,}; do echo updating play deps for \$repo; cd /src/\$repo; /play/play deps --sync --forProd; done"
 
 COPY application.conf /src/openseedbox/conf/application.conf
+RUN touch /src/openseedbox/conf/application.runtime.conf
 
 WORKDIR /src
 RUN /play/play war openseedbox -o war
@@ -84,6 +85,9 @@ ENV OPENSEEDBOX_JDBC_DRIVER=org.postgresql.Driver
 ENV OPENSEEDBOX_JDBC_USER=openseedbox
 ENV OPENSEEDBOX_JDBC_PASS=openseedbox
 ENV OPENSEEDBOX_CONTEXT_PATH=
+ENV OPENSEEDBOX_SESSION_COOKIE_NAME=NOT_GENERATED
+ENV APPLICATION_SECRET=NOT_GENERATED
+ENV GOOGLE_CLIENTID=
 
 # Copy WAR file from builder container to the final image
 COPY --from=builder /src/war $CATALINA_HOME/webapps/ROOT
