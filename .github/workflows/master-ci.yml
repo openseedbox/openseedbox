@@ -31,6 +31,12 @@ jobs:
             TAGS="$TAGS,${DOCKER_IMAGE}:latest"
           fi
           echo ::set-output name=tags::${TAGS}
+          echo ::set-output name=platforms::linux/amd64,linux/arm/v7,linux/arm64
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: ${{ steps.prep.outputs.platforms }}
 
       - name: Set up Docker Buildx
         id: buildx
@@ -49,6 +55,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           builder: ${{ steps.buildx.outputs.name }}
+          platforms: ${{ steps.prep.outputs.platforms }}
           context: ./docker
           file: ./docker/Dockerfile
           target: tester
@@ -60,6 +67,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           builder: ${{ steps.buildx.outputs.name }}
+          platforms: ${{ steps.prep.outputs.platforms }}
           context: ./docker
           file: ./docker/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
