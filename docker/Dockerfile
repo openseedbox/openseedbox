@@ -3,7 +3,7 @@
 FROM openseedbox/base as builder
 
 RUN apt update -qq && apt install -y --no-install-recommends \
-	git ca-certificates python tomcat-jakartaee-migration;
+	git ca-certificates python;
 
 RUN bash -c "for repo in openseedbox{-common,}; do echo updating git for \$repo; cd /src/\$repo; git pull --ff-only origin master; done"
 RUN bash -c "for repo in openseedbox{-common,}; do echo updating play deps for \$repo; cd /src/\$repo; /play/play deps --sync --forProd; done"
@@ -28,8 +28,7 @@ RUN mkdir war/META-INF; \
     </JarScanner>\n\
 </Context>' > war/META-INF/context.xml;
 # Only necessary if using Tomcat >= 10.0 due to package name change from javax.* to jakarta.*
-ENV PATH $JAVA_HOME/bin:$PATH
-RUN javax2jakarta war jakarta-war; rm -rf war; mv -v jakarta-war war
+RUN bash -c "mv -v war/WEB-INF/application/precompiled/java/play war/WEB-INF/classes"
 
 
 FROM builder as tester
