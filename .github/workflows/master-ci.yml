@@ -50,7 +50,18 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Test
+      - name: Build Docker images
+        uses: docker/build-push-action@v2
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          platforms: ${{ steps.prep.outputs.platforms }}
+          context: ./docker
+          file: ./docker/Dockerfile
+          target: builder
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test and export results
         id: docker_test
         uses: docker/build-push-action@v2
         with:
@@ -61,8 +72,27 @@ jobs:
           target: tester
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          outputs: type=tar,dest=./buildx-files.tar
 
-      - name: Build and push
+      - name: Extract test results
+        run: |
+          mkdir -p buildx-files
+          cd buildx-files
+          tar -xvf ../buildx-files.tar --wildcards '*/src/openseedbox*/test-result/*'
+
+      - name: Save test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: buildx-files/linux*/src/openseedbox*/test-result/
+
+      - name: All tests passed
+        run: |
+          PLATFORM_COUNT=$(echo ${{ steps.prep.outputs.platforms }}| tr '/,' '_ '|xargs -n 1 echo|wc -l)
+          PASSED_COUNT=$(find buildx-files/*/src/openseedbox*/test-result/result.passed |wc -l)
+          test $PLATFORM_COUNT -eq $PASSED_COUNT
+
+      - name: Finish building and push to registry
         id: docker_build
         uses: docker/build-push-action@v2
         with:
