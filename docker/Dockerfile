@@ -36,6 +36,7 @@ FROM builder as tester
 WORKDIR /src/openseedbox
 # sync again but without --forProd to include openseedbox-common tests
 RUN /play/play deps --sync
+RUN RANDOM_HTTP_PORT=$(shuf -i 10000-59152 -n 1); sed -i -e 's/${RANDOM_HTTP_PORT}'"/$RANDOM_HTTP_PORT/" conf/application.conf; echo random port is $RANDOM_HTTP_PORT
 RUN /play/play autotest || true
 
 
