@@ -58,6 +58,7 @@ jobs:
           context: ./docker
           file: ./docker/Dockerfile
           target: builder
+          build-args: CACHEBUSTER=${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
