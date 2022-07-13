@@ -44,47 +44,7 @@ RUN RANDOM_HTTP_PORT=$(shuf -i 10000-59152 -n 1); sed -i -e 's/${RANDOM_HTTP_POR
 RUN /play/play autotest || true
 
 
-FROM debian:bullseye-slim as tomcat
-# Copy Java
-COPY --from=base /java /java
-ENV JAVA_HOME=/java
-ENV PATH $JAVA_HOME/bin:$PATH
-
-
-# Mimic Tomcat image (copy-paste from https://github.com/docker-library/tomcat)
-ENV CATALINA_HOME /tomcat
-ENV PATH $CATALINA_HOME/bin:$PATH
-RUN mkdir -p "$CATALINA_HOME"
-WORKDIR $CATALINA_HOME
-
-# let "Tomcat Native" live somewhere isolated
-ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib
-ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
-
-COPY --from=base $CATALINA_HOME $CATALINA_HOME
-RUN set -eux; \
-	apt-get update; \
-	xargs -rt apt-get install -y --no-install-recommends < "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt"; \
-	rm -rf /var/lib/apt/lists/*
-
-# verify Tomcat Native is working properly
-RUN set -eux; \
-	nativeLines="$(catalina.sh configtest 2>&1)"; \
-	nativeLines="$(echo "$nativeLines" | grep 'Apache Tomcat Native')"; \
-	nativeLines="$(echo "$nativeLines" | sort -u)"; \
-	if ! echo "$nativeLines" | grep -E 'INFO: Loaded( APR based)? Apache Tomcat Native library' >&2; then \
-		echo >&2 "$nativeLines"; \
-		exit 1; \
-	fi
-
-EXPOSE 8080
-CMD ["catalina.sh", "run"]
-
-RUN test -s HealthCheck.class
-HEALTHCHECK --start-period=3s CMD [ "java", "-cp", ".", "HealthCheck", "8080", "||", "exit", "1" ]
-
-
-FROM tomcat
+FROM openseedbox/tomcat
 # Default values for config environment variables
 ENV OPENSEEDBOX_JDBC_URL=jdbc:postgresql://openseedboxdb/openseedbox
 ENV OPENSEEDBOX_JDBC_DRIVER=org.postgresql.Driver
