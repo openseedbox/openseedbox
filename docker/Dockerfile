@@ -1,6 +1,9 @@
 # syntax=docker/dockerfile:1
 
-FROM openseedbox/base as builder
+FROM openseedbox/base as base
+
+
+FROM base as builder
 
 RUN apt update -qq && apt install -y --no-install-recommends \
 	git ca-certificates python;
@@ -40,9 +43,9 @@ RUN RANDOM_HTTP_PORT=$(shuf -i 10000-59152 -n 1); sed -i -e 's/${RANDOM_HTTP_POR
 RUN /play/play autotest || true
 
 
-FROM debian:bullseye-slim
+FROM debian:bullseye-slim as tomcat
 # Copy Java
-COPY --from=builder /java /java
+COPY --from=base /java /java
 ENV JAVA_HOME=/java
 ENV PATH $JAVA_HOME/bin:$PATH
 
@@ -57,7 +60,7 @@ WORKDIR $CATALINA_HOME
 ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 
-COPY --from=builder $CATALINA_HOME $CATALINA_HOME
+COPY --from=base $CATALINA_HOME $CATALINA_HOME
 RUN set -eux; \
 	apt-get update; \
 	xargs -rt apt-get install -y --no-install-recommends < "$TOMCAT_NATIVE_LIBDIR/.dependencies.txt"; \
@@ -79,6 +82,8 @@ CMD ["catalina.sh", "run"]
 RUN test -s HealthCheck.class
 HEALTHCHECK --start-period=3s CMD [ "java", "-cp", ".", "HealthCheck", "8080", "||", "exit", "1" ]
 
+
+FROM tomcat
 # Default values for config environment variables
 ENV OPENSEEDBOX_JDBC_URL=jdbc:postgresql://openseedboxdb/openseedbox
 ENV OPENSEEDBOX_JDBC_DRIVER=org.postgresql.Driver
