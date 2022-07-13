@@ -8,6 +8,7 @@ FROM base as builder
 RUN apt update -qq && apt install -y --no-install-recommends \
 	git ca-certificates python;
 
+ARG CACHEBUSTER
 RUN bash -c "for repo in openseedbox{-common,}; do echo updating git for \$repo; cd /src/\$repo; git pull --ff-only origin master; done"
 RUN bash -c "for repo in openseedbox{-common,}; do echo updating play deps for \$repo; cd /src/\$repo; /play/play deps --sync --forProd; done"
 
