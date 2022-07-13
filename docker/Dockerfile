@@ -1,9 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM openseedbox/base as base
-
-
-FROM base as builder
+FROM openseedbox/base as builder
 
 RUN apt update -qq && apt install -y --no-install-recommends \
 	git ca-certificates python;
