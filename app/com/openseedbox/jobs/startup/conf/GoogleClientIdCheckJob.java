@@ -1,4 +1,4 @@
-package com.openseedbox.jobs;
+package com.openseedbox.jobs.startup.conf;
 
 import com.openseedbox.Config;
 import play.exceptions.ConfigurationException;
@@ -6,7 +6,7 @@ import play.jobs.Job;
 import play.jobs.OnApplicationStart;
 
 @OnApplicationStart
-public class BootstrapGoogleClientIdCheck extends Job {
+public class GoogleClientIdCheckJob extends Job {
 
     @Override
     public void doJob() throws Exception {
