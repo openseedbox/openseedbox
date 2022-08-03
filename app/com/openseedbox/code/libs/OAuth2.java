@@ -20,8 +20,10 @@ import play.mvc.results.Redirect;
  */
 public class OAuth2 {
 
-	private static final String CLIENT_ID_NAME = "client_id";
-	private static final String REDIRECT_URI = "redirect_uri";
+	protected static final String CLIENT_ID_NAME = "client_id";
+	protected static final String REDIRECT_URI = "redirect_uri";
+	protected static final String CLIENT_SECRET_NAME = "client_secret";
+	protected static final String CODE_NAME = "code";
 
 	public String authorizationURL;
 	public String accessTokenURL;
@@ -36,7 +38,7 @@ public class OAuth2 {
 	}
 
 	public static boolean isCodeResponse() {
-		return Params.current().get("code") != null;
+		return Params.current().get(CODE_NAME) != null;
 	}
 
 	/**
@@ -87,12 +89,16 @@ public class OAuth2 {
 	}
 
 	public Response retrieveAccessToken(String callbackURL) {
-		String accessCode = Params.current().get("code");
+		String accessCode = Params.current().get(CODE_NAME);
 		Map<String, Object> params = new HashMap<>();
-		params.put("client_id", clientid);
-		params.put("client_secret", secret);
-		params.put("redirect_uri", callbackURL);
-		params.put("code", accessCode);
+		params.put(CLIENT_ID_NAME, clientid);
+		params.put(CLIENT_SECRET_NAME, secret);
+		params.put(REDIRECT_URI, callbackURL);
+		params.put(CODE_NAME, accessCode);
+		return retrieveAccessToken(callbackURL, params);
+	}
+
+	protected Response retrieveAccessToken(String callbackURL, Map<String, Object> params) {
 		HttpResponse response = WS.url(accessTokenURL).params(params).get();
 		return new Response(response);
 	}
