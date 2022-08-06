@@ -13,6 +13,7 @@ import play.Logger;
 import play.cache.Cache;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
+import play.mvc.Router;
 
 public class Auth extends Base {
 
@@ -38,6 +39,19 @@ public class Auth extends Base {
 			setGeneralErrorMessage(message);
 		}
 		login();
+	}
+
+	public static void fragmentRedirect(String redirectTo) {
+		if (redirectTo == null) {
+			redirectTo = "Auth.echo"; // "Auth.authenticate"
+		}
+		redirectTo = Router.reverse(redirectTo).url;
+		flash.keep();
+		render(redirectTo);
+	}
+
+	public static void echo() {
+		render();
 	}
 
 	public static void authenticate(String id_token) throws Exception {
