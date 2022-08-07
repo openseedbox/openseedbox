@@ -13,6 +13,7 @@
     <br />
     <p>You can login using OpenID below.</p>
     <br />
+    <div class="row">
     <div class="signin">
         <span id="signinButton">
             <span
@@ -24,6 +25,15 @@
               data-scope="openid email profile">
             </span>
         </span>
+    </div>
+    </div>
+    #{if (keyCloak)}
+    <div class="row">
+        <a href="@{AuthKeyCloak.authenticate()}" style="background-color: #0dafd5">
+            Sign in with Keycloak
+        </a>
+    </div>
+    #{/if}
     </div>
 </div>
 <script type="text/javascript">

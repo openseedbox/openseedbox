@@ -16,6 +16,18 @@ public class Config {
                 return Play.configuration.getProperty("google.clientid");
         }
 
+	public static String getKeyCloakClientId() {
+		return Play.configuration.getProperty("openseedbox.auth.keycloak.clientid");
+	}
+
+	public static String getKeyCloakClientSecret() {
+		return Play.configuration.getProperty("openseedbox.auth.keycloak.clientsecret");
+	}
+
+	public static String getKeyCloakOpenIdConfigurationUrl() {
+		return Play.configuration.getProperty("openseedbox.auth.keycloak.openid.configuration.url");
+	}
+
 	public static String getAssetPrefix() {
 		return Play.configuration.getProperty("openseedbox.assets.prefix", "/public");
 	}

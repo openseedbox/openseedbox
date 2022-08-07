@@ -9,6 +9,7 @@ import com.google.gson.JsonObject;
 import com.openseedbox.Config;
 import com.openseedbox.models.User;
 
+import org.apache.commons.lang.StringUtils;
 import play.Logger;
 import play.cache.Cache;
 import play.libs.WS;
@@ -21,6 +22,9 @@ public class Auth extends Base {
 
 	public static void login() {
 		renderArgs.put("clientId", Config.getGoogleClientId());
+		if (!StringUtils.isEmpty(Config.getKeyCloakClientId())) {
+			renderArgs.put("keyCloak", true);
+		}
 		render();
 	}
 

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+#{set title: "Redirect" /}
+<html>
+<head>
+    #{script 'postfragment.js' /}
+    <script type="text/javascript" language="javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            postFragment("${redirectTo}", new URLSearchParams(window.location.hash.slice(1)));
+        });
+    </script>
+</head>
+<body/>
+</html>

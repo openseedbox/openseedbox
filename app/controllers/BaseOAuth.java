@@ -7,6 +7,7 @@ import com.openseedbox.models.User;
 import org.apache.commons.codec.digest.DigestUtils;
 import play.Logger;
 import play.cache.Cache;
+import play.libs.F;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -85,9 +86,23 @@ public abstract class BaseOAuth<T extends EnhancedOAuth2> extends Base {
 	public final String authURL() {
 		String controllerName = this.getClass().getSimpleName();
 		String actionName = "authenticate";
+		Map<String, Object> actionParameters = new HashMap<>();
 
-		return play.mvc.Router.getFullUrl(controllerName + "." + actionName, actionParameters);
+		F.Tuple<String, String> customizedAuthURL = customizeAuthURL(controllerName, actionName, actionParameters);
+
+		return play.mvc.Router.getFullUrl(customizedAuthURL._1 + "." + customizedAuthURL._2, actionParameters);
 	}
+
+	protected F.Tuple<String, String> customizeAuthURL(String controllerName, String actionName, Map<String,
+			Object> actionParameters) {
+		return new F.T2(controllerName, actionName);
+	};
+
+	protected final F.Tuple<String, String> customizeAuthURLWithFragmentRedirect(
+			String controllerName, String actionName, Map<String, Object> actionParameters) {
+		actionParameters.put("redirectTo", controllerName + "." + actionName);
+		return new F.T2(Auth.class.getSimpleName(), "fragmentRedirect");
+	};
 
 	protected final void logoutWithMessage(String message, Level logLevel) {
 		Cache.delete(getCurrentUserCacheKey());
