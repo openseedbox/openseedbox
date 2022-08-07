@@ -182,6 +182,14 @@ public class OAuth2 {
 			if (response.getQueryString().containsKey("error")) {
 				Map<String, String> qs = response.getQueryString();
 				return new Error(Type.OAUTH, qs.get("error"), qs.get("error_description"));
+			} else if (response.getContentType().contains("application/json")) {
+				JsonObject jsonResponse = response.getJson().getAsJsonObject();
+				JsonElement error = jsonResponse.getAsJsonPrimitive("error");
+				JsonElement description = jsonResponse.getAsJsonPrimitive("error_description");
+				return new Error(Type.OAUTH,
+						error != null ? error.getAsString() : null,
+						description != null ? description.getAsString() : null
+				);
 			} else if (response.getContentType().startsWith("text/javascript")) { // Stupid Facebook returns JSON with
 				// the wrong encoding
 				JsonObject jsonResponse = response.getJson().getAsJsonObject().getAsJsonObject("error");
