@@ -12,7 +12,8 @@ function postFragment(url, postData) {
     });
 
     document.body.appendChild(f);
-    if (window.location.pathname != url && "" != url) {
+    if ("" != url && !url.endsWith(window.location.pathname)) {
+        console.log("Redirecting to '%s' as it's differs from %s ...", url, window.location.pathname)
         f.submit();
     } else {
         console.log("Not redirecting to '%s' from '%s'! ", url, window.location);

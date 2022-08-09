@@ -13,6 +13,18 @@ require:
     - org.slf4j -> slf4j-reload4j [1.7.0,2[
     - org.postgresql -> postgresql 42.3.4:
         force: true
+        transitive: false
+    #- org.keycloak -> keycloak-installed-adapter [11,17[
+#    - com.nimbusds -> oauth2-oidc-sdk 9.39:
+#        transitive: true
+#    - com.nimbusds -> nimbus-jose-jwt 9.23
+#       transitive: true
+#    - com.google.api-client -> google-api-client 1.32.1
+    - com.auth0 -> java-jwt 3.19.2:
+        exclude:
+            - commons-codec -> commons-codec
+    - com.auth0 -> jwks-rsa 0.21.1
+#    - io.fusionauth -> fusionauth-jwt 5.0.0
 
 repositories:
     - localCheckout:

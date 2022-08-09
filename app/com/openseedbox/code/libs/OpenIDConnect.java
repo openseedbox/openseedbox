@@ -1,13 +1,36 @@
 package com.openseedbox.code.libs;
 
+import com.auth0.jwk.Jwk;
+import com.auth0.jwk.JwkException;
+import com.auth0.jwk.JwkProvider;
+import com.auth0.jwk.JwkProviderBuilder;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
+import org.apache.commons.lang.StringUtils;
+import play.Logger;
+import play.cache.Cache;
+import play.exceptions.JavaExecutionException;
 import play.libs.WS;
+import play.mvc.Scope;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class OpenIDConnect extends EnhancedOAuth2 {
 	public static final String DEFAULT_SCOPE = "openid email profile";
@@ -42,61 +65,142 @@ public class OpenIDConnect extends EnhancedOAuth2 {
 	}
 
 	@Override
-	protected Response retrieveAccessToken(String callbackURL, Map<String, Object> params) {
+	protected ResponseWithIdToken retrieveAccessToken(String callbackURL, Map<String, Object> params) {
 		if (params.getOrDefault((String) CLIENT_SECRET_NAME, (String) "not exists") == null) {
 			params.remove((String) CLIENT_SECRET_NAME);
+			Logger.debug("retrieveAccessToken(%s): removed %s", this.getClass().getSimpleName(), CLIENT_SECRET_NAME);
 		}
 		WS.HttpResponse response = WS.url(accessTokenURL).params(params).post();
-		return new Response(response);
+		Logger.debug("retrieveAccessToken(%s): params - %s", this.getClass().getSimpleName(), params.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue()).collect(Collectors.joining(", ")));
+		Logger.debug("retrieveAccessToken(%s): response - %s", this.getClass().getSimpleName(), response.getString());
+		return new ResponseWithIdToken(response, this);
 	}
 
-	public static WellKnownBuilder builder() {
-		return new WellKnownBuilder<>();
+	public boolean shouldAbortTheProcessBecauseOfNonce(ResponseWithIdToken response) {
+		if (response.idToken == null) {
+			return false;
+		}
+		String nonceFromIdToken;
+		try {
+			nonceFromIdToken = new JsonParser().parse(response.idToken).getAsJsonObject().get(NONCE_NAME).getAsString();
+		} catch (JsonSyntaxException | NullPointerException e) {
+			return true;
+		}
+		if (nonceFromIdToken == null) {
+			return true;
+		}
+		String nonceFromFlash = Scope.Flash.current().get(NONCE_NAME);
+		return !nonceFromIdToken.equals(nonceFromFlash);
 	}
 
-	public static class WellKnownBuilder<T extends OpenIDConnect> {
+
+	public static class ResponseWithIdToken extends Response {
+		public final String idToken;
+
+		static final String ID_TOKEN_NAME = "id_token";
+
+		public ResponseWithIdToken(WS.HttpResponse response, OpenIDConnect authProvider) {
+			super(new Response(response).accessToken,
+					getErrorOrValidateToken(response, authProvider), response);
+			if (this.error != null) {
+				this.idToken = null;
+			} else {
+				String token;
+				try {
+					JsonElement tokenElement = response.getJson()
+							.getAsJsonObject()
+							.get(ID_TOKEN_NAME);
+					if (tokenElement != null) {
+						token = new String(Base64.getDecoder().decode(
+								JWT.decode(tokenElement.getAsString()).getPayload()
+						));
+					} else {
+						token = null;
+					}
+				} catch (NullPointerException e) {
+					token = null;
+				}
+				this.idToken = token;
+			}
+		}
+
+		private static Error getErrorOrValidateToken(WS.HttpResponse response, OpenIDConnect authProvider) {
+			String token = response.getJson().getAsJsonObject().get(ID_TOKEN_NAME).getAsString();
+			DecodedJWT jwt = JWT.decode(token);
+			try {
+				JwkProvider jwkProvider = new JwkProviderBuilder(new URI(authProvider.jwksURL).normalize().toURL())
+						.cached(10, 24, TimeUnit.HOURS)
+						.rateLimited(10, 1, TimeUnit.MINUTES)
+						.build();
+				Jwk jwk = jwkProvider.get(jwt.getKeyId());
+				Algorithm algorithm = null;
+				if ("RS256".equals(jwt.getAlgorithm())) {
+					algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(), null);
+				}
+				JWTVerifier verifier = JWT.require(algorithm)
+						.withAudience(authProvider.clientid)
+						.withIssuer(jwt.getIssuer())
+						.build();
+				verifier.verify(token);
+			} catch (JwkException | URISyntaxException | MalformedURLException e) {
+				Error.Type errorType = e instanceof JwkException ? Error.Type.OAUTH : Error.Type.COMMUNICATION;
+				return new Error(errorType, e.getClass().getSimpleName(), e.getMessage());
+			}
+			return null;
+		}
+	}
+
+
+	public abstract static class Builder<T extends OpenIDConnect, B extends Builder<T,B>> {
 		private String openIDConfigurationUrl;
 		protected JsonObject openIDConfiguration;
 
 		protected T building = createOIDC();
+		protected B builder = createBuilder();
 
-		protected T createOIDC() {
-			return (T) new OpenIDConnect();
-		}
+		protected abstract T createOIDC();
+		protected abstract B createBuilder();
 
-		public WellKnownBuilder<T> withOpenIDConfigurationURL(String url) {
+		public B withOpenIDConfigurationURL(String url) {
 			this.openIDConfigurationUrl = url;
-			return this;
+			return builder;
 		}
 
-		public WellKnownBuilder<T> withClientId (String clientid) {
+		public B withClientId (String clientid) {
 			this.building.clientid = clientid;
-			return this;
+			return builder;
 		}
 
-		public WellKnownBuilder<T> withClientSecret (String secret) {
+		public B withClientSecret (String secret) {
 			this.building.secret = secret;
-			return this;
+			return builder;
 		}
 
-		public WellKnownBuilder<T> withScope(String scope) {
+		public B withScope(String scope) {
 			this.building.scope = scope;
-			return this;
+			return builder;
 		}
 
-		public WellKnownBuilder<T> withResponseType(String responseType) {
+		public B withResponseType(String responseType) {
 			this.building.responseType = responseType;
-			return this;
+			return builder;
 		}
 
 		public T build() {
 			WS.HttpResponse configurationResponse = null;
 			try {
-				configurationResponse = WS.url(openIDConfigurationUrl).getAsync().get();
+				String cacheKey = "openid-configuration-" + openIDConfigurationUrl;
+				String cachedResponseString = Cache.get(cacheKey, String.class);
+				if (StringUtils.isEmpty(cachedResponseString)) {
+					configurationResponse = WS.url(openIDConfigurationUrl).getAsync().get();
+					openIDConfiguration = Objects.requireNonNull(configurationResponse, "No response from " + openIDConfigurationUrl).getJson().getAsJsonObject();
+					Cache.set(cacheKey, configurationResponse.getString(), "1d");
+				} else {
+					openIDConfiguration = new JsonParser().parse(cachedResponseString).getAsJsonObject();
+				}
 			} catch (InterruptedException | ExecutionException e) {
-				e.printStackTrace();
+				throw new JavaExecutionException(e);
 			}
-			openIDConfiguration = Objects.requireNonNull(configurationResponse).getJson().getAsJsonObject();
 			parseOpenIDConfiguration();
 			return this.building;
 		}

@@ -25,6 +25,13 @@
             </span>
         </span>
     </div>
+    #{if (google)}
+    <div>
+        <a href="@{AuthGoogle.authenticate()}">
+            Sign in with Google
+        </a>
+    </div>
+    #{/if}
     #{if (keyCloak)}
     <div>
         <a href="@{AuthKeyCloak.authenticate()}" style="background-color: #0dafd5">

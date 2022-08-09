@@ -2,34 +2,52 @@ package controllers;
 
 import com.openseedbox.code.libs.EnhancedOAuth2;
 import com.openseedbox.code.libs.OAuth2;
+import com.openseedbox.models.JwtBasedScopedUser;
 import com.openseedbox.models.ScopedUser;
 import com.openseedbox.models.User;
+import com.openseedbox.mvc.TemplateNameResolver;
 import org.apache.commons.codec.digest.DigestUtils;
 import play.Logger;
 import play.cache.Cache;
-import play.libs.F;
+import play.libs.WS;
+import play.mvc.Router;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public abstract class BaseOAuth<T extends EnhancedOAuth2> extends Base {
 
-	protected AuthProvider provider = initProvider();
+	protected AuthProvider provider = initProviderOrLogout();
 
-	public final void authenticate(String state, String code, String scope) {
+	public final void authenticate() {
 		T providerService = provider.providerService;
-		if (!providerService.isCodeResponse()) {
+		Logger.debug("authenticate(%s): params - %s", this.getClass().getSimpleName(), params.allSimple().entrySet().stream().map(e -> e.getKey() + "=" + e.getValue()).collect(Collectors.joining(", ")));
+		if (params.all().size() <= 3) { // action, body + provider (from conf/routes: Auth{provider}.{action})
+			tryProviderUrlOrLogout(providerService.authorizationURL);
 			providerService.retrieveVerificationCode(authURL());
 		}
-		if (providerService.shouldAbortTheProcess()) {
+		if (!providerService.isResponseToRetrieveVerificationCode()) {
+			logoutWithMessage(String.format("Unkown response parameters from %s: %s", provider.providerName,
+					params.allSimple().keySet().stream().filter(s ->
+							!s.equalsIgnoreCase("provider") &&
+							!s.equalsIgnoreCase("action") &&
+							!s.equalsIgnoreCase("body")
+					).collect(Collectors.joining(", "))), Level.WARNING);
+		}
+		if (providerService.isStateParameterValid()) {
 			logoutWithMessage(String.format("Invalid %s parameter! Got: %s, expected: %s",
-					providerService.STATE_NAME, state, flash.get(providerService.STATE_NAME)),
+							T.STATE_NAME, params.get(T.STATE_NAME), flash.get(T.STATE_NAME)),
 					Level.SEVERE
 			);
 		}
-		AuthResult result = dieWithErrorOrRetrieveUserInfo(providerService.retrieveAccessToken(authURL()));
+		tryProviderUrlOrLogout(providerService.accessTokenURL);
+		T.Response accessTokenResponse = providerService.retrieveAccessToken(authURL());
+		verifyAccessTokenResponse(accessTokenResponse);
+		AuthResult result = dieWithErrorOrRetrieveUserInfo(accessTokenResponse);
 		if (result.user != null) {
 			ScopedUser user = result.user;
 			if (user.email != null) {
@@ -74,39 +92,50 @@ public abstract class BaseOAuth<T extends EnhancedOAuth2> extends Base {
 		}
 	};
 
+	public final void redirect() {
+		if (params.all().size() < 3) {
+			Logger.debug("redirect params: %d", params.all().size());
+			redirect("Auth.login");
+		}
+		renderArgs.put("redirectTo", Router.reverse(this.getClass().getSimpleName() + ".authenticate").url);
+		flash.keep();
+		renderTemplate(new TemplateNameResolver().resolveTemplateName(Auth.class.getSimpleName() + "/" + "fragmentRedirect" + ".html"));
+	}
+
+	private AuthProvider initProviderOrLogout() {
+		try {
+			return initProvider();
+		} catch (Throwable e) {
+			logoutWithMessage(String.format("Got exception while contacting %s: %s", "auth provider", e.getMessage()), Level.SEVERE);
+		}
+		// never ever ...
+		return null;
+	}
 	protected abstract AuthProvider initProvider();
-	private AuthResult dieWithErrorOrRetrieveUserInfo(OAuth2.Response accessTokenResponse) {
+	private AuthResult dieWithErrorOrRetrieveUserInfo(T.Response accessTokenResponse) {
 		if (accessTokenResponse.error != null) {
 			return AuthResult.error(accessTokenResponse.error);
 		}
 		return new AuthResult(retrieveScopedUser(accessTokenResponse), null);
 	}
-	protected abstract ScopedUser retrieveScopedUser(OAuth2.Response accessTokenResponse);
+	protected abstract ScopedUser retrieveScopedUser(T.Response accessTokenResponse);
 
 	public final String authURL() {
 		String controllerName = this.getClass().getSimpleName();
-		String actionName = "authenticate";
-		Map<String, Object> actionParameters = new HashMap<>();
+		String actionName = customizeAuthURLAction();
 
-		F.Tuple<String, String> customizedAuthURL = customizeAuthURL(controllerName, actionName, actionParameters);
-
-		return play.mvc.Router.getFullUrl(customizedAuthURL._1 + "." + customizedAuthURL._2, actionParameters);
+		return play.mvc.Router.getFullUrl(controllerName + "." + actionName);
 	}
 
-	protected F.Tuple<String, String> customizeAuthURL(String controllerName, String actionName, Map<String,
-			Object> actionParameters) {
-		return new F.Tuple(controllerName, actionName);
+	protected String customizeAuthURLAction() {
+		return authUrlActionAuthenticate;
 	};
+	protected final String authUrlActionAuthenticate = "authenticate";
+	protected final String authUrlActionRedirect = "redirect";
 
 	protected String authorizedWithoutEmailMessage() {
 		return "Please grant the \"email\" OAuth scope to the application and try again!";
 	}
-
-	protected final F.Tuple<String, String> customizeAuthURLWithFragmentRedirect(
-			String controllerName, String actionName, Map<String, Object> actionParameters) {
-		actionParameters.put("redirectTo", controllerName + "." + actionName);
-		return new F.Tuple(Auth.class.getSimpleName(), "fragmentRedirect");
-	};
 
 	protected final void logoutWithMessage(String message, Level logLevel) {
 		Cache.delete(getCurrentUserCacheKey());
@@ -120,6 +149,17 @@ public abstract class BaseOAuth<T extends EnhancedOAuth2> extends Base {
 		}
 		redirect("Auth.login");
 	}
+
+	private void tryProviderUrlOrLogout(String url) {
+		try {
+			WS.url(url).optionsAsync().get(1, TimeUnit.MINUTES);
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			logoutWithMessage(String.format("Got exception while contacting %s: %s", provider.providerName, e.getMessage()), Level.SEVERE);
+		}
+	}
+
+	protected void verifyAccessTokenResponse(T.Response response) {}
+
 
 	public class AuthProvider {
 		public String providerName;

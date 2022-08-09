@@ -22,6 +22,9 @@ public class Auth extends Base {
 
 	public static void login() {
 		renderArgs.put("clientId", Config.getGoogleClientId());
+		if (!StringUtils.isEmpty(Config.getGoogleClientId())) {
+			renderArgs.put("google", true);
+		}
 		if (!StringUtils.isEmpty(Config.getKeyCloakClientId())) {
 			renderArgs.put("keyCloak", true);
 		}
@@ -49,11 +52,11 @@ public class Auth extends Base {
 	}
 
 	public static void fragmentRedirect(String redirectTo) {
-		if (redirectTo == null) {
-			redirectTo = "Auth.echo"; // "Auth.authenticate"
+		if (redirectTo == null || !redirectTo.startsWith("/") ) {
+			redirectTo = Router.reverse("Auth.echo").url; // "Auth.authenticate"
+		} else {
+			flash.keep();
 		}
-		redirectTo = Router.reverse(redirectTo).url;
-		flash.keep();
 		render(redirectTo);
 	}
 

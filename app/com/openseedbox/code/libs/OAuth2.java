@@ -1,12 +1,16 @@
 package com.openseedbox.code.libs;
 
 import java.net.URLDecoder;
+import java.util.AbstractMap;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import play.Logger;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
 import play.mvc.Http.Request;
@@ -82,6 +86,7 @@ public class OAuth2 {
 	public void retrieveVerificationCode(String callbackURL, Map<String, String> parameters) {
 		parameters.put(CLIENT_ID_NAME, clientid);
 		parameters.put(REDIRECT_URI, callbackURL);
+		Logger.debug("retrieveVerificationCode: parameters - %s", parameters.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue()).collect(Collectors.joining(", ")));
 		throw new Redirect(authorizationURL, parameters);
 	}
 
@@ -100,7 +105,9 @@ public class OAuth2 {
 	}
 
 	protected Response retrieveAccessToken(String callbackURL, Map<String, Object> params) {
+		Logger.debug("retrieveAccessToken(%s): params - %s", this.getClass().getSimpleName(), params.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue()).collect(Collectors.joining(", ")));
 		HttpResponse response = WS.url(accessTokenURL).params(params).get();
+		Logger.debug("retrieveAccessToken(%s): response - %s", this.getClass().getSimpleName(), response.getString());
 		return new Response(response);
 	}
 
@@ -130,7 +137,7 @@ public class OAuth2 {
 		public final Error error;
 		public final WS.HttpResponse httpResponse;
 
-		private Response(String accessToken, Error error, WS.HttpResponse response) {
+		protected Response(String accessToken, Error error, WS.HttpResponse response) {
 			this.accessToken = accessToken;
 			this.error = error;
 			this.httpResponse = response;
@@ -169,7 +176,7 @@ public class OAuth2 {
 			COMMUNICATION, OAUTH, UNKNOWN
 		}
 
-		private Error(Type type, String error, String description) {
+		protected Error(Type type, String error, String description) {
 			this.type = type;
 			this.error = error;
 			this.description = description;

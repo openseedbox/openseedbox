@@ -5,6 +5,7 @@
     #{script 'postfragment.js' /}
     <script type="text/javascript" language="javascript">
         document.addEventListener('DOMContentLoaded', function () {
+            console.log("redirectTo is ${redirectTo}")
             postFragment("${redirectTo}", new URLSearchParams(window.location.hash.slice(1)));
         });
     </script>

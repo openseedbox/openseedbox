@@ -15,6 +15,10 @@ public class EnhancedOAuth2 extends OAuth2 {
 		super(authorizationURL, accessTokenURL, clientid, secret);
 	}
 
+	public boolean isResponseToRetrieveVerificationCode() {
+		return super.isCodeResponse();
+	}
+
 	@Override
 	public void retrieveVerificationCode(String callbackURL, Map<String, String> parameters) {
 		addUnguessableParamValueAndSaveForLater(STATE_NAME, parameters);
@@ -22,7 +26,7 @@ public class EnhancedOAuth2 extends OAuth2 {
 		super.retrieveVerificationCode(callbackURL, parameters);
 	}
 
-	public boolean shouldAbortTheProcess() {
+	public boolean isStateParameterValid() {
 		String stateFromParams = Scope.Params.current().get(STATE_NAME);
 		String stateFromFlash = Scope.Flash.current().get(STATE_NAME);
 		return !stateFromParams.equals(stateFromFlash);
