@@ -1,5 +1,6 @@
 package com.openseedbox.code.libs;
 
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -181,7 +182,15 @@ public class OAuth2 {
 		static Error oauth2(WS.HttpResponse response) {
 			if (response.getQueryString().containsKey("error")) {
 				Map<String, String> qs = response.getQueryString();
-				return new Error(Type.OAUTH, qs.get("error"), qs.get("error_description"));
+				String error = qs.get("error");
+				if (error != null && !error.contains(" ") && error.indexOf("+") != error.lastIndexOf("+")) {
+					error = URLDecoder.decode(error);
+				}
+				String description = qs.get("error_description");
+				if (description != null && !description.contains(" ") && description.indexOf("+") != description.lastIndexOf("+")) {
+					description = URLDecoder.decode(description);
+				}
+				return new Error(Type.OAUTH, error, description);
 			} else if (response.getContentType().contains("application/json")) {
 				JsonObject jsonResponse = response.getJson().getAsJsonObject();
 				JsonElement error = jsonResponse.getAsJsonPrimitive("error");
