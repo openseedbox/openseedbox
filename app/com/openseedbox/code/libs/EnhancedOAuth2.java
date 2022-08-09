@@ -7,6 +7,9 @@ import java.util.Map;
 
 public class EnhancedOAuth2 extends OAuth2 {
 	public static final String STATE_NAME = "state";
+	protected static final String SCOPE_NAME = "scope";
+
+	public String scope;
 
 	public EnhancedOAuth2(String authorizationURL, String accessTokenURL, String clientid, String secret) {
 		super(authorizationURL, accessTokenURL, clientid, secret);
@@ -14,11 +17,8 @@ public class EnhancedOAuth2 extends OAuth2 {
 
 	@Override
 	public void retrieveVerificationCode(String callbackURL, Map<String, String> parameters) {
-		String unguessableParamValue = parameters.getOrDefault(STATE_NAME, RandomStringUtils.random(128, true, true));
-		parameters.putIfAbsent(STATE_NAME, unguessableParamValue);
-		if (!Scope.Flash.current().contains(STATE_NAME) && !Scope.Session.current().contains(STATE_NAME)) {
-			Scope.Flash.current().put(STATE_NAME, unguessableParamValue);
-		}
+		addUnguessableParamValueAndSaveForLater(STATE_NAME, parameters);
+		parameters.putIfAbsent(SCOPE_NAME, scope);
 		super.retrieveVerificationCode(callbackURL, parameters);
 	}
 
@@ -28,4 +28,12 @@ public class EnhancedOAuth2 extends OAuth2 {
 		return !stateFromParams.equals(stateFromFlash);
 	}
 
+	protected final String addUnguessableParamValueAndSaveForLater (String paramName, Map<String, String> parameters) {
+		String unguessableParamValue = parameters.getOrDefault(paramName, RandomStringUtils.random(128, true, true));
+		parameters.putIfAbsent(paramName, unguessableParamValue);
+		if (!Scope.Flash.current().contains(paramName) && !Scope.Session.current().contains(paramName)) {
+			Scope.Flash.current().put(paramName, unguessableParamValue);
+		}
+		return unguessableParamValue;
+	}
 }
