@@ -45,7 +45,7 @@ public abstract class BaseOAuth<T extends EnhancedOAuth2> extends Base {
 							user.picture != null ? user.picture :
 							String.format("https://www.gravatar.com/avatar/%s",DigestUtils.md5Hex(user.email))
 					);
-					u.setOpenId(user.sub);
+					u.setOpenId(user.sub != null ? user.sub : user.id);
 					u.setLastAccess(new Date());
 
 					//if this is the very first user, set them as admin
@@ -66,7 +66,7 @@ public abstract class BaseOAuth<T extends EnhancedOAuth2> extends Base {
 				redirect("Client.index");
 			} else {
 				Logger.info("No email, no error! What next?!");
-				logoutWithMessage("Please grant the \"email\" OAuth scope to the application and try again!", Level.WARNING);
+				logoutWithMessage(authorizedWithoutEmailMessage(), Level.WARNING);
 			}
 		} else {
 			Logger.warn("Got error from %s! Error: %s", provider.providerName, result.error);
@@ -95,13 +95,17 @@ public abstract class BaseOAuth<T extends EnhancedOAuth2> extends Base {
 
 	protected F.Tuple<String, String> customizeAuthURL(String controllerName, String actionName, Map<String,
 			Object> actionParameters) {
-		return new F.T2(controllerName, actionName);
+		return new F.Tuple(controllerName, actionName);
 	};
+
+	protected String authorizedWithoutEmailMessage() {
+		return "Please grant the \"email\" OAuth scope to the application and try again!";
+	}
 
 	protected final F.Tuple<String, String> customizeAuthURLWithFragmentRedirect(
 			String controllerName, String actionName, Map<String, Object> actionParameters) {
 		actionParameters.put("redirectTo", controllerName + "." + actionName);
-		return new F.T2(Auth.class.getSimpleName(), "fragmentRedirect");
+		return new F.Tuple(Auth.class.getSimpleName(), "fragmentRedirect");
 	};
 
 	protected final void logoutWithMessage(String message, Level logLevel) {

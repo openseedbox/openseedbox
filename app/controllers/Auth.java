@@ -25,6 +25,9 @@ public class Auth extends Base {
 		if (!StringUtils.isEmpty(Config.getKeyCloakClientId())) {
 			renderArgs.put("keyCloak", true);
 		}
+		if (!StringUtils.isEmpty(Config.getGitHubClientId())) {
+			renderArgs.put("gitHub", true);
+		}
 		render();
 	}
 

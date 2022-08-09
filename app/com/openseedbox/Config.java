@@ -28,6 +28,14 @@ public class Config {
 		return Play.configuration.getProperty("openseedbox.auth.keycloak.openid.configuration.url");
 	}
 
+	public static String getGitHubClientId() {
+		return Play.configuration.getProperty("openseedbox.auth.github.clientid");
+	}
+
+	public static String getGitHubClientSecret() {
+		return Play.configuration.getProperty("openseedbox.auth.github.clientsecret");
+	}
+
 	public static String getAssetPrefix() {
 		return Play.configuration.getProperty("openseedbox.assets.prefix", "/public");
 	}

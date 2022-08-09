@@ -40,4 +40,8 @@ public class Base extends BaseController {
 	protected static String getActiveAccountCacheKey() {
 		return session.getId() + "_activeAccount";
 	}
+
+	protected static void setMessageIsRaw() {
+		flash.put("messageIsRaw", true);
+	}
 }

@@ -13,7 +13,6 @@
     <br />
     <p>You can login using OpenID below.</p>
     <br />
-    <div class="row">
     <div class="signin">
         <span id="signinButton">
             <span
@@ -26,15 +25,20 @@
             </span>
         </span>
     </div>
-    </div>
     #{if (keyCloak)}
-    <div class="row">
+    <div>
         <a href="@{AuthKeyCloak.authenticate()}" style="background-color: #0dafd5">
             Sign in with Keycloak
         </a>
     </div>
     #{/if}
+    #{if (gitHub)}
+    <div>
+        <a href="@{AuthGitHub.authenticate()}">
+            Sign in with GitHub
+        </a>
     </div>
+    #{/if}
 </div>
 <script type="text/javascript">
     var signinClicked = false;

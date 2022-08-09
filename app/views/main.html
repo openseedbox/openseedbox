@@ -51,7 +51,7 @@
 				<a class="close" data-dismiss="alert" href="#">&times;</a>
 				<h4 id="flash-success-heading" class="alert-heading">Warning</h4>
 				<span class="flash-message-content">
-					${flash.warning}
+					#{if (flash.messageIsRaw)}${ flash.warning.raw() }#{/if}#{else} ${ flash.warning }#{/else}
 				</span>
 			</div>
 			#{/if}
