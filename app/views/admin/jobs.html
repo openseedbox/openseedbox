@@ -56,7 +56,7 @@
 	out.print(toc)
 
 	jobData.each { id, data ->
-		out.print('<h2 id="' + id + '">' + jobName[id] + '<small>&nbsp;<a href="' + play.mvc.Router.reverse('Admin.runJobManually', [type: id]).url + '">Run</a></small></h2>\n')
+		out.print('<h2 id="' + id + '">' + jobName[id] + '<small>&nbsp;<a href="' + play.mvc.Router.reverse('Admin.runJobManually', [type: id]).url + '#' + id + '">Run</a></small></h2>\n')
 		renderTable(data)
 	}
 }

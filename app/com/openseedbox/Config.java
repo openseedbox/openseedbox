@@ -51,4 +51,10 @@ public class Config {
 		return Play.configuration.getProperty("openseedbox.zip.path", "/rdr");
 	}
 
+	public static Integer getMaintenanceJobEventOlderThanWeeks() {
+		return Integer.max(
+			Integer.parseInt(Play.configuration.getProperty("openseedbox.maintenance.jobevent.older.than.weeks", "1"))
+			, 1
+		);
+	}
 }

@@ -40,4 +40,5 @@ openseedbox.zip.path=/rdr
 openseedbox.zip.manifestonly=false
 openseedbox.context.path=
 openseedbox.assets.prefix=${openseedbox.context.path}/public
+openseedbox.maintenance.jobevent.older.than.weeks=1
 

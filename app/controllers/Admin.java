@@ -13,6 +13,7 @@ import com.openseedbox.code.Util.SelectItem;
 import com.openseedbox.jobs.GenericJob;
 import com.openseedbox.jobs.GenericJobResult;
 import com.openseedbox.jobs.NodePollerJob;
+import com.openseedbox.jobs.admin.WeeklyMaintenanceJob;
 import com.openseedbox.jobs.torrent.RemoveTorrentJob;
 import com.openseedbox.models.*;
 import com.openseedbox.models.util.SafeDeleteBase;
@@ -242,20 +243,35 @@ public class Admin extends Base {
 		renderArgs.put("active", "jobs");
 		List<JobEvent> pollerJobs = JobEvent.getLastList(Arrays.asList(
 				NodePollerJob.class, NodePollerJob.NodePollerWorker.class), 30);
+		List<JobEvent> maintenanceJobs = JobEvent.getLastList(Arrays.asList(
+				WeeklyMaintenanceJob.class, WeeklyMaintenanceJob.JobEventJob.class), 30);
 		Map<String,String> jobNames = Stream.of(new String[][]{
-			{"poller", "Poller Jobs"}
+			{"poller", "Poller Jobs"},
+			{"maintenance", "Maintenance Jobs"}
 		}).collect(Collectors.toMap(p -> p[0], p -> p[1]));
 		Map<String,List<JobEvent>> jobs = Stream.of(new Object[][]{
-			{"poller", pollerJobs}
+			{"poller", pollerJobs},
+			{"maintenance", maintenanceJobs}
 		}).collect(Collectors.toMap(p -> (String) p[0], p -> (List<JobEvent>) p[1]));
 		render("admin/jobs.html", jobNames, jobs);
 	}
 
 	public static void runJobManually(String type) {
-		if (type.equals("poller")) {
-			new NodePollerJob().now();
+		boolean newJob = true;
+		switch (type) {
+			case "poller":
+				new NodePollerJob().now();
+				break;
+			case "maintenance":
+				new WeeklyMaintenanceJob().now();
+				break;
+			default:
+				newJob = false;
+				setGeneralWarningMessage("Unexpected job type: " + type);
 		}
-		setGeneralMessage("Job started.");
+		if (newJob) {
+			setGeneralMessage("Job started.");
+		}
 		jobs();
 	}
 }
