@@ -1,6 +1,7 @@
 package com.openseedbox.jobs;
 
 import com.openseedbox.backend.ITorrent;
+import com.openseedbox.jobs.admin.LoggedAdminJob;
 import com.openseedbox.models.Node;
 import com.openseedbox.models.Torrent;
 import java.util.ArrayList;
@@ -8,8 +9,8 @@ import java.util.List;
 import play.jobs.Every;
 
 @Every("10s")
-@JobName("Node Poller")
-public class NodePollerJob extends LoggedJob {
+@JobName("Node Poller Scheduler")
+public class NodePollerJob extends LoggedAdminJob {
 	
 	@Override
 	protected Object doGenericJob() {
@@ -20,8 +21,8 @@ public class NodePollerJob extends LoggedJob {
 		return null;
 	}
 
-	@JobName("Node Poller Worker")
-	public class NodePollerWorker extends LoggedJob {
+	@JobName("Node Poller")
+	public class NodePollerWorker extends LoggedAdminJob {
 		Node n;
 
 		public NodePollerWorker(Node node) {

@@ -1,10 +1,10 @@
 package com.openseedbox.models;
 
 import com.openseedbox.jobs.JobName;
-import com.openseedbox.jobs.LoggedJob;
 
 import java.util.*;
 
+import com.openseedbox.jobs.admin.LoggedAdminJob;
 import siena.Column;
 import siena.Table;
 
@@ -14,7 +14,7 @@ public class JobEvent extends EventBase {
 	@Column("job_class") private String jobClass;
 	@Column("job_title") private String jobTitle;
 	
-	public JobEvent(LoggedJob job) {
+	public JobEvent(LoggedAdminJob job) {
 		startDate = new Date();		
 		jobClass = job.getClass().getName();
 		JobName n = job.getClass().getAnnotation(JobName.class);
@@ -26,15 +26,15 @@ public class JobEvent extends EventBase {
 		return JobEvent.all().order("-startDate").limit(30).fetch();
 	}
 	
-	public static List<JobEvent> getLast(Class<? extends LoggedJob> jobClass, int limit) {
-		List<Class<? extends LoggedJob>> oneList = new ArrayList<Class<? extends LoggedJob>>();
+	public static List<JobEvent> getLast(Class<? extends LoggedAdminJob> jobClass, int limit) {
+		List<Class<? extends LoggedAdminJob>> oneList = new ArrayList<Class<? extends LoggedAdminJob>>();
 		oneList.add(jobClass);
 		return getLastList(oneList, limit);
 	}
 
-	public static List<JobEvent> getLastList(List<Class<? extends LoggedJob>> jobClasses, int limit) {
+	public static List<JobEvent> getLastList(List<Class<? extends LoggedAdminJob>> jobClasses, int limit) {
 		List<String> jobClassNames = new ArrayList<String>();
-		for (Class jobClass: jobClasses) {
+		for (Class<? extends LoggedAdminJob> jobClass: jobClasses) {
 			jobClassNames.add(jobClass.getName());
 		}
 		return JobEvent.all().filter("jobClass IN", jobClassNames)

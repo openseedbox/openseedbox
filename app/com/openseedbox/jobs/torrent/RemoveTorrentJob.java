@@ -23,7 +23,7 @@ public class RemoveTorrentJob extends LoggedJob<TorrentEvent> {
 	}
 
 	@Override
-	protected TorrentEvent getJobEvent() {
+	protected TorrentEvent getEvent() {
 		return event;
 	}		
 

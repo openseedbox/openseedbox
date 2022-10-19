@@ -2,8 +2,9 @@ package com.openseedbox.jobs;
 
 import com.openseedbox.code.Util;
 import com.openseedbox.models.EventBase;
-import com.openseedbox.models.JobEvent;
+
 import java.util.Date;
+
 import play.Logger;
 import play.Play;
 import play.Play.Mode;
@@ -12,7 +13,7 @@ public abstract class LoggedJob<T extends EventBase> extends GenericJob {
 
 	@Override
 	protected GenericJobResult runJob() throws Exception {				
-		EventBase eb = getJobEvent();
+		T eb = getEvent();
 		eb.setStartDate(new Date());
 		long startMillis = System.currentTimeMillis();
 		GenericJobResult res = super.runJob();
@@ -28,14 +29,12 @@ public abstract class LoggedJob<T extends EventBase> extends GenericJob {
 		} else {
 			eb.setSuccessful(true);
 		}		
-		logResult(res, (T) eb);
+		logResult(res, eb);
 		return res;
 	}	
 	
-	protected T getJobEvent() {
-		return (T) new JobEvent(this);
-	}
-	
+	protected abstract T getEvent();
+
 	protected void logResult(GenericJobResult res, T event) {		
 		event.update();		
 	}
