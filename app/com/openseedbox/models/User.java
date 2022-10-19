@@ -13,38 +13,53 @@ import org.apache.commons.lang.StringUtils;
 import play.Play;
 import play.data.validation.Email;
 import play.data.validation.Required;
-import siena.Column;
-import siena.Table;
-import siena.Unique;
-import siena.embed.Embedded;
 
-@Table("users")
+import javax.persistence.*;
+
+@Entity
+@Table(name = "users")
 public class User extends ModelBase {
 	
-	@Email @Required @Column("email_address")
-	@Unique("email_address_unique") private String emailAddress;
-	@Column("open_id") private String openId;	
-	@Column("is_admin") private boolean admin;	
-	@Column("avatar_url") private String avatarUrl;	
-	@Required @Column("display_name") private String displayName;	
-	@Column("last_access") private Date lastAccess;				
-	@Column("api_key") private String apiKey;
-	@Column("plan_id") private Plan plan;
-	@Embedded private List<String> groups;
-	@Column("node_id") private Node dedicatedNode;
+	@Email
+	@Required
+	@Column(unique = true)
+	private String emailAddress;
+
+	private String openId;
+
+	//@Column(name = "is_admin") ??
+	private boolean admin;
+
+	private String avatarUrl;
+
+	@Required
+	private String displayName;
+
+	private Date lastAccess;
+
+	private String apiKey;
+
+	//@Column("plan_id") ??
+	@ManyToOne
+	private Plan plan;
+
+	private List<String> groups;
+
+	@ManyToOne
+	private Node dedicatedNode;
 	
 	public static final transient String TORRENT_GROUP_UNGROUPED = "Ungrouped";
 	
 	public static User findByApiKey(String apiKey) {		
-		return User.all().filter("apiKey", apiKey).get();
+		return User.<User>all().where().eq("apiKey", apiKey).findUnique();
 	}
 	
 	public static User findByOpenId(String openId) {
-		return User.all().filter("openId", openId).get();
+		return User.<User>all().where().eq("openId", openId).findUnique();
 	}
 	
 	public static User findByEmailAddress(String emailAddress) {
-		return User.all().filter("emailAddress", emailAddress).get();
+		return User.<User>all().where().eq("emailAddress", emailAddress).findUnique();
 	}	
 	
 	public boolean hasExceededLimits() {
@@ -56,7 +71,7 @@ public class User extends ModelBase {
 	}
 	
 	public List<UserTorrent> getRunningTorrents() {
-		return UserTorrent.all().filter("user", this).filter("paused", false).fetch();
+		return UserTorrent.<UserTorrent>all().where().eq("user", this).eq("paused", false).findList();
 	}
 	
 	public void generateApiKey() {
@@ -215,7 +230,7 @@ public class User extends ModelBase {
 
 	public Plan getPlan() {
 		if (plan != null) {
-			plan.get();
+			plan = Plan.findById(plan.id);
 		}
 		return plan;
 	}
@@ -246,7 +261,7 @@ public class User extends ModelBase {
 
 	public Node getDedicatedNode() {
 		if (dedicatedNode != null) {
-			dedicatedNode.get();
+			dedicatedNode = Node.findById(dedicatedNode.id);
 		}
 		return dedicatedNode;
 	}

@@ -9,16 +9,18 @@ import com.openseedbox.code.Util;
 import com.openseedbox.gson.SerializedAccessorName;
 import com.openseedbox.gson.UseAccessor;
 
-import siena.Column;
-import siena.Table;
+import javax.persistence.*;
 
-@Table("torrent_group")
+@Entity
+@Table(name = "torrent_group")
 @UseAccessor
 public class UserTorrent extends ModelBase {
 
-	@Column("group_name") private String groupName;
-	@Column("user_id") private User user;
-	@Column("torrent_hash") private String torrentHash;
+	private String groupName;
+	@ManyToOne (optional = false)
+	private User user;
+	@ManyToOne (targetEntity = Torrent.class, optional = false)
+	private String torrentHash;
 	private transient Torrent torrent;
 	private boolean paused;
 	private boolean running;
@@ -28,30 +30,45 @@ public class UserTorrent extends ModelBase {
 	}
 
 	public static List<UserTorrent> getByUser(User u) {
-		return UserTorrent.all().filter("user", u).fetch();
+		return UserTorrent.<UserTorrent>all()
+				.where()
+				.eq("user", u)
+				.findList();
 	}
 
 	public static List<UserTorrent> getByUserAndGroup(User u, String group) {
-		return UserTorrent.all()
-				  .filter("user", u).filter("groupName", group).fetch();
+		return UserTorrent.<UserTorrent>all()
+				.where()
+				.eq("user", u)
+				.eq("groupName", group)
+				.findList();
 	}
 
 	public static UserTorrent getByUser(User u, String hash) {
-		return UserTorrent.all().filter("user", u)
-				  .filter("torrentHash", hash).get();
+		return UserTorrent.<UserTorrent>all()
+				.where()
+				.eq("user", u)
+				.eq("torrentHash", hash)
+				.findUnique();
 	}
 
 	public static List<UserTorrent> getByUser(User u, List<String> hashes) {
-		return UserTorrent.all().filter("user", u)
-				  .filter("torrentHash IN", hashes).fetch();
+		return UserTorrent.<UserTorrent>all()
+				.where()
+				.eq("user", u)
+				.eq("torrentHash IN", hashes)
+				.findList();
 	}
 
 	public static List<UserTorrent> getByHash(String hash) {
-		return UserTorrent.all().filter("torrentHash", hash).fetch();
+		return UserTorrent.<UserTorrent>all()
+				.where()
+				.eq("torrentHash", hash)
+				.findList();
 	}
 
 	public static int getUsersWithTorrentCount(String hash) {
-		return UserTorrent.all().filter("torrentHash", hash).count();
+		return UserTorrent.<UserTorrent>all().where().eq("torrentHash", hash).findRowCount();
 	}
 
 	public static void blankOutGroup(User u, String group) {
@@ -59,17 +76,17 @@ public class UserTorrent extends ModelBase {
 		for (UserTorrent ut : list) {
 			ut.setGroupName(null);
 		}
-		UserTorrent.batch().update(list);
+		save(list);
 	}
 
 	public static boolean isTorrentStoppedByAllUsers(String hash) {
-		int count = UserTorrent.all().filter("torrentHash", hash).count();
-		int paused = UserTorrent.all().filter("torrentHash", hash).filter("paused", true).count();
+		int count = UserTorrent.<UserTorrent>all().where().eq("torrentHash", hash).findRowCount();
+		int paused = UserTorrent.<UserTorrent>all().where().eq("torrentHash", hash).eq("paused", true).findRowCount();
 		return (count == paused);
 	}
 
 	public static boolean isTorrentStartedByAUser(String hash) {
-		return UserTorrent.all().filter("torrentHash", hash).filter("paused", false).count() >= 1;
+		return UserTorrent.all().where().eq("torrentHash", hash).eq("paused", false).findRowCount() >= 1;
 	}
 
 	@SerializedAccessorName("nice-status")

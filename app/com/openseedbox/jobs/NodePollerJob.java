@@ -39,7 +39,7 @@ public class NodePollerJob extends ErrorLoggedAdminJob {
 					db.merge(match);
 				}
 			}
-			Torrent.batch().update(fromDb);
+			Torrent.save(fromDb);
 			return null;
 		}
 	}

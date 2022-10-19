@@ -2,28 +2,27 @@ package com.openseedbox.models;
 
 import com.openseedbox.jobs.JobName;
 
+import javax.persistence.Entity;
 import java.util.*;
 
 import com.openseedbox.jobs.admin.LoggedAdminJob;
-import siena.Column;
-import siena.Table;
 
-@Table("job_event")
+@Entity
 public class JobEvent extends EventBase {
 
-	@Column("job_class") private String jobClass;
-	@Column("job_title") private String jobTitle;
+	private String jobClass;
+	private String jobTitle;
 	
 	public JobEvent(LoggedAdminJob job) {
 		startDate = new Date();		
 		jobClass = job.getClass().getName();
 		JobName n = job.getClass().getAnnotation(JobName.class);
 		jobTitle = (n != null) ? n.value() : jobClass;
-		this.insert();
+		this.save();
 	}	
 	
 	public static List<JobEvent> getLast30() {
-		return JobEvent.all().order("-startDate").limit(30).fetch();
+		return JobEvent.<JobEvent>all().orderBy("startDate desc").setMaxRows(30).findList();
 	}
 	
 	public static List<JobEvent> getLast(Class<? extends LoggedAdminJob> jobClass, int limit) {
@@ -37,14 +36,15 @@ public class JobEvent extends EventBase {
 		for (Class<? extends LoggedAdminJob> jobClass: jobClasses) {
 			jobClassNames.add(jobClass.getName());
 		}
-		return JobEvent.all().filter("jobClass IN", jobClassNames)
-				.order("-startDate").limit(limit).fetch();
+		return JobEvent.<JobEvent>all().where().in("jobClass", jobClassNames)
+				.orderBy("startDate desc").setMaxRows(limit).findList();
 	}
 
 	public static int deleteOlderThan(Date date) {
-		return JobEvent.all().filter("startDate <", date).delete();
+		//JobEvent.all().where().lt("startDate", date).delete();
+		return createDeleteQuery(JobEvent.class,"startDate < ?", new Object[] { date } ).execute();
 	}
-	
+
 	/* Getters and Setters */
 	public String getJobClass() {
 		return jobClass;

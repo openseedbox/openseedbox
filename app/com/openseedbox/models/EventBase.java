@@ -2,16 +2,20 @@ package com.openseedbox.models;
 
 import java.util.Date;
 import org.apache.commons.lang.time.DurationFormatUtils;
-import siena.Column;
-import siena.Text;
 
+import javax.persistence.Column;
+import javax.persistence.Lob;
+import javax.persistence.MappedSuperclass;
+
+@MappedSuperclass
 public abstract class EventBase extends ModelBase {
 	
 	protected boolean successful;
-	@Column("stack_trace") @Text private String stackTrace;
-	@Column("start_date") protected Date startDate;
-	@Column("end_date") protected Date completionDate;
-	@Column("duration_milliseconds") protected long durationMilliseconds;
+	@Lob
+	private String stackTrace;
+	protected Date startDate;
+	@Column( name = "end_date") protected Date completionDate;
+	protected long durationMilliseconds;
 	
 	public String getLastRan() {
 		long now = new Date().getTime();

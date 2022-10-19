@@ -52,7 +52,7 @@ public class Admin extends Base {
 
 	public static void nodes() {
 		String active = "nodes";
-		List<Node> nodes = Node.all().fetch();
+		List<Node> nodes = Node.findAll();
 		renderTemplate("admin/nodes.html", active, nodes);
 	}
 
@@ -69,13 +69,13 @@ public class Admin extends Base {
 
 	public static void updateNode(@Valid Node node) {
 		if (!Validation.hasErrors()) {
-			node.insertOrUpdate();
+			node.save();
 			setGeneralMessage("Node '" + node.getName() + "' created/updated successfully.");
 			nodes();
 		}
 		Validation.keep();
 		params.flash();
-		if (node.isNew()) {
+		if (node.getId() == null) {
 			createNode();
 		}
 		editNode(node.getId());
@@ -96,7 +96,7 @@ public class Admin extends Base {
 
 	public static void plans() {
 		String active = "plans";
-		List<Plan> plans = Plan.all().order("monthlyCost").fetch();
+		List<Plan> plans = Plan.getAllPlansOrdered("monthlyCost");
 		renderTemplate("admin/plans.html", active, plans);
 	}
 
@@ -113,13 +113,13 @@ public class Admin extends Base {
 
 	public static void updatePlan(@Valid Plan plan) {
 		if (!Validation.hasErrors()) {
-			plan.insertOrUpdate();
+			plan.save();
 			setGeneralMessage("Plan '" + plan.getName() + "' created/updated successfully.");
 			plans();
 		}
 		Validation.keep();
 		params.flash();
-		if (plan.isNew()) {
+		if (plan.getId() == null) {
 			createPlan();
 		}
 		editPlan(plan.getId());
@@ -140,14 +140,14 @@ public class Admin extends Base {
 
 	public static void users() {
 		 String active = "users";
-		 List<User> users = User.all().fetch();
+		 List<User> users = User.findAll();
 		 renderTemplate("admin/users.html", active, users);
 	}
 
 	public static void editUser(long id) {
 		 String active = "users";
 		 User user = User.findById(id);
-		 List<Plan> all_plans = Plan.all().fetch();
+		 List<Plan> all_plans = Plan.findAll();
 		 List<Node> all_nodes = Node.getActiveNodes();
 		 List<ISelectListItem> plans = new ArrayList<ISelectListItem>();
 		 List<ISelectListItem> nodes = new ArrayList<ISelectListItem>();
@@ -216,7 +216,7 @@ public class Admin extends Base {
 
 	public static void restartBackend(long id) {
 		try {
-			Node n = Node.getByKey(id);
+			Node n = Node.findById(id);
 			n.getNodeBackend().restart();
 			setGeneralMessage("Restart request sent successfully!");
 		} catch (MessageException ex) {

@@ -3,7 +3,8 @@ package com.openseedbox.models;
 import java.util.ArrayList;
 import java.util.List;
 import play.data.validation.Required;
-import siena.embed.Embedded;
+
+import javax.persistence.Embedded;
 
 public class NodeGroup extends ModelBase {
 	
@@ -22,7 +23,10 @@ public class NodeGroup extends ModelBase {
 		if (nodesInGroup == null) {
 			return new ArrayList<Node>();
 		}
-		return Node.all().filter("id IN", nodesInGroup).fetch();
+		return Node.<Node>all()
+				.where()
+				.in("id", nodesInGroup)
+				.findList();
 	}
 
 	public void addNodeToGroup(Node n) {

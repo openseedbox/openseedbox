@@ -5,14 +5,22 @@ require:
         exclude:
             - log4j -> *
             - org.slf4j -> slf4j-log4j12
-    - play -> siena 2.0.7:
-        transitive: false
+    #- play -> ebean 1.0.6
+    - play-ebean -> ebean latest.integration
+    #- com.google.code.maven-play-plugin.org.playframework.modules.ebean -> play-ebean 1.0.6:
+    #    transitive: false
+    #- org.avaje -> ebean 2.7.4:
+    #    transitive: true
+    #- play -> siena 2.0.7:
+    #    transitive: false
     - openseedbox-common -> openseedbox-common latest.integration
     - ch.qos.reload4j -> reload4j [1.2.21,2[:
         transitive: false
     - org.slf4j -> slf4j-reload4j [1.7.0,2[
     - org.postgresql -> postgresql 42.3.4:
         force: true
+        transitive: false
+    - javax.xml.bind -> jaxb-api 2.3.0
 
 repositories:
     - localCheckout:
@@ -20,3 +28,8 @@ repositories:
        artifact: ${application.path}/../[module]
        contains:
           - openseedbox-common
+    - localCheckout2:
+          type: local
+          artifact: ${application.path}/../play1-ebean/dist/[artifact]-[revision].zip
+          contains:
+              - play-ebean -> ebean *

@@ -59,7 +59,7 @@ public class AddTorrentJob extends LoggedJob<TorrentEvent> {
 		user.addTorrentGroup(groupName);
 		ut.setGroupName(groupName);	
 		ut.setRunning(true);
-		ut.insert();		
+		ut.save();
 		
 		event.setTorrentHash(added.getTorrentHash());
 		event.setUserNotified(false);	
@@ -73,11 +73,7 @@ public class AddTorrentJob extends LoggedJob<TorrentEvent> {
 
 	@Override
 	protected void onException(Exception ex) {
-		UserMessage um = new UserMessage();		
-		um.setUser(user);
-		um.setHeading("An error occured adding a torrent!");
-		um.setMessage(Util.getStackTrace(ex));
-		um.insert();
+		new UserMessage(user,"An error occured adding a torrent!", Util.getStackTrace(ex)).save();
 	}		
 	
 }

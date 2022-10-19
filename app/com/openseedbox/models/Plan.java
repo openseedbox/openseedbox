@@ -9,22 +9,23 @@ import java.math.BigDecimal;
 import java.util.List;
 import play.data.validation.CheckWith;
 import play.data.validation.Required;
-import siena.Column;
-import siena.Table;
 
-@Table("plan")
+import javax.persistence.Column;
+import javax.persistence.Entity;
+
 @UseAccessor
+@Entity
 public class Plan extends ModelBase {
 	
-	@Required @Column("name") private String name;	
+	@Required private String name;
 	@Required @CheckWith(IsWholeNumber.class)
-	@Column("max_diskspace_gb") private int maxDiskspaceGb;	
+	private int maxDiskspaceGb;
 	@Required @CheckWith(IsWholeNumber.class)
-	@Column("max_active_torrents") private int maxActiveTorrents;	
+	private int maxActiveTorrents;
 	@Required @CheckWith(IsDecimalNumber.class)
-	@Column("monthly_cost") private BigDecimal monthlyCost;	
-	@Column("visible") private boolean visible;	
-	@Column("totalSlots") private int totalSlots;
+	private BigDecimal monthlyCost;
+	private boolean visible;
+	@Column(name = "totalslots") private int totalSlots;
 	
 	@SerializedAccessorName("is-free")
 	public boolean isFree() {
@@ -33,7 +34,7 @@ public class Plan extends ModelBase {
 	
 	@SerializedAccessorName("used-slots")
 	public int getUsedSlots() {
-		return User.all().filter("plan", this).count();
+		return User.<User>all().where().eq("plan", this).findRowCount();
 	}
 	
 	@SerializedAccessorName("free-slots")
@@ -51,9 +52,19 @@ public class Plan extends ModelBase {
 	}
 	
 	public static List<Plan> getVisiblePlans() {
-		return Plan.all().filter("visible", true).fetch();
+		return Plan.<Plan>all().where().eq("visible", true).findList();
 	}
-	
+
+	@Deprecated
+	public static List<Plan> getVisiblePlansOrdered(String col) {
+		return Plan.<Plan>all().where().eq("visible", true).orderBy(col).findList();
+	}
+
+	@Deprecated
+	public static List<Plan> getAllPlansOrdered(String col) {
+		return Plan.<Plan>all().orderBy(col).findList();
+	}
+
 	/* Getters and Setters */
 
 	@SerializedAccessorName("name")

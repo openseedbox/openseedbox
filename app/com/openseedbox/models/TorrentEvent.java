@@ -1,9 +1,11 @@
 package com.openseedbox.models;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import java.util.Date;
 import java.util.List;
-import siena.Column;
-import siena.Table;
 
 /**
  * When a torrent is added, it gets put in a queue and processed by a job.
@@ -13,35 +15,40 @@ import siena.Table;
  * not successfully added
  * @author Erin Drummond
  */
-@Table("torrent_event")
+@Entity
 public class TorrentEvent extends EventBase {
 
-	@Column("torrent_hash") private String torrentHash;
-	@Column("user_id") private User user;
-	@Column("event_type") private TorrentEventType eventType;
-	@Column("user_notified") private boolean userNotified;
+	private String torrentHash;
+
+	//@Column(name = "user_id") ??
+	private User user;
+
+	@Enumerated(EnumType.STRING)
+	private TorrentEventType eventType;
+
+	private boolean userNotified;
 	
 	public TorrentEvent(TorrentEventType type, User user) {		
 		this.eventType = type;
 		this.user = user;
-		this.insert();
+		this.save();
 	}
 	
 	public static List<TorrentEvent> getIncompleteForUser(User u, TorrentEventType eventType) {
-		return TorrentEvent.all().filter("user", u)
-				  .filter("completionDate", null).filter("eventType", eventType)
-				  .order("eventType").order("startDate").fetch();
+		return TorrentEvent.<TorrentEvent>all().where().eq("user", u)
+				  .isNull("completionDate").eq("eventType", eventType)
+				  .orderBy("eventType, startDate").findList();
 	}
 	
 	public static List<TorrentEvent> getOlderThanMinutes(int minutes) {
 		Date nowMinusMinutes = new Date(System.currentTimeMillis() - (minutes * 1000 * 60));
-		return TorrentEvent.all()
-				  .filter("completionDate", null)
-				  .filter("startDate <", nowMinusMinutes).fetch();
+		return TorrentEvent.<TorrentEvent>all().where()
+				  .isNull("completionDate")
+				  .lt("startDate", nowMinusMinutes).findList();
 	}
 
 	public static int deleteOlderThan(Date date) {
-		return TorrentEvent.all().filter("startDate <", date).delete();
+		return TorrentEvent.<TorrentEvent>all().where().lt("startDate", date).delete();
 	}
 
 	public enum TorrentEventType {

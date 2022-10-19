@@ -38,7 +38,7 @@ public abstract class LoggedJob<T extends EventBase> extends GenericJob {
 	protected abstract T getEvent();
 
 	protected void logResult(GenericJobResult res, T event) {		
-		event.update();		
+		event.save();
 	}
 	
 	protected void sleep(int seconds) {

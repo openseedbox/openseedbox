@@ -36,13 +36,13 @@ public class Account extends Base {
 	
 	public static void plans() {
 		String active = "plans";
-		List<Plan> plans = Plan.all().filter("visible", true).order("monthlyCost").fetch();
+		List<Plan> plans = Plan.getVisiblePlansOrdered("monthlyCost");
 		render("account/plans.html", active, plans);
 	}
 	
 	public static void buyPlan(long id) throws MessageException {
 		User user = getCurrentUser();		
-		Plan newPlan = Plan.getByKey(id);
+		Plan newPlan = Plan.findById(id);
 				
 		if (user.getUnpaidInvoices().size() > 0) {
 			setGeneralErrorMessage("You cannot change your plan if you have unpaid invoices!");
@@ -63,7 +63,7 @@ public class Account extends Base {
 		//check to see if there is an outstanding invoice for this plan.
 		//if there is, use that one instead of creating a new one
 		
-		Plan newPlan = Plan.getByKey(id);
+		Plan newPlan = Plan.findById(id);
 		User u = getCurrentUser();
 		
 		//if an invoice doesnt need to be created because the plan is free, switch immediately

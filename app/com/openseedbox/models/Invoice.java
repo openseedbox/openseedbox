@@ -1,39 +1,38 @@
 package com.openseedbox.models;
 
+import play.data.validation.Required;
+
+import javax.persistence.Entity;
+import javax.persistence.ManyToOne;
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
-import siena.Column;
-import siena.DateTime;
-import siena.Index;
-import siena.Table;
 
-@Table("invoice")
+@Entity
 public class Invoice extends ModelBase {
-	
-	@Column("user_id")
-	@Index("invoice_user_IDX")
+
+	//@Index
+	@Required
+	@NotNull
+	@ManyToOne
 	private User user;
-		
-	@DateTime
-	@Column("invoice_date")
+
+	@Required
+	@NotNull
 	private Date invoiceDate;
 	
-	@DateTime
-	@Column("payment_date")
 	private Date paymentDate;
 	
-	@Column("bitpay_url")
 	private String bitpayUrl;
 	
-	@Column("bitpay_id")
 	private String bitpayId;
 	
 	public static Invoice createInvoice(User u, Plan p) {
 		Invoice i = new Invoice();		
 		i.setUser(u);
 		i.setInvoiceDate(new Date());
-		i.insert();
+		i.save();
 		
 		InvoiceLine line = new InvoiceLine();
 		line.setName(p.getInvoiceLineName());
@@ -41,22 +40,26 @@ public class Invoice extends ModelBase {
 		line.setQuantity(1);
 		line.setPrice(p.getMonthlyCost());
 		line.setParentInvoice(i);
-		line.insert();
+		line.save();
 		
 		return i;
 	}
 	
 	public static List<Invoice> getUnpaidForUser(User u) {
-		return Invoice.all()
-				.filter("user", u)
-				.filter("paymentDate", null).fetch();		
+		return Invoice.<Invoice>all()
+				.where()
+				.eq("user", u)
+				.eq("paymentDate", null)
+				.findList();
 	}
 	
 	public static List<Invoice> getPaidForUser(User u) {
-		return Invoice.all()
-				.filter("user", u)
-				.filter("paymentDate !=", null)
-				.order("-paymentDate").fetch();
+		return Invoice.<Invoice>all()
+				.where()
+				.eq("user", u)
+				.isNotNull("paymentDate")
+				.orderBy("paymentDate desc")
+				.findList();
 	}
 	
 	public boolean hasBeenPaid() {
@@ -64,7 +67,10 @@ public class Invoice extends ModelBase {
 	}
 	
 	public List<InvoiceLine> getInvoiceLines() {
-		return InvoiceLine.all().filter("parentInvoice", this).fetch();
+		return InvoiceLine.<InvoiceLine>all()
+				.where()
+				.eq("parentInvoice", this)
+				.findList();
 	}
 	
 	public BigDecimal getTotalAmount() {

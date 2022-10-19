@@ -22,8 +22,10 @@ import com.openseedbox.plugins.OpenseedboxPlugin.PluginSearchResult;
 import com.openseedbox.plugins.PluginManager;
 
 import play.Logger;
+import play.Play;
 import play.cache.Cache;
 import play.data.binding.As;
+import play.jobs.JobsPlugin;
 import play.libs.F.Promise;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
@@ -55,7 +57,7 @@ public class Client extends Base {
 				new StartStopTorrentJob(ut.getTorrentHash(), TorrentAction.STOP, u.getId()).now();
 				ut.setPaused(true);
 			}
-			UserTorrent.batch().update(running);
+			UserTorrent.save(running);
 			setGeneralErrorMessage("You have exceeded your plan limits! All your torrents will be paused until you free up some space.");
 		}
 	}
@@ -66,7 +68,7 @@ public class Client extends Base {
 		}
 		group = getCurrentGroupName();
 		renderArgs.put("currentGroup", group);				
-		renderArgs.put("users", Util.toSelectItems(User.all().fetch(), "id", "emailAddress"));
+		renderArgs.put("users", Util.toSelectItems(User.findAll(), "id", "emailAddress"));
 		User user = getCurrentUser();
 		List<UserTorrent> torrents = user.getTorrentsInGroup(group);
 		List<String> groups = user.getGroups();		
@@ -79,6 +81,8 @@ public class Client extends Base {
 	public static void update(String group) {
 		//this is intended to be invoked via ajax		
 		List<UserMessage> messages = UserMessage.retrieveForUser(getCurrentUser());
+    JobsPlugin.scheduledJobs.size();
+    JobsPlugin.executor.getQueue().getClass();
 		List<Object> messagesAsObjects = new ArrayList<Object>();
 		for (UserMessage um : messages) {
 			messagesAsObjects.add(Util.convertToMap(new Object[] {
@@ -119,7 +123,7 @@ public class Client extends Base {
 			if (fileFromComputer != null) {
 				for (File f : fileFromComputer) {
 					//copy the file to somewhere more permanent because Play! deletes it when the action completes so the Job cant use it					
-					File tempFile = File.createTempFile(UUID.randomUUID().toString(), ".torrent");
+					File tempFile = File.createTempFile(UUID.randomUUID() + f.getName(), ".torrent");
 					FileUtils.copyFile(f, tempFile);
 					new AddTorrentJob(null, tempFile, user.getId(), getCurrentGroupName()).now();
 					count++;
@@ -284,7 +288,7 @@ public class Client extends Base {
 					ut.setGroupName(groupName);
 				}
 			}
-			UserTorrent.batch().update(uts);
+			UserTorrent.save(uts);
 			Account.uncacheUser();
 		}
 		index(groupName);
