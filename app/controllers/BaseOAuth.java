@@ -31,19 +31,26 @@ public abstract class BaseOAuth<T extends EnhancedOAuth2> extends Base {
 			tryProviderUrlOrLogout(providerService.authorizationURL);
 			providerService.retrieveVerificationCode(authURL());
 		}
-		if (!providerService.isResponseToRetrieveVerificationCode()) {
-			logoutWithMessage(String.format("Unkown response parameters from %s: %s", provider.providerName,
-					params.allSimple().keySet().stream().filter(s ->
-							!s.equalsIgnoreCase("provider") &&
-							!s.equalsIgnoreCase("action") &&
-							!s.equalsIgnoreCase("body")
-					).collect(Collectors.joining(", "))), Level.WARNING);
-		}
 		if (providerService.isStateParameterValid()) {
 			logoutWithMessage(String.format("Invalid %s parameter! Got: %s, expected: %s",
 							T.STATE_NAME, params.get(T.STATE_NAME), flash.get(T.STATE_NAME)),
 					Level.SEVERE
 			);
+		}
+		if (!providerService.isResponseToRetrieveVerificationCode()) {
+			// what did we got?
+			OAuth2.Error oauthError = OAuth2.Error.oauth2(params.allSimple());
+			if (oauthError.type.equals(OAuth2.Error.Type.OAUTH)) {
+				logoutWithMessage(String.format("Error response from %s: %s", provider.providerName, oauthError), Level.SEVERE);
+			}
+			// not verification code, not error ... what else?
+			logoutWithMessage(String.format("Unkown response parameters from %s: %s", provider.providerName,
+				params.allSimple().keySet().stream().filter(s ->
+					!s.equalsIgnoreCase("provider") &&
+						!s.equalsIgnoreCase("action") &&
+						!s.equalsIgnoreCase("body") &&
+						!s.equalsIgnoreCase(T.STATE_NAME)
+				).collect(Collectors.joining(", "))), Level.WARNING);
 		}
 		tryProviderUrlOrLogout(providerService.accessTokenURL);
 		T.Response accessTokenResponse = providerService.retrieveAccessToken(authURL());

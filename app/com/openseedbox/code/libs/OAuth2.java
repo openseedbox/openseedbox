@@ -186,18 +186,20 @@ public class OAuth2 {
 			return new Error(Type.COMMUNICATION, null, null);
 		}
 
+		public static Error oauth2(Map<String, String> responseParams) {
+			String error = responseParams.get("error");
+			if (error != null && !error.contains(" ") && error.indexOf("+") != error.lastIndexOf("+")) {
+				error = URLDecoder.decode(error);
+			}
+			String description = responseParams.get("error_description");
+			if (description != null && !description.contains(" ") && description.indexOf("+") != description.lastIndexOf("+")) {
+				description = URLDecoder.decode(description);
+			}
+			return new Error(Type.OAUTH, error, description);
+		}
 		static Error oauth2(WS.HttpResponse response) {
 			if (response.getQueryString().containsKey("error")) {
-				Map<String, String> qs = response.getQueryString();
-				String error = qs.get("error");
-				if (error != null && !error.contains(" ") && error.indexOf("+") != error.lastIndexOf("+")) {
-					error = URLDecoder.decode(error);
-				}
-				String description = qs.get("error_description");
-				if (description != null && !description.contains(" ") && description.indexOf("+") != description.lastIndexOf("+")) {
-					description = URLDecoder.decode(description);
-				}
-				return new Error(Type.OAUTH, error, description);
+				return Error.oauth2(response.getQueryString());
 			} else if (response.getContentType().contains("application/json")) {
 				JsonObject jsonResponse = response.getJson().getAsJsonObject();
 				JsonElement error = jsonResponse.getAsJsonPrimitive("error");
