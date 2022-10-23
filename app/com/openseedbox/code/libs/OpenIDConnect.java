@@ -15,6 +15,7 @@ import com.google.gson.JsonSyntaxException;
 import org.apache.commons.lang.StringUtils;
 import play.Logger;
 import play.cache.Cache;
+import play.exceptions.ConfigurationException;
 import play.exceptions.JavaExecutionException;
 import play.libs.WS;
 import play.mvc.Scope;
@@ -162,16 +163,25 @@ public class OpenIDConnect extends EnhancedOAuth2 {
 		protected abstract B createBuilder();
 
 		public B withOpenIDConfigurationURL(String url) {
+			if (StringUtils.isEmpty(url)) {
+				throw new ConfigurationException("OpenID configuration URL shouldn't be empty!");
+			}
 			this.openIDConfigurationUrl = url;
 			return builder;
 		}
 
 		public B withClientId (String clientid) {
+			if (StringUtils.isEmpty(clientid)) {
+				throw new ConfigurationException("client id shouldn't be empty!");
+			}
 			this.building.clientid = clientid;
 			return builder;
 		}
 
 		public B withClientSecret (String secret) {
+			if (StringUtils.isEmpty(secret)) {
+				throw new ConfigurationException("client secret shouldn't be empty!");
+			}
 			this.building.secret = secret;
 			return builder;
 		}

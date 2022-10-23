@@ -13,7 +13,7 @@ public class AuthKeyCloak extends BaseOIDCAuth<KeyCloakOIDC> {
 				.withClientId(Config.getKeyCloakClientId())
 				.withClientSecret(Config.getKeyCloakClientSecret())
 				.withOpenIDConfigurationURL(Config.getKeyCloakOpenIdConfigurationUrl())
-				.withResponseMode(ResponseMode.valueOf(Config.getKeyCloakResponseMode()))
+				.withResponseMode(ResponseMode.valueOfLabel(Config.getKeyCloakResponseMode()))
 				.build();
 
 		provider.providerService = service;

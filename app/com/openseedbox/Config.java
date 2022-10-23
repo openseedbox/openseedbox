@@ -37,7 +37,7 @@ public class Config {
 	}
 
 	public static String getKeyCloakResponseMode() {
-		return Play.configuration.getProperty("openseedbox.auth.keycloak.resoponse.mode");
+		return Play.configuration.getProperty("openseedbox.auth.keycloak.response.mode");
 	}
 
 	public static String getGitHubClientId() {
