@@ -1,5 +1,6 @@
 package controllers;
 
+import com.openseedbox.code.MessageException;
 import com.openseedbox.code.libs.EnhancedOAuth2;
 import com.openseedbox.code.libs.OAuth2;
 import com.openseedbox.models.ScopedUser;
@@ -7,9 +8,9 @@ import com.openseedbox.models.User;
 import com.openseedbox.mvc.TemplateNameResolver;
 import org.apache.commons.codec.digest.DigestUtils;
 import play.Logger;
+import play.Play;
 import play.cache.Cache;
 import play.exceptions.ConfigurationException;
-import play.exceptions.JavaExecutionException;
 import play.libs.WS;
 import play.mvc.Router;
 
@@ -117,8 +118,7 @@ public abstract class BaseOAuth<T extends EnhancedOAuth2> extends Base {
 			throw e;
 		} catch (Throwable e) {
 			String m = "Got exception while contacting auth provider!";
-			Logger.error(e, m);
-			logoutWithMessage(m, Level.SEVERE);
+			logoutWithMessage(e, m, Level.SEVERE);
 		}
 		// never ever ...
 		return null;
@@ -147,6 +147,15 @@ public abstract class BaseOAuth<T extends EnhancedOAuth2> extends Base {
 
 	protected String authorizedWithoutEmailMessage() {
 		return "Please grant the \"email\" OAuth scope to the application and try again!";
+	}
+
+	protected final void logoutWithMessage(Throwable t, String message, Level logLevel) {
+		if (Play.mode == Play.Mode.DEV) {
+			throw new MessageException(message, t);
+		} else {
+			Logger.error(t, message);
+		}
+		logoutWithMessage(message, logLevel);
 	}
 
 	protected final void logoutWithMessage(String message, Level logLevel) {
