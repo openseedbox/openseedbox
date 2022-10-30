@@ -2,6 +2,8 @@ package com.openseedbox;
 
 import play.Play;
 
+import static com.openseedbox.code.libs.KeyCloakOIDC.DEFAULT_RESPONSE_MODE;
+
 /**
  * Wrapper for getting things from application.conf
  * @author Erin Drummond
@@ -37,7 +39,7 @@ public class Config {
 	}
 
 	public static String getKeyCloakResponseMode() {
-		return Play.configuration.getProperty("openseedbox.auth.keycloak.response.mode");
+		return Play.configuration.getProperty("openseedbox.auth.keycloak.response.mode", DEFAULT_RESPONSE_MODE);
 	}
 
 	public static String getGitHubClientId() {

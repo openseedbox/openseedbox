@@ -1,12 +1,14 @@
 package com.openseedbox.code.libs;
 
 import com.openseedbox.code.libs.oidc.ResponseMode;
+import play.exceptions.ConfigurationException;
 import play.mvc.Scope;
 
 import java.util.Map;
 
 public class KeyCloakOIDC extends OpenIDConnect {
 	public static final String DEFAULT_GRANT_TYPE = "authorization_code";
+	public static final String DEFAULT_RESPONSE_MODE = ResponseMode.FRAGMENT.toString();
 
 	protected static final String RESPONSE_MODE_NAME = "response_mode";
 	protected static final String GRANT_TYPE_NAME = "grant_type";
@@ -58,6 +60,11 @@ public class KeyCloakOIDC extends OpenIDConnect {
 		}
 
 		public Builder withResponseMode(ResponseMode responseMode) {
+			if (responseMode == null) {
+				throw new ConfigurationException("KeyCloak response mode shouldn't be empty!");
+			} else if (responseMode.toString().endsWith("jwt")) {
+				throw new UnsupportedOperationException("JWT response processing is not implemented yet!");
+			}
 			this.building.responseMode = responseMode;
 			return this;
 		}
