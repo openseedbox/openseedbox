@@ -29,7 +29,7 @@ public class EnhancedOAuth2 extends OAuth2 {
 	public boolean isStateParameterValid() {
 		String stateFromParams = Scope.Params.current().get(STATE_NAME);
 		String stateFromFlash = Scope.Flash.current().get(STATE_NAME);
-		return !stateFromParams.equals(stateFromFlash);
+		return stateFromParams != null && stateFromParams.equals(stateFromFlash);
 	}
 
 	protected final String addUnguessableParamValueAndSaveForLater (String paramName, Map<String, String> parameters) {

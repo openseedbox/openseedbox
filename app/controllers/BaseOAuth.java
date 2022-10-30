@@ -31,7 +31,7 @@ public abstract class BaseOAuth<T extends EnhancedOAuth2> extends Base {
 			tryProviderUrlOrLogout(providerService.authorizationURL);
 			providerService.retrieveVerificationCode(authURL());
 		}
-		if (providerService.isStateParameterValid()) {
+		if (!providerService.isStateParameterValid()) {
 			logoutWithMessage(String.format("Invalid %s parameter! Got: %s, expected: %s",
 							T.STATE_NAME, params.get(T.STATE_NAME), flash.get(T.STATE_NAME)),
 					Level.SEVERE
