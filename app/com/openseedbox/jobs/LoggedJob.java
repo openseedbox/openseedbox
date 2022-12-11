@@ -24,9 +24,7 @@ public abstract class LoggedJob<T extends EventBase> extends GenericJob {
 		if (res.hasError()) {
 			eb.setSuccessful(false);			
 			eb.setStackTrace(ExceptionUtils.getStackTrace(res.getError()));
-			if (Play.mode == Mode.DEV) {
-				Logger.error(res.getError(), "Error executing job");
-			}			
+			Logger.error(res.getError(), "Error executing job %s", this);
 		} else {
 			eb.setSuccessful(true);
 		}		
