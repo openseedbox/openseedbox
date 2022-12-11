@@ -5,6 +5,7 @@ import com.openseedbox.models.EventBase;
 
 import java.util.Date;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import play.Logger;
 import play.Play;
 import play.Play.Mode;
@@ -22,7 +23,7 @@ public abstract class LoggedJob<T extends EventBase> extends GenericJob {
 		eb.setCompletionDate(new Date());
 		if (res.hasError()) {
 			eb.setSuccessful(false);			
-			eb.setStackTrace(Util.getStackTrace(res.getError()));
+			eb.setStackTrace(ExceptionUtils.getStackTrace(res.getError()));
 			if (Play.mode == Mode.DEV) {
 				Logger.error(res.getError(), "Error executing job");
 			}			
