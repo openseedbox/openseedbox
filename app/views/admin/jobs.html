@@ -42,9 +42,27 @@
 		<p>No jobs have been run yet.</p>
 	#{/else}
 %{ } }%
+%{ def renderHeaderWithToc = { Map jobName, Map jobData ->
+	if (jobName.size != jobData.size || jobName.size == 0) {
+		return
+	}
+	def toc = '<span><ul class="nav nav-list">\n'
+	toc += '<li class="nav-header">Job List</li>'
+	jobName.each { id, name ->
+		toc += "<li><a href=\"#${id}\">${name}</a></li>\n"
+	}
+	toc += '\n</ul></span>'
+
+	out.print(toc)
+
+	jobData.each { id, data ->
+		out.print('<h2 id="' + id + '">' + jobName[id] + '<small>&nbsp;<a href="' + play.mvc.Router.reverse('Admin.runJobManually', [type: id]).url + '">Run</a></small></h2>\n')
+		renderTable(data)
+	}
+}
+%}
 <span class="pull-right">Time: ${new Date()}</span>
-<h2>Poller Jobs <small><a href="@{Admin.runJobManually('poller')}">Run</a></small></h2>
-${renderTable(pollerJobs)}
+%{renderHeaderWithToc(jobNames, jobs) %}
 <script type="text/javascript">
 	$(document).ready(function() {
 		$("a.show-stack-trace").click(function() {

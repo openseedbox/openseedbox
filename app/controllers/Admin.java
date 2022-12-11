@@ -3,6 +3,9 @@ package controllers;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.openseedbox.code.MessageException;
 import com.openseedbox.code.Util;
@@ -239,7 +242,13 @@ public class Admin extends Base {
 		renderArgs.put("active", "jobs");
 		List<JobEvent> pollerJobs = JobEvent.getLastList(Arrays.asList(
 				NodePollerJob.class, NodePollerJob.NodePollerWorker.class), 30);
-		render("admin/jobs.html", pollerJobs);
+		Map<String,String> jobNames = Stream.of(new String[][]{
+			{"poller", "Poller Jobs"}
+		}).collect(Collectors.toMap(p -> p[0], p -> p[1]));
+		Map<String,List<JobEvent>> jobs = Stream.of(new Object[][]{
+			{"poller", pollerJobs}
+		}).collect(Collectors.toMap(p -> (String) p[0], p -> (List<JobEvent>) p[1]));
+		render("admin/jobs.html", jobNames, jobs);
 	}
 
 	public static void runJobManually(String type) {
