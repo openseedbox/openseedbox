@@ -2,6 +2,7 @@ package com.openseedbox.jobs;
 
 import com.openseedbox.backend.ITorrent;
 import com.openseedbox.jobs.admin.LoggedAdminJob;
+import com.openseedbox.jobs.node.LoggedNodeJob;
 import com.openseedbox.models.Node;
 import com.openseedbox.models.Torrent;
 import java.util.ArrayList;
@@ -22,11 +23,9 @@ public class NodePollerJob extends LoggedAdminJob {
 	}
 
 	@JobName("Node Poller")
-	public class NodePollerWorker extends LoggedAdminJob {
-		Node n;
-
+	public class NodePollerWorker extends LoggedNodeJob {
 		public NodePollerWorker(Node node) {
-			this.n = node;
+			super(node);
 		}
 
 		@Override
