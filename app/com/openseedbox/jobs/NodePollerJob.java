@@ -1,17 +1,18 @@
 package com.openseedbox.jobs;
 
 import com.openseedbox.backend.ITorrent;
-import com.openseedbox.jobs.admin.LoggedAdminJob;
+import com.openseedbox.jobs.admin.ErrorLoggedAdminJob;
 import com.openseedbox.jobs.node.LoggedNodeJob;
 import com.openseedbox.models.Node;
 import com.openseedbox.models.Torrent;
 import java.util.ArrayList;
 import java.util.List;
+
 import play.jobs.Every;
 
 @Every("10s")
 @JobName("Node Poller Scheduler")
-public class NodePollerJob extends LoggedAdminJob {
+public class NodePollerJob extends ErrorLoggedAdminJob {
 	
 	@Override
 	protected Object doGenericJob() {
