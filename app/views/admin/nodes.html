@@ -70,8 +70,10 @@
 					$(self).find(".node-free-space").html(parseInt(data['free-space-bytes'] / (1024 * 1024 * 1024)) + "GB");
 					$(self).find(".node-used-space").html(parseInt(data['used-space-bytes'] / (1024 * 1024 * 1024)) + "GB");	
 					var running = data['is-backend-running'];					
-					var html = (!running) ? "<span class='text-error'>no</span>" : "<span class='text-success'>yes</span>";
-					$(self).find(".node-backend-up").html(html);					
+					var html = (!running) ? "<span class='text-error'>no</span>" : "<span class='text-success' rel='tooltip' title='" + data['backend-version'] + "'>yes</span>";
+					var backendUp = $(self).find(".node-backend-up")
+					backendUp.html(html);
+					$(backendUp).find('[rel=tooltip]').tooltip()
 				} else {
 					$(self).find(".node-uptime").html("<span class='text-error'>Error: " + data.error + "</span>");
 				}
