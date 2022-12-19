@@ -39,7 +39,11 @@ public class TorrentEvent extends EventBase {
 				  .filter("completionDate", null)
 				  .filter("startDate <", nowMinusMinutes).fetch();
 	}
-	
+
+	public static int deleteOlderThan(Date date) {
+		return TorrentEvent.all().filter("startDate <", date).delete();
+	}
+
 	public enum TorrentEventType {
 		ADDING, REMOVING
 	}

@@ -41,4 +41,5 @@ openseedbox.zip.manifestonly=false
 openseedbox.context.path=
 openseedbox.assets.prefix=${openseedbox.context.path}/public
 openseedbox.maintenance.jobevent.older.than.weeks=1
+openseedbox.maintenance.torrentevent.older.than.months=1
 

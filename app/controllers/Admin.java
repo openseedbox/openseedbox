@@ -13,6 +13,7 @@ import com.openseedbox.code.Util.SelectItem;
 import com.openseedbox.jobs.GenericJob;
 import com.openseedbox.jobs.GenericJobResult;
 import com.openseedbox.jobs.NodePollerJob;
+import com.openseedbox.jobs.admin.MonthlyMaintenanceJob;
 import com.openseedbox.jobs.admin.WeeklyMaintenanceJob;
 import com.openseedbox.jobs.torrent.RemoveTorrentJob;
 import com.openseedbox.models.*;
@@ -244,7 +245,8 @@ public class Admin extends Base {
 		List<JobEvent> pollerJobs = JobEvent.getLastList(Arrays.asList(
 				NodePollerJob.class, NodePollerJob.NodePollerWorker.class), 30);
 		List<JobEvent> maintenanceJobs = JobEvent.getLastList(Arrays.asList(
-				WeeklyMaintenanceJob.class, WeeklyMaintenanceJob.JobEventJob.class), 30);
+				WeeklyMaintenanceJob.class, WeeklyMaintenanceJob.JobEventJob.class,
+				MonthlyMaintenanceJob.class, MonthlyMaintenanceJob.TorrentEventJob.class), 30);
 		Map<String,String> jobNames = Stream.of(new String[][]{
 			{"poller", "Poller Jobs"},
 			{"maintenance", "Maintenance Jobs"}
@@ -264,6 +266,7 @@ public class Admin extends Base {
 				break;
 			case "maintenance":
 				new WeeklyMaintenanceJob().now();
+				new MonthlyMaintenanceJob().now();
 				break;
 			default:
 				newJob = false;

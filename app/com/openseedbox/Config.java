@@ -57,4 +57,12 @@ public class Config {
 			, 1
 		);
 	}
+
+	public static Integer getMaintenanceTorrentEventOlderThanMonths() {
+		return Integer.max(
+			Integer.parseInt(Play.configuration.getProperty("openseedbox.maintenance.torrentevent.older.than.months", "1"))
+			, 1
+		);
+	}
+
 }
