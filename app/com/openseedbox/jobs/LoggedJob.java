@@ -27,6 +27,9 @@ public abstract class LoggedJob<T extends EventBase> extends GenericJob {
 			Logger.error(res.getError(), "Error executing job %s", this);
 		} else {
 			eb.setSuccessful(true);
+			if (res.getResult() != null) {
+				eb.setStackTrace(String.valueOf(res.getResult()));
+			}
 		}		
 		logResult(res, eb);
 		return res;

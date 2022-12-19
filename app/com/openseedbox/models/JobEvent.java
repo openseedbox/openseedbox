@@ -41,8 +41,8 @@ public class JobEvent extends EventBase {
 				.order("-startDate").limit(limit).fetch();
 	}
 
-	public static void deleteOlderThan(Date date) {
-		JobEvent.all().filter("startDate <", date).delete();
+	public static int deleteOlderThan(Date date) {
+		return JobEvent.all().filter("startDate <", date).delete();
 	}
 	
 	/* Getters and Setters */

@@ -3,3 +3,4 @@
 #
 validation.whole_number=Please enter a whole number
 validation.decimal_number=Please enter a decimal number
+maintenance.job.rows.deleted=Deleted %d rows from %s which were older than %s

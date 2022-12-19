@@ -25,9 +25,10 @@ public class WeeklyMaintenanceJob extends ErrorLoggedAdminJob {
         protected Object doGenericJob() throws Exception {
             Calendar someWeekAgo = Calendar.getInstance();
             someWeekAgo.add(Calendar.DAY_OF_YEAR, -7 * Config.getMaintenanceJobEventOlderThanWeeks());
-            JobEvent.deleteOlderThan(someWeekAgo.getTime());
-            Logger.debug("everything is awesome at JobEvent delete");
-            return null;
+            Logger.debug("delete before date %s", someWeekAgo.toInstant().toString());
+            int deleted = JobEvent.deleteOlderThan(someWeekAgo.getTime());
+            Logger.debug("deleted %d rows", deleted);
+            return Messages.get("maintenance.job.rows.deleted", deleted, JobEvent.class.getSimpleName(),someWeekAgo.toInstant());
         }
     }
 }
