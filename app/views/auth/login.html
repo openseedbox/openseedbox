@@ -13,7 +13,7 @@
     <br />
     <p>You can login using OpenID below.</p>
     <br />
-    <div class="signin">
+    <div class="signin btn-group">
         <span id="signinButton">
             <span
               class="g-signin2"
@@ -26,23 +26,23 @@
         </span>
     </div>
     #{if (google)}
-    <div>
-        <a href="@{AuthGoogle.authenticate()}">
-            Sign in with Google
+    <div class="btn-group">
+        <a class="btn" style="color: #dd4b39;" href="@{AuthGoogle.authenticate()}">
+            Google
         </a>
     </div>
     #{/if}
     #{if (keyCloak)}
-    <div>
-        <a href="@{AuthKeyCloak.authenticate()}" style="background-color: #0dafd5">
-            Sign in with Keycloak
+    <div class="btn-group">
+        <a class="btn" style="color: #0dafd5;" href="@{AuthKeyCloak.authenticate()}">
+            Keycloak
         </a>
     </div>
     #{/if}
     #{if (gitHub)}
-    <div>
-        <a href="@{AuthGitHub.authenticate()}">
-            Sign in with GitHub
+    <div class="btn-group">
+        <a class="btn" style="color: #444444;" href="@{AuthGitHub.authenticate()}">
+            GitHub
         </a>
     </div>
     #{/if}
