@@ -20,7 +20,7 @@ public class Auth extends Base {
 
 	public static void login() {
 		renderArgs.put("clientId", Config.getGoogleClientId());
-		renderTemplate("auth/login.html");
+		render();
 	}
 
 	public static void logout() {

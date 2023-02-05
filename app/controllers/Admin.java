@@ -46,14 +46,14 @@ public class Admin extends Base {
 		long torrentCount = Torrent.count();
 		long totalSpaceBytes = Node.getTotalSpaceBytes();
 		long usedSpaceBytes = Node.getUsedSpaceBytes();
-		renderTemplate("admin/stats.html", active, nodeCount, userCount, torrentCount,
+		render(active, nodeCount, userCount, torrentCount,
 				  totalSpaceBytes, usedSpaceBytes);
 	}
 
 	public static void nodes() {
 		String active = "nodes";
 		List<Node> nodes = Node.all().fetch();
-		renderTemplate("admin/nodes.html", active, nodes);
+		render(active, nodes);
 	}
 
 	public static void createNode() {
@@ -97,7 +97,7 @@ public class Admin extends Base {
 	public static void plans() {
 		String active = "plans";
 		List<Plan> plans = Plan.all().order("monthlyCost").fetch();
-		renderTemplate("admin/plans.html", active, plans);
+		render(active, plans);
 	}
 
 	public static void createPlan() {
@@ -141,7 +141,7 @@ public class Admin extends Base {
 	public static void users() {
 		 String active = "users";
 		 List<User> users = User.all().fetch();
-		 renderTemplate("admin/users.html", active, users);
+		 render(active, users);
 	}
 
 	public static void editUser(long id) {
@@ -255,7 +255,7 @@ public class Admin extends Base {
 			{"poller", pollerJobs},
 			{"maintenance", maintenanceJobs}
 		}).collect(Collectors.toMap(p -> (String) p[0], p -> (List<JobEvent>) p[1]));
-		render("admin/jobs.html", jobNames, jobs);
+		render(jobNames, jobs);
 	}
 
 	public static void runJobManually(String type) {

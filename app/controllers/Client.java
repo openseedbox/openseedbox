@@ -73,7 +73,7 @@ public class Client extends Base {
 		String torrentList = renderTorrentList(group);
 		List<OpenseedboxPlugin> searchPlugins = PluginManager.getSearchPlugins();
 		List<UserMessage> userMessages = UserMessage.retrieveForUser(user);		
-		renderTemplate("client/index.html", torrentList, groups, torrents, searchPlugins, userMessages);
+		render(torrentList, groups, torrents, searchPlugins, userMessages);
 	}
 	
 	public static void update(String group) {
@@ -183,7 +183,7 @@ public class Client extends Base {
 			resultError(res.getError());
 		}
 		UserTorrent torrent = (UserTorrent) res.getResult();
-		renderTemplate("client/torrent-info.html", torrent);
+		render(torrent);
 	}	
 	
 	public static void torrentDownload(String hash, String type) {
@@ -225,7 +225,7 @@ public class Client extends Base {
 				resultError(res.getError());
 			}
 			UserTorrent torrent = (UserTorrent) res.getResult();
-			renderTemplate("client/torrent-download.html", torrent);
+			render(torrent);
 		}
 	}		
 	
@@ -367,7 +367,7 @@ public class Client extends Base {
 	}
 	
 	public static void newUser() {
-		render("client/new-user.html");
+		render();
 	}
 	
 	public static void switchUser(long user_id) {
