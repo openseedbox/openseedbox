@@ -43,7 +43,7 @@
 	#{/else}
 %{ } }%
 %{ def renderHeaderWithToc = { Map jobName, Map jobData ->
-	if (jobName.size != jobData.size || jobName.isEmpty()) {
+	if (jobName.isEmpty() || jobName.size() != jobData.size()) {
 		return
 	}
 	def toc = '<span><ul class="nav nav-list">\n'

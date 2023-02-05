@@ -26,7 +26,7 @@
 <div class="row">
 	<div class="span10 offset2">
 		<span class="pull-left">
-		#{if currentGroup == "Ungrouped" && groups.size == 1}
+		#{if currentGroup == "Ungrouped" && groups.size() == 1}
 			<h3>All torrents</h3>
 		#{/if}
 		#{else}
@@ -48,7 +48,7 @@
 				%{ if (group.startsWith("_")) { continue; } }%
 				<li class="group #{if currentGroup == group}active#{/if}" data-group-name="${group}">
 					<a href="@{Client.index(group)}">
-						#{if group == "Ungrouped" && groups.size == 1}
+						#{if group == "Ungrouped" && groups.size() == 1}
 							Ungrouped
 						#{/if}
 						#{else}
