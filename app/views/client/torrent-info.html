@@ -30,7 +30,7 @@
 				#{/else}
 			</div>
 			<div class="tab-pane" id="torrent-trackers">
-				#{if (torrent.torrent.trackers.size > 0)}
+				#{if (!torrent.torrent.trackers.isEmpty())}
 				<table class="table table-condensed table-striped">
 					<tr>
 						<th>Host</th>
@@ -71,7 +71,7 @@
 				#{/else}
 			</div>
 			<div class="tab-pane" id="torrent-peers">
-				#{if (torrent.torrent.peers.size > 0)}
+				#{if (!torrent.torrent.peers.isEmpty())}
 				<table class="table table-condensed table-striped">
 					<tr>
 						<th>Address</th>

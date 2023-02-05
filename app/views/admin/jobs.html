@@ -1,6 +1,6 @@
 #{extends "admin/index.html" /}
 %{ def renderTable = { items -> }%
-	#{if items?.size > 0}
+	#{if !items?.isEmpty()}
 	<table class="table table-condensed">
 		<tr>
 			<th style="width:15%">Title</th>
@@ -43,7 +43,7 @@
 	#{/else}
 %{ } }%
 %{ def renderHeaderWithToc = { Map jobName, Map jobData ->
-	if (jobName.size != jobData.size || jobName.size == 0) {
+	if (jobName.size != jobData.size || jobName.isEmpty()) {
 		return
 	}
 	def toc = '<span><ul class="nav nav-list">\n'

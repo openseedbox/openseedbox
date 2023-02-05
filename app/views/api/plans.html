@@ -1,5 +1,5 @@
 <div class="plans">
-#{if plans.size > 0}
+#{if !plans.isEmpty()}
 	#{list items:plans, as:"plan"}
 	<div class="plan">
 		<div class="name">${plan.name}</div>

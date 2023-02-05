@@ -1,7 +1,7 @@
 %{ def Util = com.openseedbox.code.Util }%
 <tr>
 	<td #{if (_file.level > 0)}style="padding-left: ${_file.level * 20}px"#{/if}>
-		#{if (_file.children.size() > 0)}
+		#{if (!_file.children.isEmpty())}
 			<i class="icon-folder-open"></i>
 		#{/if}
 		#{else}
@@ -28,7 +28,7 @@
 	</td>
 	#{/if}
 </tr>
-#{if (_file.children.size > 0)}
+#{if (!_file.children.isEmpty())}
 	#{list items:_file.children, as:"child"}
 		#{file-row file:child, hidePercentComplete: _hidePercentComplete /}
 	#{/list}

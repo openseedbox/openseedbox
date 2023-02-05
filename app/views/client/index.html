@@ -6,7 +6,7 @@
 #{/set}
 #{set title:"Torrents" /}
 <div id="user-messages">
-#{if userMessages?.size > 0}
+#{if !userMessages?.isEmpty()}
 	#{list userMessages}
 	<div class="alert alert-error">
 		<a href="#" data-dismiss="alert" class="close">&times;</a>

@@ -1,16 +1,16 @@
 %{
 	def Util = com.openseedbox.code.Util
 	def torrentQueue = { -> }%
-		#{if torrentAddEvents.size > 0}
+		#{if !torrentAddEvents.isEmpty()}
 			<h5><span class="text-success">Waiting to Add:</span> ${torrentAddEvents.size} torrent${torrentAddEvents.size.pluralize("s")}</h5>
 		#{/if}
-		#{if torrentRemoveEvents.size > 0}
+		#{if !torrentRemoveEvents.isEmpty()}
 			<h5><span class="text-error">Waiting to Remove:</span> ${torrentRemoveEvents.size} torrent${torrentRemoveEvents.size.pluralize("s")}</h5>
 		#{/if}	
 {%
 	}
 }%
-#{if torrents.size > 0}
+#{if !torrents.isEmpty()}
 <table class="table table-condensed table-hover">
 	#{list items:torrents, as:"item"}
 	%{ def t = item.torrent }%

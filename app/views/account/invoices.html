@@ -1,6 +1,6 @@
 #{extends "account/index.html" /}
 <h3>Unpaid Invoices</h3>
-#{if unpaid_invoices.size > 0}
+#{if !unpaid_invoices.isEmpty()}
 <table class="table table-condensed">
 	<tr>
 		<th style="width:5%">#</th>
@@ -37,7 +37,7 @@
 
 
 <h3>Paid Invoices</h3>
-#{if paid_invoices.size > 0}
+#{if !paid_invoices.isEmpty()}
 <table class="table table-condensed">
 	<tr>
 		<th style="width: 5%">#</th>
