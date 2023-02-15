@@ -71,6 +71,7 @@ jobs:
           platforms: ${{ steps.prep.outputs.platforms }}
           context: "{{defaultContext}}:docker"
           target: tester
+          build-args: CACHEBUSTER=${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           outputs: type=tar,dest=./buildx-files.tar
@@ -100,6 +101,7 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           platforms: ${{ steps.prep.outputs.platforms }}
           context: "{{defaultContext}}:docker"
+          build-args: CACHEBUSTER=${{ github.sha }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.prep.outputs.tags }}
           cache-from: type=gha
