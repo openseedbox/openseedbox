@@ -7,9 +7,15 @@ RUN apt update -qq && apt install -y --no-install-recommends \
 
 ARG CACHEBUSTER
 RUN bash -c "for repo in openseedbox{-common,}; do echo updating git for \$repo; cd /src/\$repo; git pull --ff-only origin master; done"
+
+# GIT
+RUN bash -c "git config --global user.email 'you@example.com'; git config --global user.name 'Your Name'"
+# Merge working but not ready PR#87
+RUN bash -c "echo Merge OpenID Connect PR; cd /src/openseedbox; git fetch origin master --shallow-since=2023-02-05; git fetch origin refs/pull/87/head:PR; git merge --no-commit PR;"
+
 RUN bash -c "for repo in openseedbox{-common,}; do echo updating play deps for \$repo; cd /src/\$repo; /play/play deps --sync --forProd; done"
 
-COPY application.conf /src/openseedbox/conf/application.conf
+RUN cp -v /src/openseedbox/docker/application.conf /src/openseedbox/conf/application.conf
 RUN touch /src/openseedbox/conf/application.runtime.conf
 
 WORKDIR /src
@@ -53,6 +59,8 @@ ENV OPENSEEDBOX_MAINTENANCE_TORRENTEVENT_MONTHS=1
 ENV OPENSEEDBOX_SESSION_COOKIE_NAME=NOT_GENERATED
 ENV APPLICATION_SECRET=NOT_GENERATED
 ENV GOOGLE_CLIENTID=
+ENV KEYCLOAK_CLIENTID=
+ENV GITHUB_CLIENTID=
 ENV X_FORWARDED_SUPPORT=127.0.0.1
 
 # Copy WAR file from builder container to the final image
