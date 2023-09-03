@@ -1,8 +1,9 @@
 package com.openseedbox.models.util;
 
 import com.openseedbox.backend.NodeStatus;
-import siena.embed.EmbeddedMap;
 
-@EmbeddedMap
+import javax.persistence.MappedSuperclass;
+
+@MappedSuperclass
 public class EmbeddableNodeStatus extends NodeStatus {
 }

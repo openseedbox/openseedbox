@@ -25,6 +25,7 @@ import play.libs.WS.FileParam;
 import play.libs.WS.HttpResponse;
 import play.libs.WS.WSRequest;
 
+
 /**
  * Essentially this is a "pass-thru" torrent backend that delegates
  * directly to the openseedbox-server API (for whatever node this class
@@ -268,7 +269,7 @@ public class NodeBackend implements ITorrentBackend {
 		for (Torrent t : torrents) {
 			t.setStatus(forceState);
 		}
-		Torrent.batch().update(torrents);
+		Torrent.save(torrents);
 	}
 
 	private JsonElement getResponseBodyOrError(HttpResponse res) {

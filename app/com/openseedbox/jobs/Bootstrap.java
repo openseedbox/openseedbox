@@ -16,7 +16,7 @@ public class Bootstrap extends Job {
 		for(Node n : nodes) {
 			n.setDown(false);				
 		}
-		Node.batch().update(nodes);
+		Node.save(nodes);
 
 		//apply custom certificates
 		Node.reloadSSLContext();

@@ -1,29 +1,41 @@
 package com.openseedbox.models;
 
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
-import siena.Column;
-import siena.Table;
-import siena.Text;
 
-@Table("user_message")
+@Entity
 public class UserMessage extends ModelBase {
 	
 	public static enum State {
 		MESSAGE, ERROR
 	}
-	
-	private State state;			
+
+  @Enumerated(EnumType.STRING)
+	@NotNull
+	private State state;
+	@NotNull
 	private String heading;	
-	@Text private String message;
-	@Column("user_id") private User user;		
-	@Column("create_date") private Date createDate;	
+	@NotNull
+  @Lob
+	private String message;
+	@NotNull
+	@ManyToOne
+	private User user;
+	@NotNull
+	private Date createDate;
+	@NotNull
 	private boolean retrieved;
 	
-	public UserMessage() {
+	public UserMessage(User user, String heading, String message) {
 		retrieved = false;
 		createDate = new Date();
 		state = State.ERROR;
+
+		this.user = user;
+		this.heading = heading;
+		this.message = message;
 	}
 	
 	/**
@@ -33,11 +45,15 @@ public class UserMessage extends ModelBase {
 	 * @return A list of unretrieved messages
 	 */
 	public static List<UserMessage> retrieveForUser(User u) {
-		List<UserMessage> all = UserMessage.all().filter("user", u).filter("retrieved", false).fetch();
+		List<UserMessage> all = UserMessage.<UserMessage>all()
+				.where()
+				.eq("user", u)
+				.eq("retrieved", false)
+				.findList();
 		for (UserMessage um : all) {
 			um.setRetrieved(true);
 		}
-		UserMessage.batch().update(all);
+		save(all);
 		return all;
 	}
 	

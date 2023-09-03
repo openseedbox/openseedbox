@@ -6,19 +6,22 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import play.Logger;
 import play.templates.JavaExtensions;
-import siena.Column;
-import siena.Table;
-import siena.Unique;
 
-@Table("email_error")
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.validation.constraints.NotNull;
+
+@Entity
 public class EmailError extends ModelBase {
+
+	@Column(name = "error_key", unique = true)
+	private String key;
 	
-	@Unique("error_key_unique") @Column("error_key") private String key;
-	
-	@Column("sent_to_email_address") private String sentToEmailAddress;
+	private String sentToEmailAddress;
 	
 	private Date lastSent;
-	
+
+  @NotNull
 	private int sendCount;
 	
 	
@@ -60,7 +63,10 @@ public class EmailError extends ModelBase {
 	}
 	
 	public static EmailError getForKey(String key) {
-		EmailError e =  EmailError.all().filter("key", key).get();
+		EmailError e =  EmailError.<EmailError>all()
+				.where()
+				.eq("key", key)
+				.findUnique();
 		if (e == null) {
 			e = new EmailError();
 			e.setKey(key);

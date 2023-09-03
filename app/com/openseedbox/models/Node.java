@@ -1,9 +1,11 @@
 package com.openseedbox.models;
 
+import com.avaje.ebean.annotation.DbJson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.openseedbox.backend.INodeStatus;
 import com.openseedbox.backend.ITorrentBackend;
+import com.openseedbox.backend.NodeStatus;
 import com.openseedbox.backend.node.NodeBackend;
 import com.openseedbox.code.ws.CustomSSLContext;
 import com.openseedbox.code.MessageException;
@@ -17,35 +19,34 @@ import play.jobs.Job;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
 import play.libs.WS.WSRequest;
-import siena.Column;
-import siena.Table;
-import siena.Text;
-import siena.embed.Embedded;
 
 import javax.net.ssl.SSLContext;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Table("node")
+@Entity
 public class Node extends ModelBase {
 
 	@Required private String name;
-	@Required @Column("ip_address") private String ipAddress;
+	@Required private String ipAddress;
 	@Required private String scheme;
-	@Column("download_ip_address") private String downloadIpAddress;
-	@Column("download_scheme") private String downloadScheme;
-	@Required @Column("api_key") private String apiKey;
-	@Text @CheckWith(IsCertificateOrBlankString.class)
-	@Column("certificates_to_trust") private String certificatesToTrust;
+	private String downloadIpAddress;
+	private String downloadScheme;
+	@Required private String apiKey;
+	@CheckWith(IsCertificateOrBlankString.class)
+	private String certificatesToTrust;
 	private boolean down;
 	private boolean active;
-	@Embedded private EmbeddableNodeStatus status;
+	@DbJson
+	private NodeStatus status;
 
 	@Override
-	public void insertOrUpdate() {
-		super.insertOrUpdate();
+	public void save() {
+		super.save();
 
 		//reload SSLContext
 		reloadSSLContext();
@@ -56,19 +57,29 @@ public class Node extends ModelBase {
 			return u.getDedicatedNode();
 		}
 		//TODO: work this out properly. For now, just use the first one
-		Node node = Node.all().filter("active", true).limit(1).get();
-		if (node == null) {
+		List<Node> nodes = Node.<Node>all()
+				.where()
+				.eq("active", true)
+				.setMaxRows(1)
+				.findList();
+		if (nodes == null || nodes.size() == 0) {
 			throw new IllegalStateException("No available Node was found for you!");
 		}
-		return node;
+		return nodes.get(0);
 	}
 	
 	public static List<Node> getActiveNodes() {
-		return Node.all().filter("active", true).fetch();
+		return Node.<Node>all()
+				.where()
+				.eq("active", true)
+				.findList();
 	}
 
 	public static List<Node> getNodesWithCertificates() {
-		return Node.all().filter("certificatesToTrust !=", null).fetch();
+		return Node.<Node>all()
+				.where()
+				.isNotNull("certificatesToTrust")
+				.findList();
 	}
 
 	/**
@@ -137,7 +148,7 @@ public class Node extends ModelBase {
 			new Job() {
 				@Override
 				public void doJob() throws Exception {
-					update();
+					save();
 				}
 			}.now();
 			return status;
@@ -254,7 +265,7 @@ public class Node extends ModelBase {
 		this.scheme = scheme;
 	}
 	
-	public void setNodeStatus(EmbeddableNodeStatus status) {
+	public void setNodeStatus(NodeStatus status) {
 		this.status = status;
 	}
 

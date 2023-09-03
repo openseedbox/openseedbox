@@ -1,67 +1,27 @@
 package com.openseedbox.models;
 
-import java.lang.reflect.Method;
+import com.avaje.ebean.Transaction;
+
+import javax.persistence.MappedSuperclass;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import play.Logger;
-import play.modules.siena.EnhancedModel;
-import siena.Generator;
-import siena.Id;
-import siena.PersistenceManagerFactory;
-import siena.jdbc.JdbcPersistenceManager;
+import java.util.List;
 
-public abstract class ModelBase extends EnhancedModel {
+@MappedSuperclass
+public abstract class ModelBase extends play.modules.ebean.Model {
 	
-	@Id(Generator.AUTO_INCREMENT)
-	protected long id = Long.MAX_VALUE;
-
-	public long getId() {
-		return id;
-	}
-
-	public void setId(long id) {
-		this.id = id;
-	}
-	
-	public boolean isNew() {
-		return id == Long.MAX_VALUE;
-	}
-	
-	public void insertOrUpdate() {
-		if (isNew()) {
-			this.insert();
-		} else {
-			this.update();
-		}
-	}
-	
-	protected static ResultSet raw(String query) throws SQLException {
-		JdbcPersistenceManager m = (JdbcPersistenceManager) PersistenceManagerFactory.getPersistenceManager(ModelBase.class);
-		Method[] methods = m.getClass().getMethods();
-		Connection c = null;
-		//getConnection() is protected, so run it using reflection
-		for (Method me : methods) {
-			if (me.getName().equals("getConnection")) {
-				try {
-					c = (Connection) me.invoke(m);
-				} catch (Exception ex) {
-					if (ex instanceof SQLException) {
-						throw (SQLException) ex;
-					}
-					Logger.error("Error: %s", ex);
-				}
-			}
-		}
-		return c.createStatement().executeQuery(query);		
-	}
-
-	/**
-	 * siena.Model.save() is not auto increment safe with PostgreSQL! Use insertOrUpdate() instead!
-	 */
-	@Override
 	@Deprecated
-	public void save() {
-		insertOrUpdate();
+	protected static ResultSet raw(String query) throws SQLException {
+		Transaction transaction = ebean().beginTransaction();
+
+		//ebean().createQuery(ModelBase.class).where().raw(query).
+		Connection c = transaction.getConnection();
+		c.setAutoCommit(true);
+		return c.createStatement().executeQuery(query);
+	}
+
+	public static <T extends play.modules.ebean.EbeanSupport> void save(List<T> list) {
+		ebean().saveAll(list);
 	}
 }

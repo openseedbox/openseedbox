@@ -12,37 +12,47 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
-import siena.Column;
-import siena.Table;
 
-@Table("torrent")
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.ManyToOne;
+
+
 @UseAccessor
+@Entity
 public class Torrent extends ModelBase implements ITorrent {
 	
-	@Column("torrent_hash") private String torrentHash;	
+	private String torrentHash;
 	private String name;	
-	@Column("metadata_percent_complete") private double metadataPercentComplete;
-	@Column("percent_complete") private double percentComplete;
-	@Column("download_speed_bytes") private long downloadSpeedBytes;
-	@Column("upload_speed_bytes") private long uploadSpeedBytes;
-	@Column("downloaded_bytes") private long downloadedBytes;
-	@Column("uploaded_bytes") private long uploadedBytes;	
-	@Column("total_size_bytes") private long totalSizeBytes;
-	@Column("zip_download_link") private String zipDownloadLink;
+	private double metadataPercentComplete;
+	private double percentComplete;
+	private long downloadSpeedBytes;
+	private long uploadSpeedBytes;
+	private long downloadedBytes;
+	private long uploadedBytes;
+	private long totalSizeBytes;
+	private String zipDownloadLink;
 	private String error;
+	@Enumerated(EnumType.STRING)
 	private TorrentState state;
-	@Column("create_date")
 	private Date createDate;
-	@Column("node_id")
+	@ManyToOne
 	private Node node;
 	
 	public static Torrent getByHash(String hash) {
-		return Torrent.all().filter("torrentHash", hash).get();
+		return Torrent.<Torrent>all()
+				.where()
+				.eq("torrentHash", hash)
+				.findUnique();
 	}
 	
 	public static List<Torrent> getByHash(List<String> hashes) {
 		if (hashes.size() > 0) {
-			return Torrent.all().filter("torrentHash IN", hashes).fetch();
+			return Torrent.<Torrent>all()
+					.where()
+					.in("torrentHash", hashes)
+					.findList();
 		}
 		return new ArrayList<Torrent>();
 	}
@@ -52,7 +62,11 @@ public class Torrent extends ModelBase implements ITorrent {
 			this.createDate = new Date();
 		}
 	}
-	
+
+	/**
+	 * WTF?!
+	 * @param t
+	 */
 	public void merge(ITorrent t) {
 		if (t == null) {
 			throw new IllegalArgumentException("You cant merge a null torrent!");
@@ -226,7 +240,7 @@ public class Torrent extends ModelBase implements ITorrent {
 	}
 
 	public Node getNode() {
-		return Node.getByKey(node.id);
+		return Node.findById(node.id);
 	}
 
 	public void setNode(Node node) {

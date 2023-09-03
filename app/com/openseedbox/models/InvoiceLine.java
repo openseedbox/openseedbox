@@ -1,27 +1,30 @@
 package com.openseedbox.models;
 
 import java.math.BigDecimal;
-import siena.Column;
-import siena.Index;
-import siena.Table;
 
-@Table("invoice_line")
+import play.data.validation.Required;
+
+import javax.persistence.Entity;
+import javax.persistence.ManyToOne;
+import javax.validation.constraints.NotNull;
+
+@Entity
 public class InvoiceLine extends ModelBase {
-	
-	@Column("invoice_id")
-	@Index("invoice_line_invoice_IDX")
+
+	//needed?
+	//@Column("invoice_id")
+	//@Index("invoice_line_invoice_IDX")
+	@Required
+	@NotNull
+	@ManyToOne
 	private Invoice parentInvoice;
 	
-	@Column("name")
 	private String name;
 	
-	@Column("description")
 	private String description;
 	
-	@Column("price")
 	private BigDecimal price;
 	
-	@Column("quantity")
 	private int quantity;
 	
 
