@@ -8,6 +8,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 import play.Play;
@@ -59,6 +61,13 @@ public class User extends ModelBase {
 		return UserTorrent.all().filter("user", this).filter("paused", false).fetch();
 	}
 	
+	public List<UserTorrent> getActiveTorrents() {
+		return UserTorrent.getByUser(this)
+			.stream()
+			.filter(ut -> ut.getTorrent().getDownloadSpeedBytes() > 0 || ut.getTorrent().getUploadSpeedBytes() > 0)
+			.collect(Collectors.toList());
+	}
+
 	public void generateApiKey() {
 		String salt = Play.configuration.getProperty("application.secret", "salt value");
 		String key = this.emailAddress + salt;
