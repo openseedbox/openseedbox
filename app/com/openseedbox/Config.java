@@ -65,4 +65,8 @@ public class Config {
 		);
 	}
 
+	public static String getClientIndexViewsPosition() {
+		return Play.configuration.getProperty("openseedbox.client.index.view.position", "hide");
+	}
+
 }

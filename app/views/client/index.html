@@ -49,10 +49,12 @@
 			views.active.name = messages.get(views.active.id);
 		}%
 		<ul id="torrent-groups" class="nav nav-pills nav-stacked nav-list">
+			#{if Config.clientIndexViewsPosition == "top"}
 			<li class="#{if currentView == views.active.id }active#{/if}">
 				<a href="@{Client.index(null, views.active.name)}">${views.active.name}</a>
 			</li>
 			<li class="divider"></li>
+			#{/if}
 			#{list items:groups, as:"group"}
 				%{ if (group.startsWith("_")) { continue; } }%
 				<li class="group #{if currentGroup == group}active#{/if}" data-group-name="${group}">
@@ -71,6 +73,12 @@
 			#{/list}
 			<li class="divider"></li>
 			<li><a id="add-group-button" href="#add-group-dialog" data-toggle="modal"><i class="icon-plus"></i> Add Group</a></li>
+			#{if Config.clientIndexViewsPosition == "bottom"}
+			<li class="divider"></li>
+			<li class="#{if currentView == views.active.id }active#{/if}">
+				<a href="@{Client.index(null, views.active.name)}">${views.active.name}</a>
+			</li>
+			#{/if}
 		</ul>
 	</div>
 	<div class="span10">			
