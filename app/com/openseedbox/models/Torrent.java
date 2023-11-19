@@ -29,7 +29,7 @@ public class Torrent extends ModelBase implements ITorrent {
 	@Column("downloaded_bytes") private long downloadedBytes;
 	@Column("uploaded_bytes") private long uploadedBytes;	
 	@Column("total_size_bytes") private long totalSizeBytes;
-	@Column("zip_download_link") private String zipDownloadLink;
+	@Column("zip_download_link") @Text private String zipDownloadLink;
 	private String error;
 	private TorrentState state;
 	@Column("create_date")
