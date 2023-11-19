@@ -14,13 +14,14 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import siena.Column;
 import siena.Table;
+import siena.Text;
 
 @Table("torrent")
 @UseAccessor
 public class Torrent extends ModelBase implements ITorrent {
 	
 	@Column("torrent_hash") private String torrentHash;	
-	private String name;	
+	@Text private String name;
 	@Column("metadata_percent_complete") private double metadataPercentComplete;
 	@Column("percent_complete") private double percentComplete;
 	@Column("download_speed_bytes") private long downloadSpeedBytes;
