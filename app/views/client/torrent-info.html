@@ -77,6 +77,7 @@
 						<th>Address</th>
 						<th>Client</th>
 						<th>Secure</th>
+						<th>Done</th>
 						<th>Down (kb/s)</th>
 						<th>Up (kb/s)</th>
 					</tr>				
@@ -87,6 +88,10 @@
 						<td>
 							#{if peer.encryptionEnabled}<span class="text-success">yes</span>#{/if}
 							#{else}<span class="text-error">no</span>#{/else}
+						</td>
+						<td>
+							#{if peer.percentComplete > -1}${String.format("%.2f", peer.percentComplete * 100)}%#{/if}
+							#{else}n/a#{/else}
 						</td>
 						<td>${Util.getBestRate(peer.downloadRateBytes)}/s</td>
 						<td>${Util.getBestRate(peer.uploadRateBytes)}/s</td>

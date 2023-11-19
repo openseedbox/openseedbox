@@ -11,6 +11,7 @@ public class NodePeer implements IPeer {
 	private long downloadRateBytes;
 	private long uploadRateBytes;
 	private String ipAddress;
+	private double percentComplete;
 
 	public String getClientName() {
 		return clientName;
@@ -68,4 +69,11 @@ public class NodePeer implements IPeer {
 		this.ipAddress = ipAddress;
 	}
 	
+	public double getProgress() {
+		return percentComplete;
+	};
+
+	public void setProgress(double progress) {
+		this.percentComplete = progress;
+	}
 }
