@@ -17,6 +17,10 @@ public class TestTorrent extends UnitTest {
 		return longString("my-awesome-openseedbox-backend-app-127-0-0-1.nip.io:9001/download/zip/", length);
 	}
 
+	String longError(int length) {
+		return longString("JsonSyntaxException occurred : java.lang.IllegalStateException: Expected NUMBER but was BOOLEAN at path $.trackerStats[0].lastScrapeTimedOut\n", length);
+	}
+
 	String longString(String start, int length) {
 		StringBuilder sb = new StringBuilder(start);
 		sb.append(length).append(StringUtils.repeat(chartToAppend, length));
@@ -89,6 +93,42 @@ public class TestTorrent extends UnitTest {
 		t.setName("It's over 9000!");
 		t.setHashString(DigestUtils.sha1Hex(t.getName()));
 		t.setZipDownloadLink(longLink(10000));
+		t.insertOrUpdate();
+	}
+
+	@Test
+	public void testTorrentError100() {
+		Torrent t = new Torrent();
+		t.setName("Simple error");
+		t.setHashString(DigestUtils.sha1Hex(t.getName()));
+		t.setErrorMessage(longError(100));
+		t.insertOrUpdate();
+	}
+
+	@Test
+	public void testTorrentError200() {
+		Torrent t = new Torrent();
+		t.setName("Longer error");
+		t.setHashString(DigestUtils.sha1Hex(t.getName()));
+		t.setErrorMessage(longError(200));
+		t.insertOrUpdate();
+	}
+
+	@Test
+	public void testTorrentError5000() {
+		Torrent t = new Torrent();
+		t.setName("The longest error");
+		t.setHashString(DigestUtils.sha1Hex(t.getName()));
+		t.setErrorMessage(longError(5000));
+		t.insertOrUpdate();
+	}
+
+	@Test
+	public void testTorrentError10000() {
+		Torrent t = new Torrent();
+		t.setName("It's over 9000!");
+		t.setHashString(DigestUtils.sha1Hex(t.getName()));
+		t.setErrorMessage(longError(10000));
 		t.insertOrUpdate();
 	}
 }
