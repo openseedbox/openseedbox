@@ -14,7 +14,12 @@ public abstract class ErrorLoggedAdminJob extends LoggedAdminJob {
 		super.logResult(res, event);
 		if (!res.hasError()) {
 			Logger.trace("deleting actual %s record: %d", this, event.getId());
-			event.delete();
+			try {
+				event.delete();
+			}
+			catch (Exception e) {
+	                        Logger.warn(e, "unable delete actual %s record: %s", this, event.getId());
+			}
 		}
 	}
 }

@@ -7,6 +7,7 @@ import java.util.*;
 import com.openseedbox.jobs.admin.LoggedAdminJob;
 import siena.Column;
 import siena.Table;
+import play.Logger;
 
 @Table("job_event")
 public class JobEvent extends EventBase {
@@ -19,7 +20,11 @@ public class JobEvent extends EventBase {
 		jobClass = job.getClass().getName();
 		JobName n = job.getClass().getAnnotation(JobName.class);
 		jobTitle = (n != null) ? n.value() : jobClass;
-		this.insert();
+		try {
+			this.insert();
+		} catch (Exception e) {
+			Logger.warn(e, "Unable to insert %s event into %s", jobTitle, this.getClass().getSimpleName());
+		}
 	}	
 	
 	public static List<JobEvent> getLast30() {

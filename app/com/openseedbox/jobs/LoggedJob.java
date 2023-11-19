@@ -38,7 +38,11 @@ public abstract class LoggedJob<T extends EventBase> extends GenericJob {
 	protected abstract T getEvent();
 
 	protected void logResult(GenericJobResult res, T event) {		
-		event.update();		
+		try {
+			event.update();
+		} catch (Exception e) {
+			Logger.warn(e, "Unable to log result %s from job %s", event, this);
+		}
 	}
 	
 	protected void sleep(int seconds) {
