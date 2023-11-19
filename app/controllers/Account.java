@@ -72,7 +72,7 @@ public class Account extends Base {
 			u.setPlan(newPlan);
 			u.save();
 			setGeneralMessage("Plan successfully switched to '" + newPlan.getName() + "'");
-			Client.index(null);
+			Client.index(null, null);
 		}
 		
 		//check to see if theres already an active invoice for this plan

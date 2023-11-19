@@ -10,7 +10,7 @@ import play.libs.Mail;
 public class Main extends Base {
 
 	public static void index() {
-		Client.index(null);
+		Client.index(null, null);
 	}
 	
 	public static void testEmail() {

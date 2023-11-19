@@ -24,6 +24,7 @@ import com.openseedbox.plugins.PluginManager;
 import play.Logger;
 import play.cache.Cache;
 import play.data.binding.As;
+import play.i18n.Messages;
 import play.libs.F.Promise;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
@@ -31,6 +32,8 @@ import play.mvc.Before;
 
 public class Client extends Base {
 	
+	public static final String CLIENT_INDEX_VIEW_ACTIVE = "client.index.view.active";
+
 	@Before(unless={"newUser"})
 	public static void checkPlan() {
 		User u = getCurrentUser();
@@ -60,25 +63,38 @@ public class Client extends Base {
 		}
 	}
 	
-	public static void index(String group) {		
+	public static void index(String group, String view) {
 		if (!StringUtils.isEmpty(group)) {
 			setCurrentGroupName(group);
 		}
-		group = getCurrentGroupName();
-		renderArgs.put("currentGroup", group);				
 		renderArgs.put("users", Util.toSelectItems(User.all().fetch(), "id", "emailAddress"));
 		User user = getCurrentUser();
-		List<UserTorrent> torrents = user.getTorrentsInGroup(group);
-		List<String> groups = user.getGroups();		
-		String torrentList = renderTorrentList(group);
+		List<UserTorrent> torrents;
+		String torrentList;
+		if (Objects.equals(view, Messages.get(CLIENT_INDEX_VIEW_ACTIVE))) {
+			renderArgs.put("currentView", CLIENT_INDEX_VIEW_ACTIVE);
+			torrents = user.getActiveTorrents();
+			torrentList = renderTorrentList(user, torrents);
+		} else {
+			group = getCurrentGroupName();
+			renderArgs.put("currentGroup", group);
+			torrents = user.getTorrentsInGroup(group);
+			torrentList = renderTorrentList(group);
+		}
+		List<String> groups = user.getGroups();
 		List<OpenseedboxPlugin> searchPlugins = PluginManager.getSearchPlugins();
 		List<UserMessage> userMessages = UserMessage.retrieveForUser(user);		
 		renderTemplate("client/index.html", torrentList, groups, torrents, searchPlugins, userMessages);
 	}
+
+	private static void index(String group) {
+		index(group, null);
+	}
 	
-	public static void update(String group) {
+	public static void update(String group, String view) {
 		//this is intended to be invoked via ajax		
-		List<UserMessage> messages = UserMessage.retrieveForUser(getCurrentUser());
+		User user = getCurrentUser();
+		List<UserMessage> messages = UserMessage.retrieveForUser(user);
 		List<Object> messagesAsObjects = new ArrayList<Object>();
 		for (UserMessage um : messages) {
 			messagesAsObjects.add(Util.convertToMap(new Object[] {
@@ -88,7 +104,8 @@ public class Client extends Base {
 			}));
 		}
 		result(Util.convertToMap(new Object[] {
-			"torrent-list", renderTorrentList(group),
+			"torrent-list", Objects.equals(view, Messages.get(CLIENT_INDEX_VIEW_ACTIVE)) ?
+				renderTorrentList(user, user.getActiveTorrents()) : renderTorrentList(group),
 			"user-messages", messagesAsObjects
 		}));
 	}
@@ -96,10 +113,15 @@ public class Client extends Base {
 	private static String renderTorrentList(String group) {	
 		if (StringUtils.isEmpty(group)) {
 			group = "Ungrouped";
-		}		
-		List<UserTorrent> torrents = getCurrentUser().getTorrentsInGroup(group);
-		List<TorrentEvent> torrentAddEvents = TorrentEvent.getIncompleteForUser(getCurrentUser(), TorrentEventType.ADDING);		
-		List<TorrentEvent> torrentRemoveEvents = TorrentEvent.getIncompleteForUser(getCurrentUser(), TorrentEventType.REMOVING);
+		}
+		User user = getCurrentUser();
+		List<UserTorrent> torrents = user.getTorrentsInGroup(group);
+		return renderTorrentList(user, torrents);
+	}
+
+	private static String renderTorrentList(User user, List<UserTorrent> torrents) {
+		List<TorrentEvent> torrentAddEvents = TorrentEvent.getIncompleteForUser(user, TorrentEventType.ADDING);
+		List<TorrentEvent> torrentRemoveEvents = TorrentEvent.getIncompleteForUser(user, TorrentEventType.REMOVING);
 		return renderToString("client/torrent-list.html", Util.convertToMap(
 				  new Object[] { "torrents", torrents, "torrentAddEvents", torrentAddEvents, "torrentRemoveEvents", torrentRemoveEvents }));
 	}
