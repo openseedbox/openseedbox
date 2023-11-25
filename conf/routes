@@ -13,6 +13,7 @@ GET ${contextPath}/public/											staticDir:public
 # Auth
 * ${contextPath}/auth/?												Auth.login
 * ${contextPath}/auth/{action}										Auth.{action}
+* ${contextPath}/auth/{provider}/{action}							Auth{provider}.{action}
 
 # Admin screens
 * ${contextPath}/admin/?												Admin.index

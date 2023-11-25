@@ -2,6 +2,8 @@ package com.openseedbox;
 
 import play.Play;
 
+import static com.openseedbox.code.libs.KeyCloakOIDC.DEFAULT_RESPONSE_MODE;
+
 /**
  * Wrapper for getting things from application.conf
  * @author Erin Drummond
@@ -15,6 +17,38 @@ public class Config {
         public static String getGoogleClientId() {
                 return Play.configuration.getProperty("google.clientid");
         }
+
+	public static String getGoogleClientSecret() {
+		return Play.configuration.getProperty("openseedbox.auth.google.clientsecret");
+	}
+
+	public static String getGoogleOpenIdConfigurationUrl() {
+		return Play.configuration.getProperty("openseedbox.auth.google.configuration.url", "https://accounts.google.com/.well-known/openid-configuration");
+	}
+
+	public static String getKeyCloakClientId() {
+		return Play.configuration.getProperty("openseedbox.auth.keycloak.clientid");
+	}
+
+	public static String getKeyCloakClientSecret() {
+		return Play.configuration.getProperty("openseedbox.auth.keycloak.clientsecret");
+	}
+
+	public static String getKeyCloakOpenIdConfigurationUrl() {
+		return Play.configuration.getProperty("openseedbox.auth.keycloak.openid.configuration.url");
+	}
+
+	public static String getKeyCloakResponseMode() {
+		return Play.configuration.getProperty("openseedbox.auth.keycloak.response.mode", DEFAULT_RESPONSE_MODE);
+	}
+
+	public static String getGitHubClientId() {
+		return Play.configuration.getProperty("openseedbox.auth.github.clientid");
+	}
+
+	public static String getGitHubClientSecret() {
+		return Play.configuration.getProperty("openseedbox.auth.github.clientsecret");
+	}
 
 	public static String getAssetPrefix() {
 		return Play.configuration.getProperty("openseedbox.assets.prefix", "/public");

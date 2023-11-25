@@ -13,37 +13,25 @@
     <br />
     <p>You can login using OpenID below.</p>
     <br />
-    <div class="signin">
-        <span id="signinButton">
-            <span
-              class="g-signin2"
-              data-onsuccess="onSignIn"
-              data-onfailure="onSignInFailure"
-              data-clientid="${clientId}"
-              data-cookiepolicy="single_host_origin"
-              data-scope="openid email profile">
-            </span>
-        </span>
+    #{if (google)}
+    <div class="btn-group">
+        <a class="btn" style="color: #dd4b39;" href="@{AuthGoogle.authenticate()}">
+            Google
+        </a>
     </div>
+    #{/if}
+    #{if (keyCloak)}
+    <div class="btn-group">
+        <a class="btn" style="color: #0dafd5;" href="@{AuthKeyCloak.authenticate()}">
+            Keycloak
+        </a>
+    </div>
+    #{/if}
+    #{if (gitHub)}
+    <div class="btn-group">
+        <a class="btn" style="color: #444444;" href="@{AuthGitHub.authenticate()}">
+            GitHub
+        </a>
+    </div>
+    #{/if}
 </div>
-<script type="text/javascript">
-    var signinClicked = false;
-    function onSignIn(googleUser) {
-        if (googleUser.isSignedIn() && signinClicked) {
-            var id_token = googleUser.getAuthResponse().id_token;
-            document.location.href = "@{Auth.authenticate()}?id_token=" + id_token;
-        } else if (googleUser.isSignedIn()) {
-            gapi.auth2.getAuthInstance().signOut().then(function () {
-                console.log('User signed out.');
-            });
-        }
-    }
-
-    function onSignInFailure() {
-        console.log("Unable to sign in!");
-    }
-
-    $("#signinButton").click(function() {
-       signinClicked = true;
-    });
-</script>

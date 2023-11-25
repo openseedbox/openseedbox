@@ -1,0 +1,18 @@
+#{extends "main.html" /}
+#{set title: "Echo" /}
+#{if !play.mode.isProd()}
+<h1>Current Parameters</h1>
+#{list items: params.all(), as: 'item'}
+<ul>
+    #{list items: item, as: 'value'}<li>${value.key + ': ' + value.value}</li>#{/list}
+</ul>
+#{/list}
+<h1>Flash scope</h1>
+${flash.toString()}
+<h1>The Session scope</h1>
+#{list items: session.all(), as: 'item'}
+<ul>
+    #{list items: item, as: 'value'}<li>${value.key + ': ' + value.value}</li>#{/list}
+</ul>
+#{/list}
+#{/if}

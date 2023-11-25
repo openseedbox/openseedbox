@@ -1,0 +1,4 @@
+<p>Please set your email as public in your ${providerName}
+    #{if (providerSettingsUrl)}<a href="${providerSettingsUrl}">settings</a>#{/if}
+    #{else}settings{#{/else} to use this application!</p>
+#{if (providerEmailSettingsImageUrl)}<p><img src="#{asset.url providerEmailSettingsImageUrl /}"/></p>#{/if}

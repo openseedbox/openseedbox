@@ -27,8 +27,9 @@ application.session.maxAge=3d
 application.session.cookie=PLAY_OPENSEEDBOX
 webservice=com.openseedbox.code.ws.WSAsyncWithCustomSSLContext
 
-#Paste your google ClientID here. See the README for setting up the app in the Google Developers console
+#Paste your google ClientID and ClientSecret here. See the README for setting up the app in the Google Developers console
 google.clientid=
+openseedbox.auth.google.clientsecret=
 
 #OpenSeedbox-specific config
 openseedbox.node.access=http
@@ -43,3 +44,10 @@ openseedbox.assets.prefix=${openseedbox.context.path}/public
 openseedbox.maintenance.jobevent.older.than.weeks=1
 openseedbox.maintenance.torrentevent.older.than.months=1
 
+# OpenSeedbox auth providers
+openseedbox.auth.keycloak.clientid=
+openseedbox.auth.keycloak.clientsecret=
+openseedbox.auth.keycloak.openid.configuration.url=
+openseedbox.auth.keycloak.response.mode=fragment
+openseedbox.auth.github.clientid=
+openseedbox.auth.github.clientsecret=

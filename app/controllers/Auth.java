@@ -9,10 +9,12 @@ import com.google.gson.JsonObject;
 import com.openseedbox.Config;
 import com.openseedbox.models.User;
 
+import org.apache.commons.lang.StringUtils;
 import play.Logger;
 import play.cache.Cache;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
+import play.mvc.Router;
 
 public class Auth extends Base {
 
@@ -20,7 +22,16 @@ public class Auth extends Base {
 
 	public static void login() {
 		renderArgs.put("clientId", Config.getGoogleClientId());
-		renderTemplate("auth/login.html");
+		if (!StringUtils.isEmpty(Config.getGoogleClientId())) {
+			renderArgs.put("google", true);
+		}
+		if (!StringUtils.isEmpty(Config.getKeyCloakClientId())) {
+			renderArgs.put("keyCloak", true);
+		}
+		if (!StringUtils.isEmpty(Config.getGitHubClientId())) {
+			renderArgs.put("gitHub", true);
+		}
+		render();
 	}
 
 	public static void logout() {
@@ -38,6 +49,19 @@ public class Auth extends Base {
 			setGeneralErrorMessage(message);
 		}
 		login();
+	}
+
+	public static void fragmentRedirect(String redirectTo) {
+		if (redirectTo == null || !redirectTo.startsWith("/") ) {
+			redirectTo = Router.reverse("Auth.echo").url; // "Auth.authenticate"
+		} else {
+			flash.keep();
+		}
+		render(redirectTo);
+	}
+
+	public static void echo() {
+		render();
 	}
 
 	public static void authenticate(String id_token) throws Exception {
