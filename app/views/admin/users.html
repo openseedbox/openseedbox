@@ -15,7 +15,7 @@
 		<th>Used</th>					
 		<th>Action</th>
 	</tr>
-	#{list items:users, as:"user"}
+	#{list items:users.sort{ a, b -> a.id <=> b.id}, as:"user"}
 	<tr>
 		<td>${user.emailAddress}</td>		
 		<td>${user.admin ? "yes" : "no"}</td>

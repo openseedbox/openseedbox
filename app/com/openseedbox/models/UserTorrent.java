@@ -28,12 +28,13 @@ public class UserTorrent extends ModelBase {
 	}
 
 	public static List<UserTorrent> getByUser(User u) {
-		return UserTorrent.all().filter("user", u).fetch();
+		return UserTorrent.all().filter("user", u).order("id").fetch();
 	}
 
 	public static List<UserTorrent> getByUserAndGroup(User u, String group) {
 		return UserTorrent.all()
-				  .filter("user", u).filter("groupName", group).fetch();
+				  .filter("user", u).filter("groupName", group)
+				  .order("id").fetch();
 	}
 
 	public static UserTorrent getByUser(User u, String hash) {
@@ -43,7 +44,7 @@ public class UserTorrent extends ModelBase {
 
 	public static List<UserTorrent> getByUser(User u, List<String> hashes) {
 		return UserTorrent.all().filter("user", u)
-				  .filter("torrentHash IN", hashes).fetch();
+				  .filter("torrentHash IN", hashes).order("id").fetch();
 	}
 
 	public static List<UserTorrent> getByHash(String hash) {

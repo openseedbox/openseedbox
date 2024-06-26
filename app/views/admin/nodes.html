@@ -18,7 +18,7 @@
 		<th>Backend Up</th>
 		<th>Action</th>
 	</tr>
-#{list items:nodes, as:"node"}
+#{list items:nodes.sort{ a, b -> a.id <=> b.id}, as:"node"}
 	<tr class="node-line" data-node-id="${node.id}">
 		<td><a href="${node.downloadScheme}://${node.downloadIpAddress}/" target="_blank">${node.name}</a></td>
 		<td>
