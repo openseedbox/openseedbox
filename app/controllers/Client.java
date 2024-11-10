@@ -127,15 +127,18 @@ public class Client extends Base {
 	}
 	
 	public static void addTorrent(@As("\n") final String[] urlOrMagnet, final File[] fileFromComputer) throws IOException {					
+		boolean hasError = false;
 		if (urlOrMagnet == null && fileFromComputer == null) {
-			setGeneralErrorMessage("Please enter a valid URL or magent link, or choose a valid file to upload.");
+			hasError = true;
 		} else {					
 			int count = 0;
 			User user = getCurrentUser();
 			if (urlOrMagnet != null) {
 				for (String s : urlOrMagnet) {					
-					new AddTorrentJob(s, null, user.getId(), getCurrentGroupName()).now();
-					count++;
+					if (!s.isEmpty()) {
+						new AddTorrentJob(s, null, user.getId(), getCurrentGroupName()).now();
+						count++;
+					}
 				}
 			}
 			if (fileFromComputer != null) {
@@ -153,8 +156,13 @@ public class Client extends Base {
 				} else {
 					setGeneralMessage("Your torrent has been scheduled for downloading! It will begin shortly.");
 				}
+			} else {
+				hasError = true;
 			}
 		}				
+		if (hasError) {
+			setGeneralErrorMessage("Please enter a valid URL or magent link, or choose a valid file to upload.");
+		}
 		index(getCurrentGroupName());
 	}
 	
